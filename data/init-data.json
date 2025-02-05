@@ -1,0 +1,77 @@
+{
+    "compounds": {
+        "anavar": {
+            "halfLife": "10h"
+        },
+        "arimidex": {
+            "halfLife": "1.95d"
+        },
+        "halotestin": {
+            "halfLife": "7h"
+        },
+        "masteron enanthate": {
+            "halfLife": "4.5d",
+            "pctActive": 0.7
+        },
+        "masteron propionate": {
+            "halfLife": "0.8d",
+            "pctActive": 0.8
+        },
+        "testosterone cypionate": {
+            "halfLife": "5d",
+            "pctActive": 0.69
+        },
+        "testosterone decanoate": {
+            "halfLife": "7.5d",
+            "pctActive": 0.62
+        },
+        "testosterone enanthate": {
+            "halfLife": "4.5d",
+            "pctActive": 0.7
+        },
+        "testosterone isocaproate": {
+            "halfLife": "5.0d",
+            "pctActive": 0.72
+        },
+        "testosterone phenylpropionate": {
+            "halfLife": "1.5d",
+            "pctActive": 0.66
+        },
+        "testosterone propionate": {
+            "halfLife": "0.8d",
+            "pctActive": 0.8
+        },
+        "testosterone suspension": {
+            "halfLife": "0.5d"
+        },
+        "testosterone undecanoate": {
+            "halfLife": "20.9d",
+            "pctActive": 0.61
+        }
+    },
+    "blends": {
+        "sustanon 250": {
+            "testosterone propionate": 30.0,
+            "testosterone phenylpropionate": 60.0,
+            "testosterone isocaproate": 60.0,
+            "testosterone decanoate": 100.0
+        }
+    },
+    "frequencies": {
+        "twice a day": ["0.5d"],
+        "every day": ["1d"],
+        "every other day": ["2d"],
+        "every 3 days": ["3d"],
+        "every 4 days": ["4d"],
+        "every 5 days": ["5d"],
+        "every 6 days": ["6d"],
+        "every 7 days": ["7d"],
+        "twice a week": ["3.5d"],
+        "monday-wednesday-friday": ["2d", "2d", "3d"],
+        "every week": ["7d"],
+        "every other week": ["14d"],
+        "every 3 weeks": ["21d"],
+        "every 4 weeks": ["28d"],
+        "every 5 weeks": ["35d"]
+    }
+}

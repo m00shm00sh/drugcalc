@@ -1,0 +1,5 @@
+{
+    "tickDuration": "1.5h",
+    "cutoff": 0.01,
+    "doLambdaDoseCorrection": false
+}
