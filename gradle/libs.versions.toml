@@ -1,0 +1,93 @@
+
+[versions]
+kotlin-version = "2.1.20"
+kx-serialization-version = "1.8.1"
+kx-datetime-version = "0.6.2"
+kx-coroutines-version = "1.10.2"
+
+ktor-version = "3.2.0"
+
+slf4j-version = "2.0.17"
+logback-version = "1.5.18"
+
+hoplite-version = "2.9.0"
+aedile-version = "2.1.2"
+
+flyway-version = "11.9.1"
+jooq-version = "3.20.5"
+hikaricp-version = "6.3.0"
+sqlite-version = "3.50.1.0"
+
+r2-pem-keystore-version = "0.3"
+
+kproxymap-version = "v0.10.0"
+kcontainers-version = "v0.6.1"
+
+junit-version = "5.13.1"
+
+
+[libraries]
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin-version" }
+kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin-version" }
+kx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kx-datetime-version" }
+kx-serialization = {  module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kx-serialization-version" }
+kx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kx-coroutines-version" }
+kx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kx-coroutines-version" }
+slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j-version" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback-version" }
+
+ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor-version" }
+ktor-server-openapi = { module = "io.ktor:ktor-server-openapi", version.ref = "ktor-version" }
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor-version" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor-version" }
+ktor-server-host-common = { module = "io.ktor:ktor-server-host-common", version.ref = "ktor-version" }
+ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor-version" }
+ktor-server-auth = { module = "io.ktor:ktor-server-auth", version.ref = "ktor-version" }
+ktor-server-auth-jwt = { module = "io.ktor:ktor-server-auth-jwt", version.ref = "ktor-version" }
+ktor-server-body-limit = { module = "io.ktor:ktor-server-body-limit", version.ref = "ktor-version" }
+ktor-server-resources = { module = "io.ktor:ktor-server-resources", version.ref = "ktor-version" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor-version" }
+ktor-server-tls = { module = "io.ktor:ktor-network-tls-certificates", version.ref = "ktor-version" }
+ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor-version" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor-version" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor-version" }
+
+aedile = { module = "com.sksamuel.aedile:aedile-core", version.ref = "aedile-version" }
+hoplite-core = { module = "com.sksamuel.hoplite:hoplite-core", version.ref = "hoplite-version" }
+hoplite-datetime = { module = "com.sksamuel.hoplite:hoplite-datetime", version.ref = "hoplite-version" }
+hoplite-hocon = { module = "com.sksamuel.hoplite:hoplite-hocon", version.ref = "hoplite-version" }
+
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway-version" }
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp-version" }
+jooq = { module = "org.jooq:jooq", version.ref = "jooq-version" }
+jooq-kotlin-coroutines = { module = "org.jooq:jooq-kotlin-coroutines", version.ref = "jooq-version" }
+sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-version" }
+
+pem-keystore = { module = "io.r2:simple-pem-keystore", version.ref = "r2-pem-keystore-version" }
+
+kproxymap = { module = "com.github.m00shm00sh:kproxymap", version.ref = "kproxymap-version" }
+kcontainers = { module = "com.github.m00shm00sh:kcontainers", version.ref = "kcontainers-version" }
+
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit-version" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-launcher = {module = "org.junit.platform:junit-platform-launcher" }
+
+[bundles]
+ktor-server = [ "ktor-server-core", "ktor-server-openapi", "ktor-server-content-negotiation",
+        "ktor-serialization-kotlinx-json", "ktor-server-host-common", "ktor-server-status-pages",
+        "ktor-server-auth", "ktor-server-auth-jwt", "ktor-server-body-limit", "ktor-server-resources",
+        "ktor-server-netty", "ktor-server-tls"
+    ]
+ktor-server-test = [ "ktor-server-test-host", "ktor-client-core", "ktor-client-content-negotiation" ]
+
+hoplite = [ "hoplite-core", "hoplite-datetime", "hoplite-hocon" ]
+
+db-deps = ["flyway-core", "jooq", "hikaricp", "jooq-kotlin-coroutines", "sqlite" ]
+
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }
+ktor = { id = "io.ktor.plugin", version.ref = "ktor-version" }
+kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin-version" }
+flyway = { id = "org.flywaydb.flyway", version.ref = "flyway-version" }
+jooq-codegen = { id = "org.jooq.jooq-codegen-gradle", version.ref = "jooq-version" }
