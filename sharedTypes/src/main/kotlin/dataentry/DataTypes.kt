@@ -156,7 +156,10 @@ value class BlendName(val value: String) : Comparable<BlendName> {
 
 /** A valid blend value. */
 @Serializable
-data class BlendValue(private val components: Map<CompoundName, Double>): Map<CompoundName, Double> by components {
+data class BlendValue(
+    private val components: Map<CompoundName, Double>,
+    val note: String = "",
+): Map<CompoundName, Double> by components {
     init {
         require(components.size > 1) {
             "2+ components required"

@@ -10,7 +10,8 @@ internal suspend fun AsyncJooq.getBlends(
         select(
             BLENDS.NAME,
             BLEND_COMPONENTS.COMPONENT_COMPOUND, BLEND_COMPONENTS.COMPONENT_VARIANT,
-            BLEND_COMPONENTS.COMPONENT_DOSE
+            BLEND_COMPONENTS.COMPONENT_DOSE,
+            BLENDS.NOTE,
         )
             .from(BLENDS)
             .join(BLEND_COMPONENTS)
@@ -20,27 +21,31 @@ internal suspend fun AsyncJooq.getBlends(
     }.run {
         buildMap {
             var currentName: BlendName? = null
+            var noteForName: String? = null
             var inner: MutableMap<CompoundName, Double>? = null
             suspendedBlockingFetch {
-                forEachLazy { (blendName, componentCompound, componentVariant, componentDose) ->
+                forEachLazy { (blendName, componentCompound, componentVariant, componentDose, note) ->
                     requireNotNull(blendName) { "null blend name" }
                     requireNotNull(componentCompound) { "null component compound" }
                     requireNotNull(componentVariant) { "null component variant" }
                     requireNotNull(componentDose) { "null component dose" }
+                    requireNotNull(note) { "null note" }
 
                     val blendNameAsCompoundName = blendName.let(::BlendName)
                     if (currentName == null || currentName != blendNameAsCompoundName) {
                         // move inner on blendName transition, not first row
                         if (currentName != null)
-                            this@buildMap[currentName!!] = BlendValue(inner!! as Map<CompoundName, Double>)
+                            this@buildMap[currentName!!] =
+                                BlendValue(inner!! as Map<CompoundName, Double>, note)
                         inner = mutableMapOf()
                         currentName = blendNameAsCompoundName
+                        noteForName = note
                     }
                     inner!![CompoundName(CompoundBase(componentCompound), componentVariant)] = componentDose
                 }
             }
             if (currentName != null && inner != null)
-                this@buildMap[currentName] = BlendValue(inner as Map<CompoundName, Double>)
+                this@buildMap[currentName] = BlendValue(inner as Map<CompoundName, Double>, noteForName!!)
         }
     }
 
@@ -55,9 +60,10 @@ internal fun AsyncJooq.putBlendsQueries(blends: Map<BlendName, BlendValue>): Lis
                 .where(BLEND_COMPONENTS.BLEND_NAME.`in`(blends.keys))
                 .asAnyQuery()
         }
-        blends.keys.forEach {
+        blends.forEach { (k, v) ->
             add {
-                upsertQuery(BLENDS, BLENDS.NAME, it.value, BLENDS.UPDATED)
+                upsertQuery(BLENDS, listOf(BLENDS.NAME), listOf(k.value),
+                    listOf(BLENDS.NOTE), listOf(v.note), BLENDS.UPDATED)
                     .asTaggedAnyQuery()
             }
         }
