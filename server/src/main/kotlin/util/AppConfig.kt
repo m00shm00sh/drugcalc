@@ -1,8 +1,8 @@
 package com.moshy.drugcalc.server.util
 
+import com.moshy.drugcalc.calc.calc.Evaluator
 import com.moshy.drugcalc.types.datasource.DBConfig
 import com.moshy.drugcalc.calc.datacontroller.DataController
-import calc.Evaluator
 import com.sksamuel.hoplite.*
 import kotlin.time.*
 

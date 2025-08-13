@@ -1,6 +1,6 @@
 package com.moshy.drugcalc.server.http.util
 
-import calc.Evaluator
+import com.moshy.drugcalc.calc.calc.Evaluator
 import com.moshy.drugcalc.server.http.configureModule
 import com.moshy.drugcalc.server.http.user.UserService
 import com.moshy.drugcalc.server.io.JsonWithLenientIsoDuration

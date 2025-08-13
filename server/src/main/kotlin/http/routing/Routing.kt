@@ -1,7 +1,7 @@
 package com.moshy.drugcalc.server.http.routing
 
+import com.moshy.drugcalc.calc.calc.Evaluator
 import com.moshy.drugcalc.calc.datacontroller.DataController
-import calc.Evaluator
 import com.moshy.drugcalc.server.http.JwtService
 import com.moshy.drugcalc.server.http.user.UserService
 import com.moshy.drugcalc.server.util.AppConfig

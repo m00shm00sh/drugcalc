@@ -1,7 +1,7 @@
 package com.moshy.drugcalc.server.http
 
 import com.moshy.drugcalc.calc.datacontroller.DataController
-import calc.Evaluator
+import com.moshy.drugcalc.calc.calc.Evaluator
 import com.moshy.drugcalc.db.getDataSource
 import com.moshy.drugcalc.server.http.plugins.configureSerialization
 import com.moshy.drugcalc.types.datasource.DataSourceDelegate

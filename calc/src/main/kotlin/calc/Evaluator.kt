@@ -1,7 +1,5 @@
-package calc
+package com.moshy.drugcalc.calc.calc
 
-import com.moshy.drugcalc.calc.calc.CycleCalculation
-import com.moshy.drugcalc.calc.calc.evaluateDecodedCycle
 import com.moshy.drugcalc.calc.datacontroller.CacheEvictionPolicy
 import com.moshy.drugcalc.common.BoundThreadpoolDispatcher
 import com.moshy.drugcalc.types.calccommand.CycleResult

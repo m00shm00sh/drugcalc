@@ -2,7 +2,6 @@ package com.moshy.drugcalc.server.http.routing
 
 import com.moshy.drugcalc.calc.calc.*
 import com.moshy.drugcalc.calc.datacontroller.*
-import calc.Evaluator
 import com.moshy.drugcalc.types.calccommand.*
 import com.moshy.drugcalc.types.dataentry.*
 import com.moshy.drugcalc.server.http.routing.util.*
