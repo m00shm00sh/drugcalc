@@ -11,7 +11,6 @@ dependencies {
     implementation(project(":sharedTypes"))
 
     implementation(libs.kx.serialization)
-    implementation(libs.aedile)
 
     testImplementation(project(":sharedTestLogic"))
     testImplementation(project(":dbTestLogic"))

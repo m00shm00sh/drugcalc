@@ -21,20 +21,20 @@ class DataController(
     private val frequenciesCache = newCache<FrequencyName, FrequencyValue>(controllerConfig.frequencyEvictionPolicy)
 
     // search caches are loading caches because we use one-to-many loaders instead of many-to-many loaders
-    private val compoundVariantsSearchCache: LoadingCache<CompoundBase, String> =
+    private val compoundVariantsSearchCache: OneToManyLoadingCache<CompoundBase, String> =
         newLoadingCache(controllerConfig.compoundEvictionPolicy) {
             source.getVariantsForCompound(it) ?: throw NoSuchElementException("for compound $it")
         }
-    private val compoundNamesSearchCache: UnitLoadingCache<CompoundBase> =
-        newUnitLoadingCache(controllerConfig.compoundEvictionPolicy) {
+    private val compoundNamesSearchCache: OneToManyUnitLoadingCache<CompoundBase> =
+        newOneToManyUnitLoadingCache(controllerConfig.compoundEvictionPolicy) {
             source.getCompoundNames()
         }
-    private val blendNamesSearchCache: UnitLoadingCache<BlendName> =
-        newUnitLoadingCache(controllerConfig.blendEvictionPolicy) {
+    private val blendNamesSearchCache: OneToManyUnitLoadingCache<BlendName> =
+        newOneToManyUnitLoadingCache(controllerConfig.blendEvictionPolicy) {
             source.getBlendNames()
         }
-    private val frequencyNamesSearchCache: UnitLoadingCache<FrequencyName> =
-        newUnitLoadingCache(controllerConfig.frequencyEvictionPolicy) {
+    private val frequencyNamesSearchCache: OneToManyUnitLoadingCache<FrequencyName> =
+        newOneToManyUnitLoadingCache(controllerConfig.frequencyEvictionPolicy) {
             source.getFrequencyNames()
         }
 
@@ -138,14 +138,17 @@ class DataController(
     }
 
     private suspend inline fun <K, V : Comparable<V>> paginatingGetter(
-        cache: LoadingCache<K, V>,
+        cache: OneToManyLoadingCache<K, V>,
         name: K,
         paginationSpecifier: PaginationSpecifier<V>? = null
     ): ListAsSortedSet<V> =
-        cache.get(name).run { paginationSpecifier?.let(::paginateList) ?: this }
+        cache.get(name)
+            .run {
+                paginationSpecifier?.let(::paginateList) ?: this
+            }
 
     private suspend inline fun <V : Comparable<V>> paginatingGetter(
-        cache: UnitLoadingCache<V>,
+        cache: OneToManyUnitLoadingCache<V>,
         paginationSpecifier: PaginationSpecifier<V>? = null
     ): ListAsSortedSet<V> =
         paginatingGetter(cache, Unit, paginationSpecifier)
@@ -547,3 +550,6 @@ class DataController(
         private fun unresolved(what: String) = "$UNRESOLVED$what"
     }
 }
+
+private typealias OneToManyLoadingCache<K, V> = LoadingCache<K, ListAsSortedSet<V>>
+

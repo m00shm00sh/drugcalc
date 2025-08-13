@@ -24,6 +24,7 @@ dependencies {
     implementation(libs.slf4j)
     implementation(libs.kcontainers)
     implementation(libs.kproxymap)
+    implementation(libs.aedile)
 
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.kx.coroutines.test)

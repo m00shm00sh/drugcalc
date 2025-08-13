@@ -1,4 +1,4 @@
-package com.moshy.drugcalc.calc.datacontroller
+package com.moshy.drugcalc.common
 
 import com.moshy.containers.ListAsSortedSet
 import com.github.benmanes.caffeine.cache.Caffeine
@@ -6,18 +6,18 @@ import com.sksamuel.aedile.core.*
 import com.sksamuel.aedile.core.LoadingCache as AeLoadingCache
 import kotlin.time.Duration
 
-internal fun <K, V> newCache(policy: CacheEvictionPolicy) =
+fun <K, V> newCache(policy: CacheEvictionPolicy) =
     Caffeine
         .newBuilder()
         .apply { policy.accessTime?.let(::expireAfterAccess) }
         .apply { policy.writeTime?.let(::expireAfterWrite) }
         .asCache<K, V>()
 
-internal typealias LoadingCache<K, V> = AeLoadingCache<K, ListAsSortedSet<V>>
+typealias LoadingCache<K, V> = AeLoadingCache<K, V>
 
-internal fun <K, V : Comparable<V>> newLoadingCache(
+fun <K, V> newLoadingCache(
     policy: CacheEvictionPolicy,
-    compute: suspend (K) -> ListAsSortedSet<V>
+    compute: suspend (K) -> V
 ): LoadingCache<K, V> =
     Caffeine
         .newBuilder()
@@ -25,12 +25,12 @@ internal fun <K, V : Comparable<V>> newLoadingCache(
         .apply { policy.writeTime?.let(::expireAfterWrite) }
         .asLoadingCache(compute)
 
-internal typealias UnitLoadingCache<V> = LoadingCache<Unit, V>
+typealias OneToManyUnitLoadingCache<V> = LoadingCache<Unit, ListAsSortedSet<V>>
 
-internal fun <V : Comparable<V>> newUnitLoadingCache(
+fun <V : Comparable<V>> newOneToManyUnitLoadingCache(
     policy: CacheEvictionPolicy,
     compute: suspend (Unit) -> ListAsSortedSet<V>
-): UnitLoadingCache<V> =
+): OneToManyUnitLoadingCache<V> =
     Caffeine
         .newBuilder()
         .apply { maximumSize(1) }

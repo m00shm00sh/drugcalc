@@ -1,6 +1,6 @@
 package com.moshy.drugcalc.calc.calc
 
-import com.moshy.drugcalc.calc.datacontroller.CacheEvictionPolicy
+import com.moshy.drugcalc.common.CacheEvictionPolicy
 import com.moshy.drugcalc.common.BoundThreadpoolDispatcher
 import com.moshy.drugcalc.types.calccommand.CycleResult
 import kotlinx.coroutines.SupervisorJob
