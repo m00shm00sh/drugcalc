@@ -70,23 +70,28 @@ data class CompoundName(
     }
 }
 
-internal object CNSerializer: KSerializer<CompoundName> {
+object CNSerializer: KSerializer<CompoundName> {
     override fun deserialize(decoder: Decoder): CompoundName {
         val s = decoder.decodeString()
-        val items = s.split('=', limit = 2)
-        val base = CompoundBase(items[0])
-        val variant = items.getOrElse(1) { "" }
-        return CompoundName(base, variant)
+        return fromString(s)
     }
 
     override fun serialize(encoder: Encoder, value: CompoundName) {
-        val s = "${value.compound.value}=${value.variant}"
+        val s = asString(value)
         encoder.encodeString(s)
     }
 
     override val descriptor: SerialDescriptor =
         PrimitiveSerialDescriptor("dc.io.CNSerializer", PrimitiveKind.STRING)
 
+    fun fromString(s: String): CompoundName {
+        val items = s.split('=', limit = 2)
+        val base = CompoundBase(items[0])
+        val variant = items.getOrElse(1) { "" }
+        return CompoundName(base, variant)
+    }
+
+    fun asString(value: CompoundName) = "${value.compound.value}=${value.variant}"
 }
 
 /** The base name of a compound. */
