@@ -5,6 +5,7 @@ import com.moshy.drugcalc.server.http.plugins.AuthenticationFailure
 import com.moshy.drugcalc.server.http.routing.util.*
 import com.moshy.drugcalc.server.http.user.*
 import com.moshy.drugcalc.server.util.AppConfig
+import com.moshy.drugcalc.types.login.UserRequest
 import io.ktor.resources.Resource
 import io.ktor.server.auth.authenticate
 import io.ktor.server.routing.*
