@@ -2,7 +2,7 @@ package com.moshy.drugcalc.server.http
 
 import com.moshy.drugcalc.calc.datacontroller.DataController
 import com.moshy.drugcalc.calc.calc.Evaluator
-import com.moshy.drugcalc.db.getDataSource
+import com.moshy.drugcalc.db.*
 import com.moshy.drugcalc.server.http.plugins.configureSerialization
 import com.moshy.drugcalc.types.datasource.DataSourceDelegate
 import com.moshy.drugcalc.server.http.plugins.*
@@ -32,7 +32,12 @@ internal suspend fun Application.initializeKtorModule(config: AppConfig.App) {
     """.trimIndent()
     )
 
-    val dataSource: DataSourceDelegate = getDataSource(config.db)
+    val dataSource: DataSourceDelegate = try {
+        getDataSource(config.db)
+    } catch (t: Throwable) {
+        val (_, cause) = getDataInitFailure(t) ?: throw t
+        throw IllegalArgumentException("DB init failed; verify config file contents", cause)
+    }
     if (dataSource.isDbEmpty() && !config.flags.allowEmptyDb)
         throw IllegalArgumentException("disallowed empty db state")
 
