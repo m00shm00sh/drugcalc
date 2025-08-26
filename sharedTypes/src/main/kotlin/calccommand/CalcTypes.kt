@@ -69,7 +69,7 @@ data class CycleDescription(
         when (prefix) {
             PREFIX_COMPOUND, PREFIX_BLEND ->
                 require(dose?.takeIf { it > 0.0 } != null) {
-                    "nonpositive dose"
+                    "missing or nonpositive dose"
                 }
             PREFIX_TRANSFORMER -> {}
         }
