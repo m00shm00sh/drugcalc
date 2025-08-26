@@ -1,9 +1,10 @@
 
 [versions]
-kotlin-version = "2.1.20"
+kotlin-version = "2.2.20-RC"
 kx-serialization-version = "1.8.1"
 kx-datetime-version = "0.6.2"
 kx-coroutines-version = "1.10.2"
+kx-dataframe-version = "1.0.0-Beta2"
 
 ktor-version = "3.2.0"
 
@@ -20,8 +21,9 @@ sqlite-version = "3.50.1.0"
 
 r2-pem-keystore-version = "0.3"
 
-kproxymap-version = "v0.10.0"
-kcontainers-version = "v0.6.1"
+kproxymap-version = "v0.13.0"
+kcontainers-version = "v0.7.0"
+krepl-version = "v0.7.0"
 
 junit-version = "5.13.1"
 
@@ -33,6 +35,7 @@ kx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref =
 kx-serialization = {  module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kx-serialization-version" }
 kx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kx-coroutines-version" }
 kx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kx-coroutines-version" }
+kx-dataframe = { module = "org.jetbrains.kotlinx:dataframe", version.ref = "kx-dataframe-version" }
 slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j-version" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback-version" }
 
@@ -50,6 +53,7 @@ ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor-
 ktor-server-tls = { module = "io.ktor:ktor-network-tls-certificates", version.ref = "ktor-version" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor-version" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor-version" }
+ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor-version" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor-version" }
 
 aedile = { module = "com.sksamuel.aedile:aedile-core", version.ref = "aedile-version" }
@@ -67,6 +71,7 @@ pem-keystore = { module = "io.r2:simple-pem-keystore", version.ref = "r2-pem-key
 
 kproxymap = { module = "com.github.m00shm00sh:kproxymap", version.ref = "kproxymap-version" }
 kcontainers = { module = "com.github.m00shm00sh:kcontainers", version.ref = "kcontainers-version" }
+krepl = { module = "com.github.m00shm00sh:krepl", version.ref = "krepl-version" }
 
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit-version" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
@@ -80,6 +85,10 @@ ktor-server = [ "ktor-server-core", "ktor-server-openapi", "ktor-server-content-
     ]
 ktor-server-test = [ "ktor-server-test-host", "ktor-client-core", "ktor-client-content-negotiation" ]
 
+ktor-client = [ "ktor-client-core", "ktor-client-java",
+        "ktor-client-content-negotiation", "ktor-serialization-kotlinx-json"
+    ]
+
 hoplite = [ "hoplite-core", "hoplite-datetime", "hoplite-hocon" ]
 
 db-deps = ["flyway-core", "jooq", "hikaricp", "jooq-kotlin-coroutines", "sqlite" ]
@@ -87,6 +96,7 @@ db-deps = ["flyway-core", "jooq", "hikaricp", "jooq-kotlin-coroutines", "sqlite"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }
+kotlin-plugin-dataframe = { id = "org.jetbrains.kotlin.plugin.dataframe", version.ref = "kotlin-version" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor-version" }
 kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin-version" }
 flyway = { id = "org.flywaydb.flyway", version.ref = "flyway-version" }
