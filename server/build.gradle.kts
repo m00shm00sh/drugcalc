@@ -32,3 +32,7 @@ dependencies {
     testImplementation(project(":dbTestLogic"))
     testImplementation(project(":calcTestLogic"))
 }
+
+tasks.shadowJar {
+    mergeServiceFiles()
+}
