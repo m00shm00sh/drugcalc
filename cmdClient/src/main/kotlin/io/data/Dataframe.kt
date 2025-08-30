@@ -11,6 +11,7 @@ import kotlin.time.Duration
  * If a field is nullable, then an empty value can exist in the CSV / Excel cell pertaining to that field
  */
 
+@Suppress("unused")
 @DataSchema
 internal interface CompoundsUpdater {
     val compound: String
@@ -20,6 +21,7 @@ internal interface CompoundsUpdater {
     val note: String?
 }
 
+@Suppress("unused")
 @DataSchema
 internal interface Compound {
     val compound: String
@@ -29,6 +31,7 @@ internal interface Compound {
     val note: String?
 }
 
+@Suppress("unused")
 @DataSchema
 internal interface Blend {
     val name: String
@@ -38,6 +41,7 @@ internal interface Blend {
     val note: String?
 }
 
+@Suppress("unused")
 @DataSchema
 internal interface Frequency {
     val name: String
