@@ -5,6 +5,7 @@ kx-serialization-version = "1.8.1"
 kx-datetime-version = "0.6.2"
 kx-coroutines-version = "1.10.2"
 kx-dataframe-version = "1.0.0-Beta2"
+kx-html-version = "0.12.0"
 
 ktor-version = "3.2.0"
 
@@ -21,6 +22,8 @@ sqlite-version = "3.50.1.0"
 
 r2-pem-keystore-version = "0.3"
 
+plotlykt-version = "0.7.2"
+
 kproxymap-version = "v0.13.0"
 kcontainers-version = "v0.7.0"
 krepl-version = "v0.7.0"
@@ -35,9 +38,10 @@ kx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref =
 kx-serialization = {  module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kx-serialization-version" }
 kx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kx-coroutines-version" }
 kx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kx-coroutines-version" }
-kx-dataframe = { module = "org.jetbrains.kotlinx:dataframe", version.ref = "kx-dataframe-version" }
 slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j-version" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback-version" }
+kx-dataframe = { module = "org.jetbrains.kotlinx:dataframe", version.ref = "kx-dataframe-version" }
+kx-html = { module = "org.jetbrains.kotlinx:kotlinx-html", version.ref = "kx-html-version" }
 
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor-version" }
 ktor-server-openapi = { module = "io.ktor:ktor-server-openapi", version.ref = "ktor-version" }
@@ -68,6 +72,8 @@ jooq-kotlin-coroutines = { module = "org.jooq:jooq-kotlin-coroutines", version.r
 sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-version" }
 
 pem-keystore = { module = "io.r2:simple-pem-keystore", version.ref = "r2-pem-keystore-version" }
+
+plotly-kt = { module = "space.kscience:plotlykt-core", version.ref = "plotlykt-version" }
 
 kproxymap = { module = "com.github.m00shm00sh:kproxymap", version.ref = "kproxymap-version" }
 kcontainers = { module = "com.github.m00shm00sh:kcontainers", version.ref = "kcontainers-version" }

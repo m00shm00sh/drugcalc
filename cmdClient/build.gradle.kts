@@ -19,6 +19,9 @@ dependencies {
 
     implementation(kotlin("reflect"))
     implementation(libs.kx.dataframe)
+    implementation(libs.plotly.kt)
+//  do not directly include kx-html; it will conflict with PlotlyKt's kx-html version and throw a MethodNotFound
+//    implementation(libs.kx.html)
     implementation(libs.logback.classic)
     implementation(libs.bundles.ktor.client)
     implementation(libs.krepl)

@@ -13,8 +13,9 @@ internal class ForCalc {
 
     var config: ProxyMap<Config> = ProxyMap()
     var reqCycles: List<CycleDescription> = emptyList()
-    var calcResult: DecodedCycleResult = emptyMap()
+    var calcResult: CycleResult = emptyMap()
     var lineDuration: Duration = 1.days
+    var calcTimeTick: Duration = DEFAULT_CONFIG["tickDuration"] as Duration
 
     companion object {
         val DEFAULT_CONFIG = ProxyMap<Config>("tickDuration" to 6.hours)

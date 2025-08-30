@@ -15,6 +15,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     gradlePluginPortal()
+    maven("https://repo.kotlin.link")
     maven("https://jitpack.io")
 }
 
@@ -31,7 +32,6 @@ dependencies {
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.launcher)
-
 }
 
 tasks.withType<Test>().configureEach {

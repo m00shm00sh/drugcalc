@@ -3,14 +3,28 @@ package com.moshy.drugcalc.cmdclient.handlers
 import com.moshy.drugcalc.cmdclient.AppState
 import com.moshy.drugcalc.cmdclient.helpers.*
 import com.moshy.drugcalc.cmdclient.io.*
+import com.moshy.drugcalc.cmdclient.io.data.WithLenientDuration
 import com.moshy.drugcalc.cmdclient.states.ForCalc
 import com.moshy.drugcalc.cmdclient.states.ForCalc.*
+import com.moshy.drugcalc.common.PreferredIODispatcher
 import com.moshy.drugcalc.types.calccommand.*
 import com.moshy.ProxyMap
 import com.moshy.containers.zipForEach
-import com.moshy.drugcalc.cmdclient.io.data.WithLenientDuration
+import com.moshy.drugcalc.common.toTruthy
 import com.moshy.krepl.*
+import kotlinx.coroutines.withContext
+import kotlinx.html.Entities
+import kotlinx.html.body
+import kotlinx.html.div
+import kotlinx.html.head
+import kotlinx.html.stream.createHTML
+import space.kscience.dataforge.meta.configure
+import space.kscience.plotly.*
+import space.kscience.plotly.models.*
+import space.kscience.visionforge.html.appendTo
+import java.io.File
 import kotlin.time.*
+import kotlin.time.Duration.Companion.days
 
 internal fun AppState.configureCalc(): Repl.EntryBuilder.() -> Unit = {
     val forCalc = this@configureCalc.forCalc
@@ -92,10 +106,10 @@ internal fun AppState.configureCalc(): Repl.EntryBuilder.() -> Unit = {
             }
         }
         this["add"] {
-            usage = "$name {arg=val}+"
+            usage = "$name {flags=.b|.t}? cb=compound {vx=var|xfrm}? {d=dose}? s=time t=time fn=freqname"
             help = "add cycle to list"
             handler = { (_, kw, _, out) ->
-                val data = parseCycleDescription(kw)
+                val data = parseCycleDescription(kw, null)
                 forCalc.reqCycles += data
                 out.send("add [${forCalc.reqCycles.size - 1}]".asLine())
             }
@@ -126,9 +140,17 @@ internal fun AppState.configureCalc(): Repl.EntryBuilder.() -> Unit = {
                 require (index in 0..<forCalc.reqCycles.size) {
                     "index out of range ($index; size=${forCalc.reqCycles.size})"
                 }
-                val data = parseCycleDescription(kw)
+                val data = parseCycleDescription(kw, forCalc.reqCycles[index])
                 forCalc.reqCycles = forCalc.reqCycles.toMutableList().apply { this[index] = data }
                 out.send("edit [$index]".asLine())
+            }
+        }
+        this["show"] {
+            help = "show cycle"
+            handler = { (_, _, _, out) ->
+                forCalc.reqCycles.forEachIndexed { i, v ->
+                    out.send("[$i]: $v".asLine())
+                }
             }
         }
         this["clear"] {
@@ -142,12 +164,15 @@ internal fun AppState.configureCalc(): Repl.EntryBuilder.() -> Unit = {
         this["eval"] {
             help = "evaluate cycle"
             handler = withRepl { repl, (_, _, _, out) ->
+                val config = ForCalc.DEFAULT_CONFIG + forCalc.config
                 val reqBody = CycleRequest(
                     app.forData.newEntries,
-                    ForCalc.DEFAULT_CONFIG + forCalc.config,
+                    config,
                     forCalc.reqCycles
                 )
-                val resp = app.doRequest<DecodedCycleResult, _>(NetRequestMethod.Post, "/api/calc", body = reqBody)
+                val resp: CycleResult =
+                    app.doRequest<_, _>(NetRequestMethod.Post, "/api/calc?noDecode=true", body = reqBody)
+                forCalc.calcTimeTick = config["tickDuration"] as Duration
                 buildList {
                     add("eval: ${resp.size} items:")
                     resp.forEach { (k, v) ->
@@ -162,15 +187,26 @@ internal fun AppState.configureCalc(): Repl.EntryBuilder.() -> Unit = {
         this["result"] {
             help = "show result"
             handler = withRepl { repl, (pos, _, _, out) ->
+                forCalc.checkForExpectedResult()
                 val selection = pos.firstOrNull()
                 val lines = forCalc.renderResult(selection)
                 paginator(repl, out, lines)
             }
         }
+        this["render"]  {
+            help = "render to file"
+            handler = discardRepl { (pos, kw, _, out) ->
+                forCalc.checkForExpectedResult()
+                val file = pos.firstOrNull() ?: throw IllegalArgumentException("expected filename")
+                val split = kw["sp"].toTruthy()
+                forCalc.renderPlotToFile(file, split)
+                out.send("saved $file".asLine())
+            }
+        }
     }
 }
 
-private fun parseCycleDescription(kvToks: Map<String, String>): CycleDescription =
+private fun parseCycleDescription(kvToks: Map<String, String>, old: CycleDescription?): CycleDescription =
     buildMap {
         kvToks.forEach { (k, v) ->
             val remapK = descriptionRemap[k] ?: throw IllegalArgumentException("unrecognized: $k")
@@ -178,40 +214,50 @@ private fun parseCycleDescription(kvToks: Map<String, String>): CycleDescription
         }
     }.let {
         val map = ProxyMap.fromProps<CycleDescription>(it, module = WithLenientDuration)
-        map.createObject()
+        if (old != null)
+            map.applyToObject(old)
+        else
+            map.createObject()
+    }
+
+private fun ForCalc.checkForExpectedResult() =
+    require (calcResult.isNotEmpty() || reqCycles.isEmpty()) {
+        "expected result; did you forget to call `eval`?"
     }
 
 private fun ForCalc.renderResult(selection: String?) =
     buildList list@ {
         with(this@renderResult) {
-            val lineDuration = lineDuration
-                if (selection != null) {
+            // FIXME: refactor calc:datacontroller/Decoder.kt:Duration.transcode() to shared requireToInt()
+            val lineDuration = (lineDuration / calcTimeTick).toInt()
+            val temporals = TextRendererTemporals(lineDuration, calcTimeTick)
+            if (selection != null) {
                 val result = calcResult[selection]
                     ?: throw IllegalArgumentException("no data for selection: ${quote(selection)}")
-                this@list.renderResultItem(result, lineDuration, 0)
+                this@list.renderResultItem(result, temporals, 0)
             } else {
                 calcResult.forEach { (name, elems) ->
                     add("$name:")
-                    renderResultItem(elems, lineDuration, 1)
+                    renderResultItem(elems, temporals, 1)
                 }
             }
         }
     }
 
-private fun LinesBuilder.renderResultItem(elems: DecodedXYList, lineDuration: Duration, indent: Int = 1) {
+private fun LinesBuilder.renderResultItem(elems: XYList, t: TextRendererTemporals, indent: Int = 1) {
     val tabs = "\t".repeat(indent)
     if (elems.x.isEmpty())
         return
-    var lineStart: Duration = -1 * lineDuration
+    var lineStart: Int = -1
     data class LineEntry(
         val t0Str: String,
         val ys: MutableList<Double> = mutableListOf()
     )
     val entries = buildList {
         elems.x.zipForEach(elems.y) { x, y ->
-            if ((x - lineStart) >= lineDuration) {
+            if ((x - lineStart) >= t.lineDuration) {
                 lineStart = x
-                add(LineEntry("$x"))
+                add(LineEntry("${x * t.tickDuration}"))
             }
             last().ys.add(y)
         }
@@ -230,6 +276,91 @@ private fun LinesBuilder.renderResultItem(elems: DecodedXYList, lineDuration: Du
             }
         }.let {
             add(it)
+        }
+    }
+}
+
+private data class TextRendererTemporals(
+    val lineDuration: Int,
+    val tickDuration: Duration,
+)
+
+private suspend fun ForCalc.renderPlotToFile(filename: String, split: Boolean = false) {
+    val dayInTicksF = (1.days / calcTimeTick)
+    val resultShapes = calcResult.mapValues { it.value.type }
+    val lineItemNames = mutableListOf<String>()
+    val stepItemNames= mutableListOf<String>()
+
+    resultShapes.forEach { (k, v) ->
+        when (v) {
+            XYList.PlotType.POINT -> lineItemNames.add(k)
+            XYList.PlotType.BAR -> stepItemNames.add(k)
+        }
+    }
+
+    val xVals = calcResult.entries.associate { (k, v) -> k to v.x.map { x -> x / dayInTicksF } }
+    val yVals = calcResult.entries.associate { (k, v) -> k to v.y }
+
+    val p = Plotly.plot {
+        lineItemNames.forEach {
+            scatter {
+                x.numbers = xVals[it]!!
+                y.numbers = yVals[it]!!
+                name = it
+                showlegend = true
+                mode = ScatterMode.lines
+                type = TraceType.scattergl
+            }
+        }
+        stepItemNames.forEach {
+            scatter {
+                x.numbers = xVals[it]!!
+                y.numbers = yVals[it]!!
+                name = it
+                showlegend = true
+                mode = ScatterMode.lines
+                type = TraceType.scattergl
+                line {
+                    shape = LineShape.hv
+                }
+            }
+        }
+        layout {
+            xaxis {
+                title = "time (days)"
+            }
+            yaxis {
+                title = "release rate (mg/day)"
+                showgrid = true
+
+            }
+            title = "Dose release estimate"
+            legend {
+                title = "compound"
+                orientation = LegendOrientation.horizontal
+                xanchor = XAnchor.center
+                x = 0.5
+            }
+            hovermode = HoverMode.`x unified`
+        }
+    }
+    if (split) {
+        val head: String = createHTML().head {
+            cdnPlotlyHeader.appendTo(consumer)
+        }
+        val hxBody: String = StaticPlotlyRenderer.run {
+            createHTML().body {
+                renderPlot(p, "hxChart", PlotlyConfig()).toString()
+            }
+        }
+        withContext(PreferredIODispatcher()) {
+            File($$"$$filename$head").writeText(head)
+            File($$"$$filename$body").writeText(hxBody)
+        }
+    } else {
+        val h = p.toHTML()
+        withContext(PreferredIODispatcher()) {
+            File(filename).writeText(h)
         }
     }
 }
