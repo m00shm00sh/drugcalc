@@ -50,7 +50,7 @@ internal class ForData(app: AppState, cacheEvictionPolicy: CacheEvictionPolicy) 
     }
     val blendValuesCache = newLoadingCache<BlendName, BlendValue>(cacheEvictionPolicy) {
         val bv = it.value.encode()
-        app.doRequest<BlendValue>(NetRequestMethod.Get, "/api/data/blendds/$bv")
+        app.doRequest<BlendValue>(NetRequestMethod.Get, "/api/data/blends/$bv")
     }
     val frequencyValuesCache = newLoadingCache<FrequencyName, FrequencyValue>(cacheEvictionPolicy) {
         val fv = it.value.encode()
