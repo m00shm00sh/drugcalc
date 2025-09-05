@@ -238,12 +238,10 @@ private fun ForData.handleDataListDetail() = discardRepl { (pos, _, _, out) ->
                 ?: pos.firstOrNull()?.let(::FrequencyName)
                 ?: throw IllegalArgumentException("expected frequency name")
             val newEntry = newEntries.frequencies[what]
-            val details =
-                when {
-                    newEntry != null -> newEntry
-                    else -> frequencyValuesCache.get(what)
-                }
-            out.send(details.toString().asLine())
+            when {
+                newEntry != null -> newEntry
+                else -> frequencyValuesCache.get(what)
+            }
         }
 
         null -> {
