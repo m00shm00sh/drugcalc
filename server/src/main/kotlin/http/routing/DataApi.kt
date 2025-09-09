@@ -9,6 +9,8 @@ import com.moshy.drugcalc.common.oneOf
 import com.moshy.ProxyMap
 import com.moshy.drugcalc.calc.calc.getTransformersInfo
 import com.moshy.drugcalc.server.http.routing.util.*
+import com.moshy.drugcalc.server.http.routing.util.UrlStringSerializer.Companion.encode
+import com.moshy.drugcalc.server.util.AccessException
 import com.moshy.drugcalc.server.util.AppConfig
 import com.moshy.drugcalc.types.calccommand.TransformerInfo
 import io.ktor.resources.*
@@ -90,10 +92,14 @@ internal fun Route.configureDataRoutes(
     }
     authenticatedAsAdmin {
         post<DataRoute.Compounds, Map<CompoundName, CompoundInfo>, Unit> { _, insertMap ->
-            dataController.putEntries(Data(compounds = insertMap))
+            requireOperationSucceeded {
+                dataController.putEntries(Data(compounds = insertMap))
+            }
         }
         patch<DataRoute.Compounds, Map<CompoundName, ProxyMap<CompoundInfo>>, Unit> { _, deltaMap ->
-            dataController.updateCompounds(deltaMap)
+            requireOperationSucceeded {
+                dataController.updateCompounds(deltaMap)
+            }
         }
         delete<DataRoute.Compounds, Unit> { _ ->
             requireOperationSucceeded {
@@ -225,12 +231,12 @@ internal fun Route.configureDataRoutes(
 }
 
 private inline fun requireOperationSucceeded(block: () -> Boolean) =
-    require(block()) {
+    require(remapUOE(block)) {
         "operation failed"
     }
 
 private inline fun checkedDelete(name: Any, block: () -> Boolean) {
-    if (!block())
+    if (!remapUOE(block))
         throw NoSuchElementException("$name not found")
 }
 
@@ -247,3 +253,17 @@ private inline fun <R> remapResolutionFailure(block: () -> R) =
         }
         throw e
     }
+
+// Ktor throws a UOE when deserialization fails so we need to remap to a more specific failure to trigger 403 handler
+@Throws(AccessException::class)
+private inline fun <R> remapUOE(block: () -> R) =
+    try {
+        block()
+    } catch (e: UnsupportedOperationException) {
+        throw AccessException(e.message, e.cause)
+    }
+
+/** Thrower supplier for saving exception messages. */
+private fun throwMissing(cat: String, name: String): () -> Nothing =
+    { throw NoSuchElementException("for $cat $name") }
+

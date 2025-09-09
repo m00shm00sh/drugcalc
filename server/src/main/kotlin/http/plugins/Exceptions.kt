@@ -6,6 +6,7 @@ import io.ktor.http.*
 import io.ktor.serialization.JsonConvertException
 import io.ktor.server.application.*
 import io.ktor.server.plugins.BadRequestException
+import io.ktor.server.plugins.CannotTransformContentToTypeException
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 
@@ -17,6 +18,7 @@ internal fun Application.configureExceptions(sendUnexpectedExceptionStackTrace: 
             when (cause) {
                 is BadRequestException,
                 is JsonConvertException,
+                is UnsupportedOperationException,
                 is IllegalArgumentException -> {
                     logger.debug("400: {}", cause.message)
                     call.respondText(text = "400: ${cause.message}", status = HttpStatusCode.BadRequest)
@@ -27,8 +29,7 @@ internal fun Application.configureExceptions(sendUnexpectedExceptionStackTrace: 
                     call.respondText(text = "404: ${cause.message}", status = HttpStatusCode.NotFound)
                 }
 
-                is AccessException,
-                is UnsupportedOperationException -> {
+                is AccessException -> {
                     logger.debug("403: {}", cause.message)
                     call.respondText(text = "403: ${cause.message}", status = HttpStatusCode.Forbidden)
                 }
