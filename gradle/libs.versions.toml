@@ -24,7 +24,7 @@ r2-pem-keystore-version = "0.3"
 
 plotlykt-version = "0.7.2"
 
-kproxymap-version = "v0.13.0"
+kproxymap-version = "v0.14.0"
 kcontainers-version = "v0.7.0"
 krepl-version = "v0.7.0"
 

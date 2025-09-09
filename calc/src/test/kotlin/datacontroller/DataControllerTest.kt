@@ -442,11 +442,11 @@ internal class DataControllerTest {
     fun `updateCompounds f-invalid`() = runTestWithTempController(RO(RoFlag.FORBID_CLEAR)) {
         val u0Name = CompoundName(CompoundBase("testosterone"), "enanthate")
         val u0Time = (-1).toDuration(DurationUnit.DAYS)
-        val u0Data = ProxyMap<CompoundInfo>("halfLife" to u0Time)
 
         CheckArg.throws<IllegalArgumentException, Unit>(Unit,
-            "nonpositive halfLife"
+            "nonpositive halfLife (-1d)"
         ).invokeSuspend {
+            val u0Data = ProxyMap<CompoundInfo>("halfLife" to u0Time)
            updateCompounds(mapOf(u0Name to u0Data))
         }
     }

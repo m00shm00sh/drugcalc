@@ -2,6 +2,7 @@ package com.moshy.drugcalc.types.dataentry
 
 import com.moshy.drugcalc.common.checkValues
 import com.moshy.ProxyMap
+import com.moshy.proxymap.registerValidator
 import kotlin.time.Duration
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
@@ -129,11 +130,29 @@ data class CompoundInfo(
     val note: String = "",
 ) {
     init {
-        require(halfLife.isPositive()) {
-            "nonpositive halfLife ($halfLife)"
+        validateHalflife(halfLife)
+        validatePctactive(pctActive)
+    }
+
+    companion object {
+        @JvmStatic
+        internal fun validateHalflife(d: Duration) {
+            require(d.isPositive()) {
+                "nonpositive halfLife ($d)"
+            }
         }
-        require(pctActive > 0 && pctActive <= 1.0) {
-            "pctActive not in (0.0, 1.0] (got $pctActive)"
+        @JvmStatic
+        internal fun validatePctactive(p: Double) {
+            require(p > 0 && p <= 1.0) {
+                "pctActive not in (0.0, 1.0] (got $p)"
+            }
+        }
+
+        init {
+            registerValidator(
+                CompoundInfo::halfLife to ::validateHalflife,
+                CompoundInfo::pctActive to ::validatePctactive
+            )
         }
     }
 }
