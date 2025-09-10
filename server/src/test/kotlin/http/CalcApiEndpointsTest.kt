@@ -6,6 +6,7 @@ import com.moshy.drugcalc.calctest.DataControllerTestSupport.Companion.RO_ALL
 import com.moshy.drugcalc.server.http.routing.util.UrlStringSerializer.Companion.encode
 import com.moshy.drugcalc.server.http.util.*
 import com.moshy.ProxyMap
+import com.moshy.drugcalc.common.runIf
 import com.moshy.drugcalc.commontest.CheckArg
 import com.moshy.drugcalc.commontest.assertGreater
 import com.moshy.drugcalc.commontest.assertSetsAreEqual
@@ -162,7 +163,7 @@ private fun <V> StringBuilder.addQueryKV(key: String, value: V?, encode: Boolean
         append('&')
     append(key)
     append('=')
-    append(value.toString_().run { if (encode) encode() else this })
+    append(value.toString_().runIf(encode) { encode() })
 }
 private fun <V> StringBuilder.addQueryKVList(key: String, value: List<V?>, encode: Boolean = false) {
     if (!isEmpty())
