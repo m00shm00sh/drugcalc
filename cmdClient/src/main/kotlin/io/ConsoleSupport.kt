@@ -1,6 +1,9 @@
 package com.moshy.drugcalc.cmdclient.io
 
 import com.moshy.drugcalc.common.toTruthy
+import com.moshy.drugcalc.types.dataentry.BlendName
+import com.moshy.drugcalc.types.dataentry.CompoundBase
+import com.moshy.drugcalc.types.dataentry.FrequencyName
 import com.moshy.krepl.InputReceiveChannel
 import com.moshy.krepl.OutputSendChannel
 import com.moshy.krepl.asNonLine
@@ -18,3 +21,8 @@ internal fun quote(s: String) =
         -1 -> s
         else -> "\"" + s.replace("\"", "\\\"") + "\""
     }
+
+internal fun quote(s: CompoundBase) = quote(s.value)
+internal fun quote(s: BlendName) = quote(s.value)
+internal fun quote(s: FrequencyName) = quote(s.value)
+

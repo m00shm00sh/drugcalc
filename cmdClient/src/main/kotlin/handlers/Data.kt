@@ -1274,10 +1274,6 @@ private fun <T: Comparable<T>> LinesBuilder.appendLass(lass: ListAsSortedSet<T>,
     }
 }
 
-private fun quote(s: CompoundBase) = quote(s.value)
-private fun quote(s: BlendName) = quote(s.value)
-private fun quote(s: FrequencyName) = quote(s.value)
-
 private val compoundInfoRemap = mapOf(
     id(name(CompoundInfo::halfLife)),
     aliasName("halflife", CompoundInfo::halfLife),
