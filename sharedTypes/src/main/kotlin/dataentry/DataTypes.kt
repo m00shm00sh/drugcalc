@@ -2,6 +2,7 @@ package com.moshy.drugcalc.types.dataentry
 
 import com.moshy.drugcalc.common.checkValues
 import com.moshy.ProxyMap
+import com.moshy.drugcalc.common.conditional
 import com.moshy.proxymap.registerValidator
 import kotlin.time.Duration
 import kotlinx.serialization.*
@@ -15,6 +16,16 @@ data class Data(
     val frequencies: FrequenciesMap = emptyMap()
 ) {
     fun isNotEmpty() = listOf(compounds, blends, frequencies).any { it.isNotEmpty() }
+
+    override fun toString(): String = buildString {
+        val b = conditional()
+        append("Data(")
+        b.appendIfNotNullOrEmpty(::compounds, compounds)
+        b.appendIfNotNullOrEmpty(::blends, blends)
+        b.appendIfNotNullOrEmpty(::frequencies, frequencies)
+        append(")")
+    }
+
 }
 
 typealias CompoundsMap = Map<CompoundName, CompoundInfo>

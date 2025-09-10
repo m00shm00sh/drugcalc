@@ -1,11 +1,13 @@
 package com.moshy.drugcalc.types
 
 import com.moshy.drugcalc.commontest.CheckArg
+import com.moshy.drugcalc.commontest.assertEquals
 import com.moshy.drugcalc.types.calccommand.CycleDescription
 import com.moshy.drugcalc.types.dataentry.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.time.*
+import kotlin.time.Duration.Companion.days
 
 internal class DataTypesTest {
     @Test
@@ -34,6 +36,49 @@ internal class DataTypesTest {
                     FrequencyName("a") to FrequencyValue(listOf(1.toDuration(DurationUnit.DAYS)))
                 )
             ).isNotEmpty())
+    }
+
+    @Test
+    fun `test Data toString`() {
+        val c = mapOf(CompoundName("a") to CompoundInfo(1.days))
+        val b = mapOf(
+            BlendName("b") to
+                BlendValue(mapOf(
+                    CompoundName("c") to 1.0,
+                    CompoundName("d") to 1.0,
+                )
+            )
+        )
+        val f = mapOf(FrequencyName("a") to FrequencyValue(listOf(1.days)))
+        val cStr = c.toString()
+        val bStr = b.toString()
+        val fStr = f.toString()
+        for (i in 0..7) {
+            var d = Data()
+            var exp = "Data("
+            var did1 = false
+            if (i and 1 == 0) {
+                d = d.copy(compounds = c)
+                exp += "compounds=$cStr"
+                did1 = true
+            }
+            if (i and 2 == 0) {
+                d = d.copy(blends = b)
+                if (did1)
+                    exp += ", "
+                exp += "blends=$bStr"
+                did1 = true
+            }
+            if (i and 4 == 0) {
+                d = d.copy(frequencies = f)
+                if (did1)
+                    exp += ", "
+                exp += "frequencies=$fStr"
+                did1 = true
+            }
+            exp += ")"
+            assertEquals(exp, d.toString())
+        }
     }
 
     @Test
