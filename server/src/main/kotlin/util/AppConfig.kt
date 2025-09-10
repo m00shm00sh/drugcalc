@@ -74,6 +74,7 @@ internal object AppConfig {
         ConfigLoaderBuilder.default()
             .addCommandLineSource(args, prefix = "-D")
             .addResourceSource("/application.conf")
+            .addFileSource("application.conf", optional = true)
             .build()
             .loadConfigOrThrow<App>()
 }
