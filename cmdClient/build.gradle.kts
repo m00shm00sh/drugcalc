@@ -26,8 +26,6 @@ dependencies {
     implementation(libs.bundles.ktor.client)
     implementation(libs.krepl)
 
-    implementation(libs.bundles.hoplite)
-
     testImplementation(libs.kx.coroutines.test)
     testImplementation(project(":sharedTestLogic"))
 }

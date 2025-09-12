@@ -46,7 +46,7 @@ internal suspend inline fun <reified O, reified I : Any> AppState.doRequest(
 ): O {
     try {
         logger.debug("net: {} {}", method.name, urlString)
-        val connectParams = forConnect.connect!!
+        val connectParams = forConnect.connect
         val client = forConnect.getClient()
         val jwtToken =
             if (flags.contains(NetRequestFlag.AUTH_JWT))

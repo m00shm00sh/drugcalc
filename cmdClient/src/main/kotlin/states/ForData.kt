@@ -10,13 +10,19 @@ import com.moshy.ProxyMap
 import com.moshy.containers.ListAsSortedSet
 import com.moshy.containers.assertIsSortedSet
 import com.moshy.containers.buildCopy
-import java.lang.IllegalArgumentException
+import kotlinx.serialization.*
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.*
+import java.lang.ref.WeakReference
 
-internal class ForData(private val app: AppState) {
+@Serializable(with = ForDataSerializer::class)
+internal class ForData(initialData: Data = Data()) {
     val logger = logger("${AppState.NAME}:data")
 
     var currentSection: CurrentSection? = null
-    var newEntries: Data = Data()
+    var newEntries: Data = initialData
+
+    var app: WeakReference<AppState>? = null
 
     sealed interface CurrentSection {
         // save name to avoid a type check
@@ -60,7 +66,7 @@ internal class ForData(private val app: AppState) {
     }
 
     suspend fun fetchCompoundBaseNames() =
-        app.fetchSortedList<CompoundBase>("/api/data/compounds").run {
+        checkNotNull(app?.get()).fetchSortedList<CompoundBase>("/api/data/compounds").run {
             buildCopy {
                 val local = newEntries.compounds.keys
                 val toAdd = local.map { it.compound }
@@ -72,7 +78,7 @@ internal class ForData(private val app: AppState) {
         }
 
     suspend fun fetchCompoundVariantNames(cb: CompoundBase) =
-        app.fetchSortedList<String>("/api/data/compounds/${cb.value.encode()}").run {
+        checkNotNull(app?.get()).fetchSortedList<String>("/api/data/compounds/${cb.value.encode()}").run {
                 buildCopy {
                     val local = newEntries.compounds.keys
                     val toAdd = local.asSequence()
@@ -89,7 +95,7 @@ internal class ForData(private val app: AppState) {
             }
 
     suspend fun fetchBlendNames() =
-        app.fetchSortedList<BlendName>("/api/data/blends").run {
+        checkNotNull(app?.get()).fetchSortedList<BlendName>("/api/data/blends").run {
             buildCopy {
                 val local = newEntries.blends.keys
                 addAll(local)
@@ -100,7 +106,7 @@ internal class ForData(private val app: AppState) {
         }
 
     suspend fun fetchFrequencyNames() =
-        app.fetchSortedList<FrequencyName>("/api/data/frequencies").run {
+        checkNotNull(app?.get()).fetchSortedList<FrequencyName>("/api/data/frequencies").run {
             buildCopy {
                 addAll(newEntries.frequencies.keys)
                 (currentSection as? CurrentSection.Frequencies)?.let { edit ->
@@ -114,7 +120,7 @@ internal class ForData(private val app: AppState) {
         (currentSection as? CurrentSection.Compounds)?.let { edit ->
             edit.editPage[cn]?.let { return it }
         }
-        return app.doRequest<CompoundInfo>(NetRequestMethod.Get,
+        return checkNotNull(app?.get()).doRequest<CompoundInfo>(NetRequestMethod.Get,
             "/api/data/compounds" +
                 "/${cn.compound.value.encode()}" +
                 "/${cn.variant.takeIf { it.isNotEmpty() }?.encode() ?: "-"}"
@@ -126,7 +132,7 @@ internal class ForData(private val app: AppState) {
         (currentSection as? CurrentSection.Blends)?.let { edit ->
             edit.editPage[bn]?.let { return it }
         }
-        return app.doRequest<BlendValue>(NetRequestMethod.Get,
+        return checkNotNull(app?.get()).doRequest<BlendValue>(NetRequestMethod.Get,
             "/api/data/blends" +
                 "/${bn.value.encode()}"
         )
@@ -137,12 +143,11 @@ internal class ForData(private val app: AppState) {
         (currentSection as? CurrentSection.Frequencies)?.let { edit ->
             edit.editPage[fn]?.let { return it }
         }
-        return app.doRequest<FrequencyValue>(NetRequestMethod.Get,
+        return checkNotNull(app?.get()).doRequest<FrequencyValue>(NetRequestMethod.Get,
             "/api/data/frequencies" +
                 "/${fn.value.encode()}"
         )
     }
-
 }
 
 internal fun <R> Data.mapAll(block: (Map<out Comparable<*>, Any>) -> R): List<R> =
@@ -172,4 +177,16 @@ private fun produceFrequencyName(tokens: List<String>): FrequencyName {
     val fn = tokens.getOrNull(0)?.let(::FrequencyName)
         ?: throw IllegalArgumentException("expected frequency name")
     return fn
+}
+
+internal object ForDataSerializer : KSerializer<ForData> {
+    val dataSerializer = serializer<Data>()
+
+    override val descriptor = SerialDescriptor($$"ForData$Data", dataSerializer.descriptor)
+
+    override fun serialize(encoder: Encoder, value: ForData) =
+        encoder.encodeSerializableValue(dataSerializer, value.newEntries)
+
+    override fun deserialize(decoder: Decoder): ForData =
+        ForData(decoder.decodeSerializableValue(dataSerializer))
 }

@@ -8,19 +8,23 @@ import com.moshy.drugcalc.cmdclient.states.ForLogin
 import com.moshy.krepl.OutputSendChannel
 import com.moshy.krepl.Repl
 import com.moshy.krepl.asLine
+import kotlinx.serialization.*
+import java.lang.ref.WeakReference
 
+@Serializable
 internal class AppState {
+    @Transient
     val logger = logger(NAME)
 
     val forConnect = ForConnect()
 
     val forLogin = ForLogin()
 
-    val forData = ForData(this)
+    val forData = ForData()
 
     val forCalc = ForCalc()
 
-    var pageSize: Int = 10
+    var pageSize: Int = 0
 
     internal suspend fun maybePaginate(repl: Repl, lines: List<String>, out: OutputSendChannel) {
         logger.debug("paginate {} lines with {} pageSize", lines.size, pageSize)
@@ -31,6 +35,11 @@ internal class AppState {
                 out.send("\t$line".asLine())
             }
     }
+
+    fun fromConfig() =
+        this.apply {
+            forData.app = WeakReference(this)
+        }
 
     companion object {
         const val NAME = "CliClient"

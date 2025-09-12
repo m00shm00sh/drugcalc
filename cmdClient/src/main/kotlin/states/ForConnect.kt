@@ -9,13 +9,16 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.*
 import java.lang.IllegalArgumentException
 import java.security.cert.X509Certificate
 import javax.net.ssl.*
 
+@Serializable
 internal class ForConnect {
+    @Serializable
     data class ConnectParams(
-        val addr: String,
+        val addr: String = "http://127.0.0.1:8080",
         val insecure: Boolean = false,
     ) {
         fun makeConnectableUrl(path: String): String {
@@ -25,15 +28,15 @@ internal class ForConnect {
     }
     private val logger = logger("${AppState.NAME}:connect")
 
-    var connect: ConnectParams? = null
+    var connect: ConnectParams = ConnectParams()
+    @Transient
     private var client: HttpClient? = null
 
     suspend fun getClient(): HttpClient {
         client?.let { return it }
-        val connectParams = connect ?: throw IllegalArgumentException("unconfigured connect")
 
         val client = HttpClient(Java) {
-            if (connectParams.insecure)
+            if (connect.insecure)
                 engine {
                     config {
                         sslContext(insecureTlsContext())
@@ -43,7 +46,7 @@ internal class ForConnect {
                 json()
             }
         }
-        val req = client.get(connectParams.makeConnectableUrl("/api/"))
+        val req = client.get(connect.makeConnectableUrl("/api/"))
         require(req.status == HttpStatusCode.OK) {
             throw RuntimeException("heartbeat: http ${req.status}")
         }

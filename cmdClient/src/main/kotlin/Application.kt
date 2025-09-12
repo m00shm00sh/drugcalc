@@ -1,28 +1,31 @@
 package com.moshy.drugcalc.cmdclient
 
 import com.moshy.drugcalc.cmdclient.handlers.*
-import com.moshy.drugcalc.cmdclient.states.ForConnect
-import com.moshy.drugcalc.cmdclient.util.AppConfig
-import com.moshy.drugcalc.common.CacheEvictionPolicy
-import com.moshy.drugcalc.types.login.UserRequest
 import com.moshy.krepl.Repl
+import kotlinx.serialization.json.Json
+import java.io.File
 
-suspend fun main(args: Array<String>) {
-    val config = AppConfig.config(args)
+suspend fun main() {
+    val configFile = File("dc-client.json")
+    val state =
+        when {
+            configFile.exists() ->
+                Json.decodeFromString<AppState>(configFile.readText())
+
+            else ->
+                AppState()
+        }.fromConfig()
+
 
     val repl = Repl()
-    val state = AppState().apply {
-        with(config) {
-            forConnect.connect = conn
-            forLogin.login = login
-            pageSize?.let {
-                this@apply.pageSize = it
-            }
-        }
-    }
     repl["connect"](state.configureConnect())
     repl["login"](state.configureLogin())
     repl["data"](state.configureData())
     repl["calc"](state.configureCalc())
     repl.run()
+
+    val prettyJson = Json { prettyPrint = true }
+    prettyJson.encodeToString(state).let {
+        configFile.writeText(it)
+    }
 }

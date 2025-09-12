@@ -116,7 +116,7 @@ internal fun AppState.configureData(): Repl.EntryBuilder.() -> Unit = {
             help = "remove local (uncommitted) entry(es) (semantics depend on current section)"
             usage = """
                 $name
-                variant {all=truthy}? | compound-name variant {all=truthy}? |
+                compound-name variant {all=truthy}? |
                 blend-name | frequency-name    
             """.trimIndent()
             handler = forData.handleDataRemoveLocal()
@@ -125,7 +125,7 @@ internal fun AppState.configureData(): Repl.EntryBuilder.() -> Unit = {
             help = "remove remote (server) entry(es) (semantics depend on current section)"
             usage = """
                 $name
-                variant {all=truthy}? | compound-name variant {all=truthy}? |
+                compound-name variant {all=truthy}? |
                 blend-name | frequency-name    
             """.trimIndent()
             handler = forData.handleDataRemoveRemote(app)
@@ -166,7 +166,6 @@ private fun Repl.registerSectionalHandlersForNew(forData: ForData) {
         val uCompoundKw = "{halfLife|pctActive|note}*"
         usage = """
                 $name
-                variant $uCompoundKw |
                 compound-name variant $uCompoundKw
                 blend-name {.note=note} {blend-component=dose}+ 
                 frequency-name frequency-value+
@@ -184,7 +183,7 @@ private fun Repl.registerSectionalHandlersForUpdate(forData: ForData) {
     this["update"] {
         help = "add update entry (semantics depend on current section)"
         val uCompoundKw = "{halfLife|pctActive|note}*"
-        usage = "$name (variant $uCompoundKw | compound-name variant $uCompoundKw)"
+        usage = "$name compound-name variant $uCompoundKw"
         handler = forData.handleDataUpdate()
     }
 }
@@ -768,17 +767,18 @@ private fun LinesBuilder.appendCompoundVariants(k: CompoundBase, v: Collection<S
 
 private fun <K> LinesBuilder.appendSet(s: Set<K>, name: String = "", indent: Int = 0) {
     val tabs = "\t".repeat(indent)
-    val tabsNext = "\t".repeat(indent + 1)
     if (s.isEmpty())
         return
     if (name.isNotEmpty())
         add("$tabs$name")
+    val indentItem = indent + (if (name.isNotEmpty()) 1 else 0)
+    val tabsNext = "\t".repeat(indentItem)
     s.forEach {
         add("$tabsNext$it")
     }
 }
 
-private fun <T: Comparable<T>> LinesBuilder.appendLass(lass: ListAsSortedSet<T>, indent: Int = 1) {
+private fun <T: Comparable<T>> LinesBuilder.appendLass(lass: ListAsSortedSet<T>, indent: Int = 0) {
     val tabs = "\t".repeat(indent)
     lass.forEach {
         add("$tabs$it")

@@ -7,12 +7,17 @@ import com.moshy.drugcalc.cmdclient.io.doRequest
 import com.moshy.drugcalc.common.logger
 import com.moshy.drugcalc.types.login.LoginResponse
 import com.moshy.drugcalc.types.login.UserRequest
+import kotlinx.serialization.*
 import java.lang.IllegalArgumentException
 
+@Serializable
 internal class ForLogin {
-    val logger = logger("${AppState.Companion.NAME}:login")
+    @Transient
+    val logger = logger("${AppState.NAME}:login")
 
     var login: UserRequest? = null
+
+    @Transient
     private var token: String? = null
 
     suspend fun getLoginToken(app: AppState): String {
