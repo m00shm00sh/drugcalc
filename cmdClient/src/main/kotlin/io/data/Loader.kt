@@ -2,6 +2,7 @@ package com.moshy.drugcalc.cmdclient.io.data
 
 import com.moshy.drugcalc.types.dataentry.*
 import com.moshy.ProxyMap
+import org.jetbrains.annotations.Blocking
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.convertTo
 import org.jetbrains.kotlinx.dataframe.io.readCsv
@@ -9,6 +10,7 @@ import org.jetbrains.kotlinx.dataframe.io.readExcel
 import java.io.File
 import java.util.Arrays
 
+@Blocking
 internal fun loadCompoundsUpdater(file: String): Map<CompoundName, ProxyMap<CompoundInfo>> =
     @Suppress("MoveLambdaOutsideParentheses")
     decode(
@@ -17,6 +19,7 @@ internal fun loadCompoundsUpdater(file: String): Map<CompoundName, ProxyMap<Comp
         { file, type -> loadDataframe<_, _, CompoundsUpdater>(file, type) }
     )
 
+@Blocking
 internal fun loadCompounds(file: String): Map<CompoundName, CompoundInfo> =
     @Suppress("MoveLambdaOutsideParentheses")
     decode(
@@ -25,6 +28,7 @@ internal fun loadCompounds(file: String): Map<CompoundName, CompoundInfo> =
         { file, type -> loadDataframe<_, _, Compound>(file, type) }
     )
 
+@Blocking
 internal fun loadBlends(file: String): Map<BlendName, BlendValue> =
     @Suppress("MoveLambdaOutsideParentheses")
     decode(
@@ -33,6 +37,7 @@ internal fun loadBlends(file: String): Map<BlendName, BlendValue> =
         { file, type -> loadDataframe<_, _, Blend>(file, type) }
     )
 
+@Blocking
 internal fun loadFrequencies(file: String): Map<FrequencyName, FrequencyValue> =
     @Suppress("MoveLambdaOutsideParentheses")
     decode(
@@ -51,6 +56,7 @@ private enum class DfType {
     XCSV,
 }
 
+@Blocking
 private inline fun <reified R> decode(filename: String, onJson: (String) -> R, onDataframe: (String, DfType) -> R): R {
     val fileStart: ByteArray = File(filename).inputStream().use {
         it.readNBytes(64)
