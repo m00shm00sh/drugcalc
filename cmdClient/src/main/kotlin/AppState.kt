@@ -9,14 +9,14 @@ import com.moshy.krepl.OutputSendChannel
 import com.moshy.krepl.Repl
 import com.moshy.krepl.asLine
 
-internal class AppState(cacheEvictionPolicy: CacheEvictionPolicy) {
+internal class AppState {
     val logger = logger(NAME)
 
     val forConnect = ForConnect()
 
     val forLogin = ForLogin()
 
-    val forData = ForData(this, cacheEvictionPolicy)
+    val forData = ForData(this)
 
     val forCalc = ForCalc()
 

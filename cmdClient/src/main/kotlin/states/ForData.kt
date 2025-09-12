@@ -9,96 +9,140 @@ import com.moshy.drugcalc.types.dataentry.*
 import com.moshy.ProxyMap
 import com.moshy.containers.ListAsSortedSet
 import com.moshy.containers.assertIsSortedSet
+import com.moshy.containers.buildCopy
+import java.lang.IllegalArgumentException
 
-internal class ForData(app: AppState, cacheEvictionPolicy: CacheEvictionPolicy) {
+internal class ForData(private val app: AppState) {
     val logger = logger("${AppState.NAME}:data")
 
     var currentSection: CurrentSection? = null
     var newEntries: Data = Data()
-    var updateEntries: DataUpdater = DataUpdater()
 
     sealed interface CurrentSection {
-        class Compounds(val compound: CompoundBase? = null) : CurrentSection
-        object Blends : CurrentSection
-        object Frequencies : CurrentSection
+        // save name to avoid a type check
+        val name: String
+
+        val editPage: MutableMap<out Comparable<*>, out Any>
+        fun produceName(tokens: List<String>): Any
+
+        class Compounds(
+            override val name: String = "compounds",
+            override val editPage: MutableMap<CompoundName, CompoundInfo> = mutableMapOf(),
+        ) : CurrentSection {
+            override fun produceName(tokens: List<String>) =
+                produceCompoundName(tokens)
+        }
+
+        class Blends(
+            override val name: String = "blends",
+            override val editPage: MutableMap<BlendName, BlendValue> = mutableMapOf(),
+        ) : CurrentSection {
+            override fun produceName(tokens: List<String>) =
+                produceBlendName(tokens)
+        }
+
+        class Frequencies(
+            override val name: String = "frequencies",
+            override val editPage: MutableMap<FrequencyName, FrequencyValue> = mutableMapOf(),
+        ) : CurrentSection {
+            override fun produceName(tokens: List<String>) =
+                produceFrequencyName(tokens)
+        }
+
+        class CompoundsUpdater(
+            override val name: String = "compounds[updater]",
+            override val editPage: MutableMap<CompoundName, ProxyMap<CompoundInfo>> = mutableMapOf()
+        ) : CurrentSection {
+            override fun produceName(tokens: List<String>) = produceCompoundName(tokens)
+
+        }
+
     }
 
-    data class DataUpdater(
-        val compounds: Map<CompoundName, ProxyMap<CompoundInfo>> = emptyMap(),
-    ) {
-        fun isNotEmpty() = compounds.isNotEmpty()
-    }
+    suspend fun fetchCompoundBaseNames() =
+        app.fetchSortedList<CompoundBase>("/api/data/compounds").run {
+            buildCopy {
+                val local = newEntries.compounds.keys
+                val toAdd = local.map { it.compound }
+                addAll(toAdd)
+                (currentSection as? CurrentSection.Compounds)?.let { edit ->
+                    addAll(edit.editPage.keys.map { it.compound })
+                }
+            }
+        }
 
-    val compoundBasesCache = newOneToManyUnitLoadingCache<CompoundBase>(cacheEvictionPolicy) {
-        app.fetchSortedList("/api/data/compounds")
-    }
-    val compoundVariantsCache = newLoadingCache<CompoundBase, ListAsSortedSet<String>>(cacheEvictionPolicy) {
-        val base = it.value.encode()
-        // NOTE: throws NoSuchElementException on non-match key
-        app.fetchSortedList("/api/data/compounds/$base")
-    }
-    val blendNamesCache = newOneToManyUnitLoadingCache<BlendName>(cacheEvictionPolicy) {
-        app.fetchSortedList("/api/data/blends")
-    }
-    val frequencyNamesCache = newOneToManyUnitLoadingCache<FrequencyName>(cacheEvictionPolicy) {
-        app.fetchSortedList("/api/data/frequencies")
-    }
-    val compoundValuesCache = newLoadingCache<CompoundName, CompoundInfo>(cacheEvictionPolicy) {
-        val cbv = it.compound.value.encode()
-        val cvv = it.variant.encode()
-        app.doRequest<CompoundInfo>(NetRequestMethod.Get, "/api/data/compounds/$cbv/$cvv")
-    }
-    val blendValuesCache = newLoadingCache<BlendName, BlendValue>(cacheEvictionPolicy) {
-        val bv = it.value.encode()
-        app.doRequest<BlendValue>(NetRequestMethod.Get, "/api/data/blends/$bv")
-    }
-    val frequencyValuesCache = newLoadingCache<FrequencyName, FrequencyValue>(cacheEvictionPolicy) {
-        val fv = it.value.encode()
-        app.doRequest<FrequencyValue>(NetRequestMethod.Get, "/api/data/frequencies/$fv")
-    }
-    val allNameCaches = listOf(compoundBasesCache, compoundVariantsCache, blendNamesCache, frequencyNamesCache)
-    val allValueCaches = listOf(compoundValuesCache, blendValuesCache, frequencyValuesCache)
+    suspend fun fetchCompoundVariantNames(cb: CompoundBase) =
+        app.fetchSortedList<String>("/api/data/compounds/${cb.value.encode()}").run {
+                buildCopy {
+                    val local = newEntries.compounds.keys
+                    val toAdd = local.asSequence()
+                        .filter { it.compound == cb }
+                        .map { it.variant }
+                    addAll(toAdd)
+                    (currentSection as? CurrentSection.Compounds)?.let { edit ->
+                        edit.editPage.keys.asSequence()
+                            .filter { it.compound == cb }
+                            .map { it.variant }
+                            .let(::addAll)
+                    }
+                }
+            }
 
-    sealed interface LastEntry {
-        class Compound(override val name: CompoundName) : LastEntry
-        class Blend(override val name: BlendName) : LastEntry
-        class Frequency(override val name: FrequencyName) : LastEntry
+    suspend fun fetchBlendNames() =
+        app.fetchSortedList<BlendName>("/api/data/blends").run {
+            buildCopy {
+                val local = newEntries.blends.keys
+                addAll(local)
+                (currentSection as? CurrentSection.Blends)?.let { edit ->
+                    addAll(edit.editPage.keys)
+                }
+            }
+        }
 
-        val name: Comparable<*>
-    }
+    suspend fun fetchFrequencyNames() =
+        app.fetchSortedList<FrequencyName>("/api/data/frequencies").run {
+            buildCopy {
+                addAll(newEntries.frequencies.keys)
+                (currentSection as? CurrentSection.Frequencies)?.let { edit ->
+                    addAll(edit.editPage.keys)
+                }
+            }
+        }
 
-    enum class LastEdit {
-        NEW, UPDATE,
-    }
-
-    var lastEntry: LastEntry? = null
-    var lastEdit: LastEdit? = null
-    fun clearEditState() {
-        lastEdit = null
-        lastEntry = null
-    }
-
-    /**
-     *  If [lastEdit] is [last] and [LastEntry] is [Entry],
-     *  then test entry name of type [Name] with [matcher] and [clearEditState].
-     */
-    inline fun <reified Entry : LastEntry, reified Name : Comparable<Name>> clearEditStateIfMatch(
-        last: LastEdit,
-        matcher: (Name) -> Boolean
-    ) {
-        if (lastEdit == last
-            && ((lastEntry as? Entry)?.name?.let { matcher(it as Name) } ?: false)
+    suspend fun fetchCompoundValue(cn: CompoundName): CompoundInfo {
+        newEntries.compounds[cn]?.let { return it }
+        (currentSection as? CurrentSection.Compounds)?.let { edit ->
+            edit.editPage[cn]?.let { return it }
+        }
+        return app.doRequest<CompoundInfo>(NetRequestMethod.Get,
+            "/api/data/compounds" +
+                "/${cn.compound.value.encode()}" +
+                "/${cn.variant.takeIf { it.isNotEmpty() }?.encode() ?: "-"}"
         )
-            clearEditState()
     }
 
-    /** If [LastEntry] is [Entry], then test entry name of type [Name] with [matcher] and [clearEditState]. */
-    inline fun <reified Entry : LastEntry, reified Name : Comparable<Name>> clearEditStateIfMatch(
-        matcher: (Name) -> Boolean
-    ) {
-        if ((lastEntry as? Entry)?.name?.let { matcher(it as Name) } ?: false)
-            clearEditState()
+    suspend fun fetchBlendValue(bn: BlendName): BlendValue {
+        newEntries.blends[bn]?.let { return it }
+        (currentSection as? CurrentSection.Blends)?.let { edit ->
+            edit.editPage[bn]?.let { return it }
+        }
+        return app.doRequest<BlendValue>(NetRequestMethod.Get,
+            "/api/data/blends" +
+                "/${bn.value.encode()}"
+        )
     }
+
+    suspend fun fetchFrequencyValue(fn: FrequencyName): FrequencyValue {
+        newEntries.frequencies[fn]?.let { return it }
+        (currentSection as? CurrentSection.Frequencies)?.let { edit ->
+            edit.editPage[fn]?.let { return it }
+        }
+        return app.doRequest<FrequencyValue>(NetRequestMethod.Get,
+            "/api/data/frequencies" +
+                "/${fn.value.encode()}"
+        )
+    }
+
 }
 
 internal fun <R> Data.mapAll(block: (Map<out Comparable<*>, Any>) -> R): List<R> =
@@ -110,3 +154,22 @@ internal fun <R> Data.mapAll(block: (Map<out Comparable<*>, Any>) -> R): List<R>
 
 private suspend inline fun <reified T: Comparable<T>> AppState.fetchSortedList(endpoint: String): ListAsSortedSet<T> =
     doRequest<List<T>>(NetRequestMethod.Get, endpoint).assertIsSortedSet()
+
+private fun produceCompoundName(tokens: List<String>): CompoundName {
+    val base = tokens.getOrNull(0)?.let(::CompoundBase)
+        ?: throw IllegalArgumentException("expected compound name")
+    val variant = tokens.getOrElse(1) { "" }
+    return CompoundName(base, variant)
+}
+
+private fun produceBlendName(tokens: List<String>): BlendName {
+    val bn = tokens.getOrNull(0)?.let(::BlendName)
+        ?: throw IllegalArgumentException("expected blend name")
+    return bn
+}
+
+private fun produceFrequencyName(tokens: List<String>): FrequencyName {
+    val fn = tokens.getOrNull(0)?.let(::FrequencyName)
+        ?: throw IllegalArgumentException("expected frequency name")
+    return fn
+}

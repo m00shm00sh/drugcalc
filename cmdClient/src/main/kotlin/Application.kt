@@ -11,8 +11,7 @@ suspend fun main(args: Array<String>) {
     val config = AppConfig.config(args)
 
     val repl = Repl()
-    val cacheParams = CacheEvictionPolicy()
-    val state = AppState(cacheParams).apply {
+    val state = AppState().apply {
         with(config) {
             forConnect.connect = conn
             forLogin.login = login
