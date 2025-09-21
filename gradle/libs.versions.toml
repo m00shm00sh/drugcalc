@@ -55,6 +55,7 @@ ktor-server-body-limit = { module = "io.ktor:ktor-server-body-limit", version.re
 ktor-server-resources = { module = "io.ktor:ktor-server-resources", version.ref = "ktor-version" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor-version" }
 ktor-server-tls = { module = "io.ktor:ktor-network-tls-certificates", version.ref = "ktor-version" }
+ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor-version" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor-version" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor-version" }
 ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor-version" }
@@ -87,7 +88,7 @@ junit-launcher = {module = "org.junit.platform:junit-platform-launcher" }
 ktor-server = [ "ktor-server-core", "ktor-server-openapi", "ktor-server-content-negotiation",
         "ktor-serialization-kotlinx-json", "ktor-server-host-common", "ktor-server-status-pages",
         "ktor-server-auth", "ktor-server-auth-jwt", "ktor-server-body-limit", "ktor-server-resources",
-        "ktor-server-netty", "ktor-server-tls"
+        "ktor-server-netty", "ktor-server-tls", "ktor-server-cors"
     ]
 ktor-server-test = [ "ktor-server-test-host", "ktor-client-core", "ktor-client-content-negotiation" ]
 
