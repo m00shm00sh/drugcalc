@@ -72,7 +72,7 @@ internal object AppConfig {
         val datacontroller: DataController.Config = DataController.Config(),
         val http: Http,
         val jwt: Jwt,
-        val cors: Cors,// = Cors(),
+        val cors: Cors = Cors(),
     )
 
     fun config(args: Array<String>) =
