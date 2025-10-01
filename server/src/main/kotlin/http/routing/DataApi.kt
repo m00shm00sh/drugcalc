@@ -70,9 +70,21 @@ internal class DataRoute(val _from: UrlString? = null, val limit: Int? = null) {
     @Resource("transformers")
     internal class Transformers(val parent: DataRoute) {
         @Resource("names")
-        internal class Names(val parent: Transformers)
+        internal class Names(val parent: Transformers) {
+            @Resource("{_transformer}")
+            internal class Name(val parent: Names, val _transformer: UrlString) {
+                val transformer: String
+                    get() = _transformer.value
+            }
+        }
         @Resource("frequencies")
-        internal class Frequencies(val parent: Transformers)
+        internal class Frequencies(val parent: Transformers) {
+            @Resource("{_transformerFreq}")
+            internal class Name(val parent: Frequencies, val _transformerFreq: UrlString) {
+                val transformerFreq: FrequencyName
+                    get() = FrequencyName(_transformerFreq.value)
+            }
+        }
     }
 }
 
@@ -231,11 +243,21 @@ internal fun Route.configureDataRoutes(
             }
         }
     }
-    get<DataRoute.Transformers.Names, Map<String, TransformerInfo>> { _ ->
-        getTransformersInfo()
+    get<DataRoute.Transformers.Names, List<String>> { _ ->
+        getTransformersInfo().keys.toMutableList().apply { sort() }
     }
-    get<DataRoute.Transformers.Frequencies, Map<FrequencyName, String>> { _ ->
-        TRANSFORMER_FREQ_INFO
+    get<DataRoute.Transformers.Names.Name, TransformerInfo> { params ->
+        val t = params.transformer
+        getTransformersInfo()[t]
+            ?: throwMissing("transformer name", t)()
+    }
+    get<DataRoute.Transformers.Frequencies, List<FrequencyName>> { _ ->
+        TRANSFORMER_FREQ_INFO.keys.toMutableList().apply { sort() }
+    }
+    get<DataRoute.Transformers.Frequencies.Name, String> { param ->
+        val t = param.transformerFreq
+        TRANSFORMER_FREQ_INFO[t]
+            ?: throwMissing("transformer frequency", t.value)()
     }
 }
 

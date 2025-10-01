@@ -12,7 +12,10 @@ import com.moshy.drugcalc.commontest.assertDoesNotContain
 import com.moshy.drugcalc.commontest.assertEquals
 import com.moshy.ProxyMap
 import com.moshy.containers.assertIsSortedSet
+import com.moshy.drugcalc.calc.calc.TRANSFORMER_FREQ_INFO
+import com.moshy.drugcalc.calc.calc.getTransformersInfo
 import com.moshy.drugcalc.calctest.DataControllerTestSupport
+import com.moshy.drugcalc.commontest.assertSetsAreEqual
 import com.moshy.drugcalc.types.calccommand.TransformerInfo
 import io.ktor.client.HttpClient
 import io.ktor.client.call.*
@@ -22,6 +25,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 // unstarred import so it takes precedence for assert(DoesNotThrow|Throws)
 import org.junit.jupiter.api.Test
+import kotlin.test.assertContentEquals
 import kotlin.time.*
 
 // TODO: casefold+trim coverage for put post update del
@@ -793,7 +797,23 @@ internal class DataApiEndpointsTest {
 
     @Test
     fun testGetTransformerNames() = withServer(RO_ALL) {
-        testEndpoint<Unit, Map<String, TransformerInfo>>(Method.GetJson, "/api/data/transformers/names")
+        testEndpoint<Unit, List<String>>(Method.GetJson, "/api/data/transformers/names") {
+            assertSetsAreEqual(getTransformersInfo().keys, toSet())
+        }
+    }
+
+    /*
+     *  /api/data/transformers/names/{t} GET
+     */
+
+    @Test
+    fun testGetTransformerName() = withServer(RO_ALL) {
+        testEndpoint<Unit, TransformerInfo>(Method.GetJson, "/api/data/transformers/names/median") {
+            assertEquals(getTransformersInfo()["median"], this)
+        }
+        testEndpoint<Unit, Unit>(Method.GetJson, "/api/data/transformers/names/ham",
+            responseCode = HttpStatusCode.NotFound
+        )
     }
 
     /*
@@ -802,7 +822,23 @@ internal class DataApiEndpointsTest {
 
     @Test
     fun testGetTransformerFrequencies() = withServer(RO_ALL) {
-        testEndpoint<Unit, Map<FrequencyName, String>>(Method.GetJson, "/api/data/transformers/frequencies")
+        testEndpoint<Unit, List<FrequencyName>>(Method.GetJson, "/api/data/transformers/frequencies") {
+            assertSetsAreEqual(TRANSFORMER_FREQ_INFO.keys, toSet())
+        }
+    }
+
+    /*
+     *  /api/data/transformers/frequencies/{t} GET
+     */
+
+    @Test
+    fun testGetTransformerFrequency() = withServer(RO_ALL) {
+        testEndpoint<Unit, String>(Method.GetJson, "/api/data/transformers/frequencies/.") {
+            assertEquals(TRANSFORMER_FREQ_INFO[FrequencyName(".")], this)
+        }
+        testEndpoint<Unit, Unit>(Method.GetJson, "/api/data/transformers/names/frequencies/ham",
+            responseCode = HttpStatusCode.NotFound
+        )
     }
 
     private inline fun <reified T> testExpectedFailures(
