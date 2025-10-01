@@ -3,6 +3,7 @@ package com.moshy.drugcalc.calc.calc
 import com.moshy.drugcalc.types.dataentry.*
 import com.moshy.drugcalc.types.calccommand.*
 import com.moshy.containers.circularIterator
+import kotlinx.coroutines.channels.ticker
 
 /** Returns a transformer that applies [blockTransform] to each block.
  *
@@ -77,9 +78,14 @@ internal val transformerEntries: Map<String, TransformerEntry> =
         )
     )
 
+val TRANSFORMER_FREQ_INFO = mapOf(
+    FrequencyName(".") to "each timeDuration quantum"
+)
+
 internal fun generateTransformerFreqs(c: Config): Map<FrequencyName, FrequencyValue> =
-    c.run {
-        listOf(
-            "." to listOf(tickDuration)
-        ).associate { (k, v) -> FrequencyName(k) to FrequencyValue(v) }
+    TRANSFORMER_FREQ_INFO.mapValues { (k, _) ->
+        when (k.value) {
+            "." -> listOf(c.tickDuration)
+            else -> error("unhandled frequency $k")
+        }.let(::FrequencyValue)
     }

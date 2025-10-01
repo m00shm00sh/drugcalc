@@ -7,6 +7,7 @@ import com.moshy.drugcalc.calc.datacontroller.DataController.Companion.DONT_EXPA
 import com.moshy.drugcalc.server.http.plugins.authenticatedAsAdmin
 import com.moshy.drugcalc.common.oneOf
 import com.moshy.ProxyMap
+import com.moshy.drugcalc.calc.calc.TRANSFORMER_FREQ_INFO
 import com.moshy.drugcalc.calc.calc.getTransformersInfo
 import com.moshy.drugcalc.server.http.routing.util.*
 import com.moshy.drugcalc.server.http.routing.util.UrlStringSerializer.Companion.encode
@@ -67,7 +68,12 @@ internal class DataRoute(val _from: UrlString? = null, val limit: Int? = null) {
     }
 
     @Resource("transformers")
-    internal class Transformers(val parent: DataRoute)
+    internal class Transformers(val parent: DataRoute) {
+        @Resource("names")
+        internal class Names(val parent: Transformers)
+        @Resource("frequencies")
+        internal class Frequencies(val parent: Transformers)
+    }
 }
 
 
@@ -225,8 +231,11 @@ internal fun Route.configureDataRoutes(
             }
         }
     }
-    get<DataRoute.Transformers, Map<String, TransformerInfo>> { _ ->
+    get<DataRoute.Transformers.Names, Map<String, TransformerInfo>> { _ ->
         getTransformersInfo()
+    }
+    get<DataRoute.Transformers.Frequencies, Map<FrequencyName, String>> { _ ->
+        TRANSFORMER_FREQ_INFO
     }
 }
 

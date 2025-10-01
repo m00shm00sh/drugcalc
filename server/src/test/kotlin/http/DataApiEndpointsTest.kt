@@ -788,12 +788,21 @@ internal class DataApiEndpointsTest {
         testExpectedFailures<Unit>(Method.Delete, "/api/data/frequencies/spam")
 
     /*
-     *  /api/data/transformers GET
+     *  /api/data/transformers/names GET
      */
 
     @Test
-    fun testGetTransformers() = withServer(RO_ALL) {
-        testEndpoint<Unit, Map<String, TransformerInfo>>(Method.GetJson, "/api/data/transformers")
+    fun testGetTransformerNames() = withServer(RO_ALL) {
+        testEndpoint<Unit, Map<String, TransformerInfo>>(Method.GetJson, "/api/data/transformers/names")
+    }
+
+    /*
+     *  /api/data/transformers/frequencies GET
+     */
+
+    @Test
+    fun testGetTransformerFrequencies() = withServer(RO_ALL) {
+        testEndpoint<Unit, Map<FrequencyName, String>>(Method.GetJson, "/api/data/transformers/frequencies")
     }
 
     private inline fun <reified T> testExpectedFailures(
