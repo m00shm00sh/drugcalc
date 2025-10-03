@@ -34,7 +34,7 @@ internal fun Application.configureApiRoutes(
         route("api") {
             configureLoginRoutes(flags, jwtService, userService)
             configureDataRoutes(flags, dataController)
-            configureCalcRoutes(flags, dataController, evaluator, jsonModule)
+            configureCalcRoutes(flags, dataController, evaluator)
         }
         get<Heartbeat, String> {
             "OK"
