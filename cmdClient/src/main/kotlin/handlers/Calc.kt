@@ -13,12 +13,9 @@ import com.moshy.containers.zipForEach
 import com.moshy.drugcalc.common.toTruthy
 import com.moshy.krepl.*
 import kotlinx.coroutines.withContext
-import kotlinx.html.Entities
 import kotlinx.html.body
-import kotlinx.html.div
 import kotlinx.html.head
 import kotlinx.html.stream.createHTML
-import space.kscience.dataforge.meta.configure
 import space.kscience.plotly.*
 import space.kscience.plotly.models.*
 import space.kscience.visionforge.html.appendTo
@@ -166,22 +163,25 @@ internal fun AppState.configureCalc(): Repl.EntryBuilder.() -> Unit = {
             handler = withRepl { repl, (_, _, _, out) ->
                 val config = ForCalc.DEFAULT_CONFIG + forCalc.config
                 val reqBody = CycleRequest(
+                    forCalc.reqCycles,
                     app.forData.newEntries,
                     config,
-                    forCalc.reqCycles
+                    DecodeSpec.Scaled(1.toDuration(DurationUnit.DAYS))
                 )
-                val resp: CycleResult =
-                    app.doRequest<_, _>(NetRequestMethod.Post, "/api/calc?noDecode=true", body = reqBody)
+                val resp: CycleResult<XYList> =
+                    app.doRequest<_, _>(NetRequestMethod.Post, "/api/calc", body = reqBody)
                 forCalc.calcTimeTick = config["tickDuration"] as Duration
                 buildList {
                     add("eval: ${resp.size} items:")
                     resp.forEach { (k, v) ->
-                        add("${quote(k)}: [${v.x.size}]{${v.type}}")
+                        add("${quote(k)}: [${v.x.size}]{${v.plotType}}")
                     }
                 }.let {
                     paginator(repl, out, it)
                 }
-                forCalc.calcResult = resp
+                forCalc.calcResult = requireNotNull(resp.refineOrNull<XYList.OfDay>()) {
+                    "unexpected xylist type"
+                }
             }
         }
         this["result"] {
@@ -228,36 +228,34 @@ private fun ForCalc.checkForExpectedResult() =
 private fun ForCalc.renderResult(selection: String?) =
     buildList list@ {
         with(this@renderResult) {
-            // FIXME: refactor calc:datacontroller/Decoder.kt:Duration.transcode() to shared requireToInt()
-            val lineDuration = (lineDuration / calcTimeTick).toInt()
-            val temporals = TextRendererTemporals(lineDuration, calcTimeTick)
             if (selection != null) {
-                val result = calcResult[selection]
-                    ?: throw IllegalArgumentException("no data for selection: ${quote(selection)}")
-                this@list.renderResultItem(result, temporals, 0)
+                val result = requireNotNull(calcResult[selection]) {
+                    "no data or wrong type for selection: ${quote(selection)}"
+                }
+                this@list.renderResultItem(result, lineDurationInDays, 0)
             } else {
                 calcResult.forEach { (name, elems) ->
                     add("$name:")
-                    renderResultItem(elems, temporals, 1)
+                    renderResultItem(elems, lineDurationInDays, 1)
                 }
             }
         }
     }
 
-private fun LinesBuilder.renderResultItem(elems: XYList, t: TextRendererTemporals, indent: Int = 1) {
+private fun LinesBuilder.renderResultItem(elems: XYList.OfDay, lineDurationInDays: Double, indent: Int = 1) {
     val tabs = "\t".repeat(indent)
     if (elems.x.isEmpty())
         return
-    var lineStart: Int = -1
+    var lineStart: Double = -1.0
     data class LineEntry(
         val t0Str: String,
         val ys: MutableList<Double> = mutableListOf()
     )
     val entries = buildList {
         elems.x.zipForEach(elems.y) { x, y ->
-            if ((x - lineStart) >= t.lineDuration) {
+            if ((x - lineStart) >= lineDurationInDays) {
                 lineStart = x
-                add(LineEntry("${x * t.tickDuration}"))
+                add(LineEntry("+${x}d"))
             }
             last().ys.add(y)
         }
@@ -280,14 +278,8 @@ private fun LinesBuilder.renderResultItem(elems: XYList, t: TextRendererTemporal
     }
 }
 
-private data class TextRendererTemporals(
-    val lineDuration: Int,
-    val tickDuration: Duration,
-)
-
 private suspend fun ForCalc.renderPlotToFile(filename: String, split: Boolean = false) {
-    val dayInTicksF = (1.days / calcTimeTick)
-    val resultShapes = calcResult.mapValues { it.value.type }
+    val resultShapes = calcResult.mapValues { it.value.plotType }
     val lineItemNames = mutableListOf<String>()
     val stepItemNames= mutableListOf<String>()
 
@@ -298,7 +290,7 @@ private suspend fun ForCalc.renderPlotToFile(filename: String, split: Boolean = 
         }
     }
 
-    val xVals = calcResult.entries.associate { (k, v) -> k to v.x.map { x -> x / dayInTicksF } }
+    val xVals = calcResult.entries.associate { (k, v) -> k to v.x as List<Double> }
     val yVals = calcResult.entries.associate { (k, v) -> k to v.y }
 
     val p = Plotly.plot {
@@ -403,12 +395,12 @@ private val descriptionRemap = mapOf(
 )
 
 private val renderVarRemap = mapOf(
-    id(name(ForCalc::lineDuration)),
-    aliasName("line", ForCalc::lineDuration)
+    id(name(ForCalc::lineDurationInDays)),
+    aliasName("line", ForCalc::lineDurationInDays)
 )
 
 private val renderVarSetter = mapOf(
-    name(ForCalc::lineDuration) to { c: ForCalc, s: String -> c.lineDuration = Duration.parse(s) }
+    name(ForCalc::lineDurationInDays) to { c: ForCalc, s: String -> c.lineDurationInDays = s.toDouble() }
 )
 
 private suspend fun Map<String, String>.renderRemapEntriesTo(out: OutputSendChannel) {

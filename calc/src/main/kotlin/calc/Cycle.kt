@@ -15,7 +15,7 @@ import kotlin.time.toDuration
  * @see Config
  * @throws IllegalArgumentException if a transformer is invalid
  */
-fun evaluateDecodedCycle(cycle: CycleCalculation, config: Config): CycleResult {
+fun evaluateDecodedCycle(cycle: CycleCalculation, config: Config): CycleResult<XYList.OfRaw> {
     val (expandedCycles, lateHandling) = cycle
 
     val reducedCycles: Map<CompoundBase, List<Double>> =
@@ -31,14 +31,12 @@ fun evaluateDecodedCycle(cycle: CycleCalculation, config: Config): CycleResult {
             "$activeCompound:$transformerName" to transformerFn(reducedCycles, activeCompound, start, duration, freqs)
         }
 
-    return reducedCycles.entries.associate { (k, v) -> k.value to v.toXYList() } +
+    return CycleResult(
+        reducedCycles.entries.associate { (k, v) -> k.value to v.toXYList() } +
             transformVals.mapValues { it.value.toXYList() }
+    )
 
 }
-
-fun CycleResult.decodeTimeTickScaling(config: Config): DecodedCycleResult =
-    mapValues { it.value.decodeTimeTickScaling(config.tickDuration) }
-
 
 /**
  * Using [DecodedCycle] data from [cycles], evaluate each cycle given [Config] then return

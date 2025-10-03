@@ -29,18 +29,6 @@ internal class CycleTest {
     fun testEvaluateAndReduceCompoundCycles(name: String, a: CheckArg<CycleResult, EvaluateAndReduceCompoundCyclesP>) =
         a.invoke { evaluateAndReduceCompoundCycles(cycle, config).mapKeys { (k, _) -> k.value } }
 
-    @Test
-    fun decodeTimeTickScaling() {
-        val encoded: Map<String, XYList> = mapOf(
-            "a" to XYList.pointPlot(listOf(1, 2), listOf(1.0, 2.0))
-        )
-        val expected = mapOf(
-            "a" to DecodedXYList.pointPlot(listOf(1, 2).map { it.toDuration(DurationUnit.HOURS) }, listOf(1.0, 2.0))
-        )
-        val tConfig = config.copy(tickDuration = (1).toDuration(DurationUnit.HOURS))
-        val decoded = encoded.decodeTimeTickScaling(tConfig)
-        assertEquals(expected, decoded)
-    }
 
     internal companion object {
 
@@ -111,8 +99,8 @@ internal class CycleTest {
                         assertAll(
                             // check that the compounds and transformers entries didn't overwrite each other
                             { assertEquals(setOf("foo", "foo:median"), it.keys) },
-                            { assertEquals(XYList.PlotType.POINT, it["foo"]!!.type) },
-                            { assertEquals(XYList.PlotType.BAR, it["foo:median"]!!.type) }
+                            { assertEquals(XYList.PlotType.POINT, it["foo"]!!.plotType) },
+                            { assertEquals(XYList.PlotType.BAR, it["foo:median"]!!.plotType) }
                         )
                     }
                 ),
@@ -317,4 +305,4 @@ private fun durationToTicks(ds: List<Duration>, tick: Duration): List<Int> =
     ds.map { (it / tick).toInt() }
 
 private typealias CycleResult = Map<String, List<Double>>
-private typealias DecodedCycleResult = Map<String, XYList>
+private typealias DecodedCycleResult = Map<String, XYList.OfRaw>

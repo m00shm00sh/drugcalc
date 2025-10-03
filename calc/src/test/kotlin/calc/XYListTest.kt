@@ -19,7 +19,7 @@ class XYListTest {
             listOf(1.0, 2.0, 1.0)
         )
         val valsAsXY = vals.toXYList()
-        assertEquals(XYList.PlotType.BAR, valsAsXY.type)
+        assertEquals(XYList.PlotType.BAR, valsAsXY.plotType)
         assertEquals(xyVals[0].size, valsAsXY.x.size)
         assertIterableEquals(xyVals[0], valsAsXY.x)
         assertIterableEquals(xyVals[1], valsAsXY.y)

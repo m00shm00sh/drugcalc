@@ -24,9 +24,9 @@ internal data class RangeValue<DataT, IndexishT : Comparable<IndexishT>>
 internal typealias RangeList<DataT, IndexishT> = List<RangeValue<DataT, IndexishT>>
 
 @JvmName("RangeList\$toXYList")
-internal fun RangeList<Double, Int>.toXYList(): XYList =
+internal fun RangeList<Double, Int>.toXYList(): XYList.OfRaw =
     this.map { Pair(it.from, it.value) }.run {
-        XYList.barPlot(
+        XYList.OfRaw.barPlot(
             this.map { it.first },
             this.map { it.second }
         )

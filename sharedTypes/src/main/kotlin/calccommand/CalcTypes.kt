@@ -4,15 +4,20 @@ import com.moshy.ProxyMap
 import com.moshy.drugcalc.types.dataentry.Data
 import com.moshy.drugcalc.types.dataentry.FrequencyName
 import kotlinx.serialization.*
+import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.encoding.*
+import kotlinx.serialization.json.JsonClassDiscriminator
+import java.util.Objects
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
 @Serializable
 data class CycleRequest(
+    val cycle: List<CycleDescription>,
     val data: Data? = null,
     val config: ProxyMap<Config>? = null,
-    val cycle: List<CycleDescription>
+    val decode: DecodeSpec = DecodeSpec.ToDuration(), // default to preserve ?noDecode=false behavior
 ) {
     init {
         require(cycle.isNotEmpty()) {
@@ -21,8 +26,69 @@ data class CycleRequest(
     }
 }
 
-typealias CycleResult = Map<String, XYList>
-typealias DecodedCycleResult = Map<String, DecodedXYList>
+@JvmInline
+@Serializable
+value class CycleResult<XYL : XYList>(
+    val map: Map<String, XYL>
+): Map<String, XYL> by map {
+    inline fun <reified XYL2 : XYList> refineOrNull(): CycleResult<XYL2>? {
+        if (map.values.any { it !is XYL2 })
+            return null
+        @Suppress("UNCHECKED_CAST")
+        return CycleResult(map as Map<String, XYL2>)
+    }
+}
+
+@Serializable(with = DecodeSpecSerializer::class)
+sealed interface DecodeSpec {
+    fun decodeGivenConfig(map: CycleResult<XYList.OfRaw>, c: Config): CycleResult<out XYList>
+
+    class None : DecodeSpec {
+        override fun decodeGivenConfig(map: CycleResult<XYList.OfRaw>, c: Config): CycleResult<XYList.OfRaw> {
+            return map
+        }
+    }
+
+    class Scaled(val day: Duration) : DecodeSpec {
+        override fun decodeGivenConfig(map: CycleResult<XYList.OfRaw>, c: Config): CycleResult<XYList.OfDay> {
+            val dayInTicks = c.tickDuration / day
+            return CycleResult(map.mapValues { (_, v) -> v.toTimeRescaledXYList(dayInTicks) })
+        }
+    }
+
+    class ToDuration : DecodeSpec {
+        override fun decodeGivenConfig(map: CycleResult<XYList.OfRaw>, c: Config): CycleResult<XYList.OfDuration> {
+            return CycleResult(map.mapValues { (_, v) -> v.toDurationXYList(c.tickDuration) })
+        }
+    }
+}
+
+object DecodeSpecSerializer : KSerializer<DecodeSpec> {
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("drugcalc.calccommand.DecodeSpec", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): DecodeSpec {
+        val incoming = decoder.decodeString()
+        if (incoming == "none")
+            return DecodeSpec.None()
+        if (incoming == "duration")
+            return DecodeSpec.ToDuration()
+        val asDur = Duration.parseOrNull(incoming)
+        if (asDur != null)
+            return DecodeSpec.Scaled(asDur)
+        throw IllegalArgumentException("unexpected DecodeSpec: $incoming")
+    }
+
+    // lenient in accepting, strict in generating
+    override fun serialize(encoder: Encoder, value: DecodeSpec) {
+        val s = when (value) {
+            is DecodeSpec.None -> "none"
+            is DecodeSpec.ToDuration -> "duration"
+            is DecodeSpec.Scaled -> value.day.toIsoString()
+        }
+        encoder.encodeString(s)
+    }
+}
 
 /** Describes a cycle of a compound.
  *
@@ -113,10 +179,16 @@ data class Config(
 
 /** Tagged XY pair that gives information on (x,y) plotting type (bar vs point).
  *
- * @param type plotting type; see [PlotType]
+ * @param plotType plotting type; see [PlotType]
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
-data class XYList(val type: PlotType, val x: List<Int>, val y: List<Double>) {
+@JsonClassDiscriminator("xType")
+sealed class XYList {
+    abstract val plotType: PlotType
+    abstract val x: List<Comparable<*>>
+    abstract val y: List<Double>
+
     @Serializable
     enum class PlotType {
         @SerialName("point")
@@ -125,26 +197,54 @@ data class XYList(val type: PlotType, val x: List<Int>, val y: List<Double>) {
         BAR,
     }
 
-    companion object {
-        fun pointPlot(xs: List<Int>, ys: List<Double>) = XYList(PlotType.POINT, xs, ys)
-        fun barPlot(xs: List<Int>, ys: List<Double>) = XYList(PlotType.BAR, xs, ys)
-    }
-}
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is XYList) return false
 
-@Serializable
-data class DecodedXYList(val type: XYList.PlotType, val x: List<Duration>, val y: List<Double>) {
-    @Suppress("unused") // usage analysis only discovers the cases used in unit testing
-    companion object {
-        fun pointPlot(xs: List<Duration>, ys: List<Double>) = DecodedXYList(XYList.PlotType.POINT, xs, ys)
-        fun barPlot(xs: List<Duration>, ys: List<Double>) = DecodedXYList(XYList.PlotType.BAR, xs, ys)
+        if (plotType != other.plotType) return false
+        if (x != other.x) return false
+        if (y != other.y) return false
+
+        return true
     }
+
+    override fun hashCode(): Int = Objects.hash(plotType, x, y)
+
+    @Serializable
+    @SerialName("raw")
+    class OfRaw(
+        override val plotType: PlotType,
+        override val x: List<Int>,
+        override val y: List<Double>
+    ) : XYList() {
+        companion object {
+            fun pointPlot(xs: List<Int>, ys: List<Double>) = OfRaw(PlotType.POINT, xs, ys)
+            fun barPlot(xs: List<Int>, ys: List<Double>) = OfRaw(PlotType.BAR, xs, ys)
+        }
+    }
+
+    @Serializable
+    @SerialName("day")
+    class OfDay(
+        override val plotType: PlotType,
+        override val x: List<Double>,
+        override val y: List<Double>
+    ) : XYList()
+
+    @Serializable
+    @SerialName("duration")
+    class OfDuration(
+        override val plotType: PlotType,
+        override val x: List<Duration>,
+        override val y: List<Double>
+    ) : XYList()
 }
 
 /**
  * Converts scalar lists to XY with zeros omitted.
  */
 @JvmName("IndexedPoints\$toXYList")
-fun List<Double>.toXYList(): XYList {
+fun List<Double>.toXYList(): XYList.OfRaw {
     val xs: MutableList<Int> = mutableListOf()
     val ys: MutableList<Double> = mutableListOf()
     for (xIdx in indices) {
@@ -154,11 +254,14 @@ fun List<Double>.toXYList(): XYList {
             ys.add(yv)
         }
     }
-    return XYList.pointPlot(xs, ys)
+    return XYList.OfRaw.pointPlot(xs, ys)
 }
 
-fun XYList.decodeTimeTickScaling(timeTick: Duration) =
-    DecodedXYList(type, x.map { timeTick * it }, y)
+fun XYList.OfRaw.toTimeRescaledXYList(ticksPerDay: Double): XYList.OfDay =
+    XYList.OfDay(plotType, x.map { it * ticksPerDay }, y)
+
+fun XYList.OfRaw.toDurationXYList(timeTick: Duration): XYList.OfDuration =
+    XYList.OfDuration(plotType, x.map { timeTick * it }, y)
 
 /** Describes info and usage for a transformer. */
 @Serializable

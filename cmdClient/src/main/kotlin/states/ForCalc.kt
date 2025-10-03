@@ -4,9 +4,9 @@ import com.moshy.drugcalc.types.calccommand.*
 import com.moshy.ProxyMap
 import com.moshy.drugcalc.cmdclient.AppState
 import com.moshy.drugcalc.common.logger
+import kotlinx.html.emptyMap
 import kotlinx.serialization.*
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 
 @Serializable
@@ -18,8 +18,8 @@ internal class ForCalc {
     var reqCycles: List<CycleDescription> = emptyList()
 
     @Transient
-    var calcResult: CycleResult = emptyMap()
-    var lineDuration: Duration = 1.days
+    var calcResult: CycleResult<XYList.OfDay> = CycleResult(emptyMap())
+    var lineDurationInDays: Double = 1.0
     var calcTimeTick: Duration = DEFAULT_CONFIG["tickDuration"] as Duration
 
     companion object {
