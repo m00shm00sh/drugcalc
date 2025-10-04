@@ -12,6 +12,7 @@ internal object AppConfig {
         val httpDevMode: Boolean = false,
         val allowDbClear: Boolean = false,
         val sendStackTrace: Boolean = false,
+        val dumpCausesToLog: Boolean = false,
         val enableTestonlyEndpoints: Boolean = false,
         val allowEmptyDb: Boolean = false,
     )

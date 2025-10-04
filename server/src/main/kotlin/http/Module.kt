@@ -61,7 +61,7 @@ internal fun Application.configureModule(
     val jwtService = JwtService(config.jwt, userService)
     val json = JsonWithLenientIsoDuration
 
-    configureExceptions(config.flags.sendStackTrace)
+    configureExceptions(config.flags)
     configureLimits(config.http.limits)
     configureSerialization(json)
     configureSecurity(jwtService)
