@@ -97,19 +97,28 @@ fun <T> assertSuperset(expectedSubset: Set<T>, actualSuperset: Set<T>?, message:
     }
 }
 
-fun <T: Comparable<T>> assertGreater(greaterThan: T, actual: T?, message: String? = null) {
-    if  (actual == null || actual <= greaterThan)
-        fail(
-            object { override fun toString() = "> $greaterThan" },
-            actual, message
-        )
-}
-fun <T: Comparable<T>> assertLess(lessThan: T, actual: T?, message: String? = null) {
-    if  (actual == null || actual >= lessThan)
-        fail(
-            object { override fun toString() = "< $lessThan" },
-            actual, message
-        )
+fun <T: Comparable<T>> assertGreater(greaterThan: T, actual: T?, message: String? = null) =
+    assertCompare(greaterThan, actual, 1, false, message)
+
+fun <T: Comparable<T>> assertGreaterOrEqual(greaterThan: T, actual: T?, message: String? = null) =
+    assertCompare(greaterThan, actual, 1, true, message)
+
+fun <T: Comparable<T>> assertLess(lessThan: T, actual: T?, message: String? = null) =
+    assertCompare(lessThan, actual, -1, false, message)
+
+fun <T: Comparable<T>> assertLessOrEqual(lessThanOrEqual: T, actual: T?, message: String? = null) =
+    assertCompare(lessThanOrEqual, actual, -1, true, message)
+
+private fun <T: Comparable<T>> assertCompare(exp: T, got: T?, dir: Int, eq: Boolean, message: String?) {
+    val (op, cmp) = when {
+        dir < 0 && eq -> "<=" to { a: T, b: T -> a <= b }
+        dir < 0 && !eq -> "<" to { a: T, b: T -> a < b }
+        dir > 0 && eq -> ">=" to { a: T, b: T -> a >= b }
+        dir > 0 && !eq -> ">" to { a: T, b: T -> a > b }
+        else -> throw IllegalArgumentException("bad dir: 0")
+    }
+    if (got === null || !cmp(got, exp))
+        fail(object { override fun toString() = "$op $exp" }, got, message)
 }
 
 fun <T> assertEquals(expected: ListAsSortedSet<T>, actual: Collection<T>, message: String? = null) {

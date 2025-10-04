@@ -15,6 +15,8 @@ import com.moshy.containers.assertIsSortedSet
 import com.moshy.drugcalc.calc.calc.TRANSFORMER_FREQ_INFO
 import com.moshy.drugcalc.calc.calc.getTransformersInfo
 import com.moshy.drugcalc.calctest.DataControllerTestSupport
+import com.moshy.drugcalc.commontest.assertLess
+import com.moshy.drugcalc.commontest.assertLessOrEqual
 import com.moshy.drugcalc.commontest.assertSetsAreEqual
 import com.moshy.drugcalc.types.calccommand.TransformerInfo
 import io.ktor.client.HttpClient
@@ -790,6 +792,18 @@ internal class DataApiEndpointsTest {
     @Test
     fun `testDeleteFrequency f`() =
         testExpectedFailures<Unit>(Method.Delete, "/api/data/frequencies/spam")
+
+    /*
+     * /api/data/frequencies.w GET
+     */
+    @Test
+    fun testGetFrequenciesWeighted() = withServer(RO_ALL) {
+        testEndpoint<Unit, Map<String, Duration>>(Method.GetJson, "/api/data/frequencies.w") {
+            values.zipWithNext { a, b ->
+                assertLessOrEqual(b, a)
+            }
+        }
+    }
 
     /*
      *  /api/data/transformers/names GET

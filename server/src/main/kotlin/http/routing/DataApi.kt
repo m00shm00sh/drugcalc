@@ -16,6 +16,7 @@ import com.moshy.drugcalc.server.util.AppConfig
 import com.moshy.drugcalc.types.calccommand.TransformerInfo
 import io.ktor.resources.*
 import io.ktor.server.routing.*
+import kotlin.time.Duration
 
 @Suppress("PropertyName")
 @Resource("data")
@@ -66,6 +67,9 @@ internal class DataRoute(val _from: UrlString? = null, val limit: Int? = null) {
                 get() = FrequencyName(_frequency.value)
         }
     }
+
+    @Resource("frequencies.w")
+    internal class FrequenciesWithWeights(val parent: DataRoute)
 
     @Resource("transformers")
     internal class Transformers(val parent: DataRoute) {
@@ -242,6 +246,15 @@ internal fun Route.configureDataRoutes(
                 dataController.removeEntries(fNames = oneOf(params.frequency))
             }
         }
+    }
+    get<DataRoute.FrequenciesWithWeights, Map<FrequencyName, Duration>> { _ ->
+        // no pagination because we're not sorting by name
+        dataController.resolveNames(fNames = dataController.getFrequencyNames())
+            .frequencies
+            .asSequence()
+            .map { (k, v) -> k to v.totalTime }
+            .sortedBy { (_, v) -> v }
+            .toMap()
     }
     get<DataRoute.Transformers.Names, List<String>> { _ ->
         getTransformersInfo().keys.toMutableList().apply { sort() }
