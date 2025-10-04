@@ -226,7 +226,8 @@ value class FrequencyName(val value: String) : Comparable<FrequencyName> {
 /** A valid frequency value. */
 @Suppress("JavaDefaultMethodsNotOverriddenByDelegation")
 @Serializable
-data class FrequencyValue(private val values: List<@Contextual Duration>): List<Duration> by values {
+data class FrequencyValue(private val values: List<@Contextual Duration>)
+: Comparable<FrequencyValue>, List<Duration> by values {
     init {
         require(values.isNotEmpty()) {
             "empty list"
