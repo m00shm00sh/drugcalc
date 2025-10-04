@@ -172,6 +172,7 @@ class DataController(
         val cNames = mutableSetOf<CompoundName>()
         val bNames = mutableSetOf<BlendName>()
         val fNames = mutableSetOf<FrequencyName>()
+        val xfrmFreqNames = mutableSetOf<FrequencyName>()
         val auxData = auxData?.run {
             Data(
                 compounds = compounds.clean(),
@@ -182,34 +183,39 @@ class DataController(
 
         for (c in cycle) {
             when (c.prefix) {
-                CycleDescription.PREFIX_COMPOUND ->
+                CycleDescription.PREFIX_COMPOUND -> {
                     CompoundName(CompoundBase(c.compoundOrBlend), c.variantOrTransformer)
                         .clean()
                         .let(cNames::add)
-
-                CycleDescription.PREFIX_BLEND ->
+                    c.freqName.clean().let(fNames::add)
+                }
+                CycleDescription.PREFIX_BLEND -> {
                     BlendName(c.compoundOrBlend)
                         .clean()
                         .let(bNames::add)
-
-                CycleDescription.PREFIX_TRANSFORMER -> {}
+                    c.freqName.clean().let(fNames::add)
+                }
+                CycleDescription.PREFIX_TRANSFORMER -> {
+                    c.freqName.clean().let(xfrmFreqNames::add)
+                }
             }
-            c.freqName.clean().let(fNames::add)
         }
-        return doResolveNames(cNames, bNames, fNames, auxData)
+        return doResolveNames(cNames, bNames, fNames, xfrmFreqNames, auxData)
     }
 
     suspend fun resolveNames(
         cNames: Set<CompoundName> = emptySet(),
         bNames: Set<BlendName> = emptySet(),
         fNames: Set<FrequencyName> = emptySet(),
+        transformerFreqs: Set<FrequencyName> = emptySet(),
         auxData: Data? = null
-    ): Data =
+    ):Data =
         doResolveNames(
             // trim and casefold may break set property so need to manually sort afterwards
             cNames.takeUnless { it === DONT_EXPAND_BLEND_COMPOUNDS }?.clean()?.copyToSortedSet() ?: cNames,
             bNames.clean().copyToSortedSet(),
             fNames.clean().copyToSortedSet(),
+            transformerFreqs.clean().copyToSortedSet(),
             auxData?.run {
                 Data(
                     compounds = compounds.clean(),
@@ -223,6 +229,7 @@ class DataController(
         cNames: Set<CompoundName> = emptySet(),
         bNames: Set<BlendName> = emptySet(),
         fNames: Set<FrequencyName> = emptySet(),
+        transformerFreqs: Set<FrequencyName> = emptySet(),
         auxData: Data? = null
     ): Data {
         val log = logger("$LOG_NAME: resolveNames")
@@ -303,7 +310,7 @@ class DataController(
             val fNames = fNames - overridenFrequencies.keys
             log.debug("f: fetching frequencies")
             val fItems = overridenFrequencies +
-                    frequenciesCache.getAll(fNames) {
+                    frequenciesCache.getAll(fNames + transformerFreqs) {
                         log.debug("f: uncached frequencies {}", it)
                         source.getFrequencies(it)
                     }

@@ -220,7 +220,7 @@ internal class DataControllerTest {
             // auxData
             FrequencyName("soon")
         )
-        val data = resolveNames(cNames, bNames, fNames, auxData)
+        val data = resolveNames(cNames, bNames, fNames, emptySet(), auxData)
         assertAll(
             { assertEquals(cNamesExpected, data.compounds.keys) },
             { assertEquals(bNames, data.blends.keys) },
@@ -265,7 +265,7 @@ internal class DataControllerTest {
         val fNames = setOf(
             FrequencyName("every day"),
         )
-        val data = resolveNames(cNames, bNames, fNames, auxData)
+        val data = resolveNames(cNames, bNames, fNames, emptySet(), auxData)
         assertAll(
             { assertEquals(cNamesExpected, data.compounds.keys) },
             {
@@ -288,6 +288,31 @@ internal class DataControllerTest {
             }
         )
     }
+
+    @Test
+    fun `resolveNames +xfrm`() = runTestWithTempController(RO_ALL) {
+        val fNames = setOf(
+            FrequencyName("every day"),
+        )
+        val fNamesXfrm = setOf(
+            FrequencyName("every other day"),
+        )
+        val data = resolveNames(fNames = fNames, transformerFreqs = fNamesXfrm)
+        assertSetsAreEqual(data.frequencies.keys, fNames + fNamesXfrm)
+    }
+
+    @Test
+    fun `resolveNames +xfrm no-fail`() = runTestWithTempController(RO_ALL) {
+        val fNames = setOf(
+            FrequencyName("every day"),
+        )
+        val fNamesXfrm = setOf(
+            FrequencyName("ligma"),
+        )
+        val data = resolveNames(fNames = fNames, transformerFreqs = fNamesXfrm)
+        assertSetsAreEqual(data.frequencies.keys, fNames)
+    }
+
     @Test
     fun `validate compounds consistency`() = runTestWithTempController(RO_ALL) {
         val t = 1.toDuration(DurationUnit.DAYS)

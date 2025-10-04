@@ -117,7 +117,7 @@ class Decoder(
                 val fName = fName.clean()
                 val fVals = names.frequencies[fName]
                     ?: transformerFreqs[fName]
-                    ?: throw IllegalArgumentException("the frequency $fName did not resolve to a sequence of durations")
+                    ?: throw IllegalArgumentException("unresolved frequency $fName")
                 val (tcStart, tcDuration, tcFreqVals) = transcodeTimes(start, duration, fVals)
                 add(
                     DecodedCycle(
