@@ -2,6 +2,7 @@ package com.moshy.drugcalc.types
 
 import com.moshy.drugcalc.commontest.CheckArg
 import com.moshy.drugcalc.commontest.assertEquals
+import com.moshy.drugcalc.commontest.assertLess
 import com.moshy.drugcalc.types.calccommand.CycleDescription
 import com.moshy.drugcalc.types.dataentry.*
 import org.junit.jupiter.api.Assertions.*
@@ -286,5 +287,25 @@ internal class DataTypesTest {
                 )
             )
         }
+        val durs = listOf(1.toDuration(DurationUnit.DAYS), 1.toDuration(DurationUnit.DAYS))
+        val dSum = durs.reduce { a, x -> a + x }
+        assertEquals(dSum, FrequencyValue(durs).totalTime)
     }
+
+    @Test
+    fun `test FrequencyValue compare`() {
+        val a = FrequencyValue(listOf(1, 2).map { it.toDuration(DurationUnit.DAYS) })
+        val b = FrequencyValue(listOf(1, 2).map { it.toDuration(DurationUnit.DAYS) })
+        val c = FrequencyValue(listOf(1, 1).map { it.toDuration(DurationUnit.DAYS) })
+        val d = FrequencyValue(listOf(3).map { it.toDuration(DurationUnit.DAYS) })
+
+        assertAll(
+            { assertLess(d, a) },
+            { assertLess(a, c) },
+            { assertEquals(b, a) },
+        )
+    }
+
+
+
 }

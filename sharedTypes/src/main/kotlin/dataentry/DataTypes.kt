@@ -1,8 +1,9 @@
 package com.moshy.drugcalc.types.dataentry
 
 import com.moshy.drugcalc.common.checkValues
-import com.moshy.ProxyMap
 import com.moshy.drugcalc.common.conditional
+import com.moshy.containers.compareTo
+import com.moshy.ProxyMap
 import com.moshy.proxymap.registerValidator
 import kotlin.time.Duration
 import kotlinx.serialization.*
@@ -231,5 +232,13 @@ data class FrequencyValue(private val values: List<@Contextual Duration>): List<
             "empty list"
         }
         values.checkValues(Duration::isPositive) { i, v -> "$i: nonpositive duration $v" }
+    }
+
+    @Transient
+    val totalTime = values.reduce { a, x -> a + x }
+
+    override fun compareTo(other: FrequencyValue): Int {
+        totalTime.compareTo(other.totalTime).takeIf { it != 0 }?.let { return it }
+        return values.compareTo(other.values)
     }
 }
