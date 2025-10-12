@@ -11,7 +11,7 @@ import {
 } from './duration'
 import { zodNonemptyStringSchema } from './string'
 import { SelectableSchema } from './Selectable'
-import { stripIf } from '../util/filter-setif'
+import { getOrElse, stripIf } from '../util/filter-setif'
 
 /* even though this is strictly an outgoing type, i'm still making a zod schema because
  * prettier's typescript handling butchers indentation of union types
@@ -107,11 +107,85 @@ export const cycleFieldsToCycleDescription = (
         return d
     })
 
-export const importFromQueryString = (q: URLSearchParams): CalcRequestRow[] => {
 
+const Q_FLAGS = "fl"
+const Q_COMPOUND_OR_BLEND = "cb"
+const Q_VARIANT_OR_TRANSFORMER = "vx"
+const Q_DOSE = "d"
+const Q_START = "s"
+const Q_DURATION = "t"
+const Q_FREQ_NAME = "fn"
+
+const encodeFlag = (fl: ".b"|".t"|""|undefined): string => {
+    switch (fl) {
+        case ".b": return "b"
+        case ".t": return "t"
+        default: return ""
+    }
 }
-export const exportToQueryString = (rows: readonly CalcRequestRow[]) => {
+const decodeFlag = (fl: string) => {
+    switch (fl) {
+        case "b": return ".b"
+        case "t": return ".t"
+        default: return ""
+    }
+}
 
+export const importRowsFromQueryString = (q: URLSearchParams): CalcRequestRow[] => {
+    const qFL = q.getAll(Q_FLAGS)
+    const qCB = q.getAll(Q_COMPOUND_OR_BLEND)
+    const qVX = q.getAll(Q_VARIANT_OR_TRANSFORMER)
+    const qD = q.getAll(Q_DOSE)
+    const qS = q.getAll(Q_START)
+    const qT = q.getAll(Q_DURATION)
+    const qFN = q.getAll(Q_FREQ_NAME)
+
+    const qCBlen = qCB.length
+    const checkLen = (qTok: string[], qNam: string) => {
+        if (qTok.length !== qCBlen)
+            throw Error(`length mismatch for param ${qNam}: got ${qTok.length}, exp ${qCBlen}`)
+    }
+    if (qFL.length > 0)
+        checkLen(qFL, Q_FLAGS)
+    if (qVX.length > 0)
+        checkLen(qVX, Q_VARIANT_OR_TRANSFORMER)
+    checkLen(qD, Q_DOSE)
+    checkLen(qS, Q_START)
+    checkLen(qT, Q_DURATION)
+    checkLen(qFN, Q_FREQ_NAME)
+
+    const rows: CalcRequestRow[] = []
+    for (let i = 0; i < qCBlen; ++i) {
+        rows.push({
+            prefix: decodeFlag(qFL[i] ?? ''),
+            compoundOrBlend: qCB[i],
+            variantOrTransformer: qVX[i],
+            dose: Number(qD),
+            start: qS[i],
+            duration: qT[i],
+            freqName: qFN[i]
+        })
+    }
+    // components/Calc's form validator will validate these values
+    return rows
+}
+export const exportRowsToQueryString = (rows: readonly CalcRequestRow[]): URLSearchParams => {
+    const q = new URLSearchParams()
+    const noPrefixes = rows.find((e) => e.prefix) === undefined
+    const noVX = rows.find((e) => ('variantOrTransformer' in e && e.variantOrTransformer)) === undefined
+
+    for (const r of rows) {
+        if (!noPrefixes)
+            q.append(Q_FLAGS, encodeFlag(r.prefix))
+        q.append(Q_COMPOUND_OR_BLEND, r.compoundOrBlend)
+        if (!noVX)
+            q.append(Q_VARIANT_OR_TRANSFORMER, getOrElse(r, 'variantOrTransformer', ''))
+        q.append(Q_DOSE, getOrElse(r, 'dose', 0).toString())
+        q.append(Q_START, r.start)
+        q.append(Q_DURATION, r.duration)
+        q.append(Q_FREQ_NAME, r.freqName)
+    }
+    return q
 }
 
 export type AuxData = {

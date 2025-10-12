@@ -26,6 +26,8 @@ import {
     calcRequestPrefixMapping,
     calcRequestRowInit,
     CycleResultSchema,
+    exportRowsToQueryString,
+    importRowsFromQueryString,
     plotlyEmptyInvocation,
     resultToPlotly,
 } from '../types/Calc'
@@ -289,17 +291,35 @@ export const Calc = () => {
         () => '',
     )
 
+    const [searchParams, setSearchParams] = useSearchParams()
+
+    const initValues = () => {
+        try {
+            const rows = importRowsFromQueryString(searchParams)
+            return rows.length !== 0 ? rows : [calcRequestRowInit()]
+        } catch (e) {
+            console.log(`query string import failed: ${e}`)
+            return [calcRequestRowInit()]
+        }
+    }
+
     const methods = useForm<CalcRequestDataContainer>({
         defaultValues: {
-            cycle: [calcRequestRowInit()],
+            cycle: initValues(),
         },
         resolver: zodResolver(CalcRequestDataContainerSchema),
     })
-    const { control, formState: {errors}, setError, watch } = methods
+    const { control, formState: {errors}, getValues, setError, watch } = methods
     const { append, update, remove, fields } = useFieldArray({
         control,
         name: `cycle`,
     })
+
+    const saveFormToQueryString = () => {
+        const r = getValues('cycle')
+        setSearchParams(exportRowsToQueryString(r))
+    }
+
 
     const doSubmit = async (r: CalcRequestDataContainer) => {
         try {
@@ -374,6 +394,7 @@ export const Calc = () => {
                                     getSelected={() => selecteds}
                                     removeRows={remove}
                                     submitStr="Evaluate"
+                                    save2={[saveFormToQueryString, 'Save form to URL']}
                                 />
                             </GridCol>
                         </form>
