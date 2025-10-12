@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLocalFrequencies } from '../hooks/useLocalData'
 import { Button } from '../widgets/Button'
-import { Grid, GridCol } from '../widgets/RowCol'
+import { GridCol, FlexRow } from '../widgets/RowCol'
 import { selectedItemsFromRemoteFormLoader } from '../util/load-from-remote'
 import type {
     FrequencyEditorRow,
@@ -28,6 +28,7 @@ import { EditorCommands } from './EditorCommands'
 import { FormInput } from './FormField'
 import { Centered } from '../widgets/Centered'
 import { getSelectedIndices } from '../types/Selectable'
+import { ErrorMessage } from '../widgets/ErrorMessage'
 
 type FrequencyComponentProps = {
     remove: UseFieldArrayRemove
@@ -40,18 +41,17 @@ const FrequencyComponent = ({
 }: FrequencyComponentProps) => {
     const component = `frequencies.${frequencyIndex}.values.${componentIndex}`
     return (
-        <Grid colSpec="[fit-content(200px)_auto]" auxClasses="gap-2">
+        <fieldset className="gap-2 border flex flex-row">
+            <FormInput
+                type="checkbox"
+                name={`${component}.selected`}
+            />
             <FormInput
                 type="text"
                 placeholder="iso8601-ish"
                 name={`${component}.value`}
             />
-            <FormInput
-                type="checkbox"
-                name={`${component}.selected`}
-                inpClasses="pl-2"
-            />
-        </Grid>
+        </fieldset>
     )
 }
 
@@ -74,36 +74,32 @@ const FrequencyComponents = ({ parentIndex }: FrequencyComponentsProps) => {
         `frequencies.${parentIndex}.values`,
     )
     return (
-        <GridCol>
-            <fieldset
-                className={'border ' + (componentContainerError && 'invalid')}
-            >
-                <legend>frequencies</legend>
-                <GridCol auxClasses="gap-2 p-2">
-                    {fields.map((field, index) => (
-                        <FrequencyComponent
-                            key={field.id}
-                            frequencyIndex={parentIndex}
-                            componentIndex={index}
-                            remove={remove}
-                        />
-                    ))}
-                </GridCol>
-                <Button
-                    onClick={() => append(frequencyEditorComponentItemInit())}
-                >
-                    Add component
-                </Button>
-                <Button onClick={() => remove(selecteds)}>
-                    Remove selected
-                </Button>
-            </fieldset>
-            {componentContainerError?.root?.message && (
-                <div className="error-msg">
-                    {componentContainerError?.root?.message}
-                </div>
-            )}
-        </GridCol>
+        <fieldset
+            className={'border ' + (componentContainerError && 'invalid')}
+        >
+            <legend>frequencies</legend>
+            <GridCol auxClasses="gap-2 p-2">
+                {fields.map((field, index) => (
+                    <FrequencyComponent
+                        key={field.id}
+                        frequencyIndex={parentIndex}
+                        componentIndex={index}
+                        remove={remove}
+                    />
+                ))}
+                <FlexRow>
+                    <Button
+                        onClick={() => append(frequencyEditorComponentItemInit())}
+                    >
+                        Add component
+                    </Button>
+                    <Button onClick={() => remove(selecteds)}>
+                        Remove selected
+                    </Button>
+                </FlexRow>
+                <ErrorMessage text={componentContainerError?.root?.message} />
+            </GridCol>
+        </fieldset>
     )
 }
 
@@ -173,23 +169,19 @@ export const FrequenciesEditor = ({ isLoggedIn }: EditorProps) => {
                                 (errors?.frequencies?.[index] && 'invalid')
                             }
                         >
-                            <Grid colSpec={2} auxClasses="gap">
-                                <GridCol auxClasses="gap-2 p-2">
-                                    <FormInput
-                                        name={`frequencies.${index}.frequency`}
-                                        type="text"
-                                        label="name"
-                                        placeholder="name"
-                                    />
-                                    <Centered>
-                                        <FormInput
-                                            type="checkbox"
-                                            name={`frequencies.${index}.selected`}
-                                        />
-                                    </Centered>
-                                </GridCol>
+                            <FlexRow auxClasses="gap">
+                                <FormInput
+                                    type="checkbox"
+                                    name={`frequencies.${index}.selected`}
+                                />
+                                <FormInput
+                                    name={`frequencies.${index}.frequency`}
+                                    type="text"
+                                    label="name"
+                                    placeholder="name"
+                                />
                                 <FrequencyComponents parentIndex={index} />
-                            </Grid>
+                            </FlexRow>
                         </fieldset>
                     ))}
                     <EditorCommands

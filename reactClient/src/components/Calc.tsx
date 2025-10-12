@@ -166,6 +166,12 @@ const CycleDescriptionEditorRow = ({
     return (
         <fieldset className={'border ' + (rowError ? 'invalid' : '')}>
             <Grid colSpec={4} rowSpec={2} auxClasses="gap-2">
+                <FormInput
+                    type="checkbox"
+                    label=" "
+                    name={`cycle.${index}.selected`}
+                    inpClasses="pl-2"
+                />
                 <FormSelectWithOptions
                     label="prefix"
                     name={`${row}.prefix`}
@@ -196,36 +202,33 @@ const CycleDescriptionEditorRow = ({
                     name={`${row}.variantOrTransformer`}
                     optionValues={selectVariantOrTransformer}
                 />
-                <FormInput
-                    type="checkbox"
-                    blockClasses="col-start-4"
-                    label=" "
-                    name={`cycle.${index}.selected`}
-                    inpClasses="pl-2"
-                />
                 {prefixValue !== calcRequestPrefixMapping['transformer'] && (
                     <FormInput
                         label="dose"
+                        placeholder='dose (mg)'
+                        blockClasses="row-2 col-1"
                         name={`${row}.dose`}
                         type="number"
                         min={0.0001}
                         step={0.0001}
-                        valueAsNumber
                     />
                 )}
                 <FormInput
+                    blockClasses='row-2 col-2'
                     placeholder="iso8601-ish"
                     label="start"
                     type="text"
                     name={`${row}.start`}
                 />
                 <FormInput
+                    blockClasses='row-2 col-3'
                     placeholder="iso8601-ish"
                     label="duration"
                     type="text"
                     name={`${row}.duration`}
                 />
                 <FormSelectWithOptions
+                    blockClasses='row-2 col-4'
                     label="frequency"
                     name={`${row}.freqName`}
                     optionValues={selectFrequency}

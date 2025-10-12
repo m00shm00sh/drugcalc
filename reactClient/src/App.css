@@ -7,17 +7,6 @@ body {
     background-image: linear-gradient(to bottom, #707070, #202020);
     background-attachment: fixed;
 }
-
-.content,
-.editor {
-    display: flex;
-    min-height: 100vh;
-    line-height: 1.1;
-    text-align: center;
-    flex-direction: column;
-    justify-content: start;
-}
-
 .content h1 {
     font-size: 3.6rem;
     font-weight: 700;
@@ -28,6 +17,7 @@ body {
     font-weight: 400;
     opacity: 0.5;
 }
+
 
 form {
     border-radius: 5px;
@@ -43,18 +33,16 @@ form {
     gap: 10px;
 }
 
+.gap {
+    gap: 10px;
+}
+
 button {
     margin: 10px;
 }
 
 input:invalid {
     outline: 2px solid red;
-}
-
-.error-msg {
-    color: red;
-    font-size: 0.8rem;
-    text-align: center;
 }
 
 fieldset {

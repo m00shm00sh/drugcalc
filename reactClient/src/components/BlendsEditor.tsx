@@ -37,7 +37,7 @@ import type { EditorProps } from './EditorProps'
 import { FormInput, FormSelectWithOptions, FormTextArea } from './FormField'
 import { Centered } from '../widgets/Centered'
 import { ErrorMessage } from '../widgets/ErrorMessage'
-import { Grid, GridCol } from '../widgets/RowCol'
+import { FlexRow } from '../widgets/RowCol'
 import { getSelectedIndices } from '../types/Selectable'
 
 const LocalCompoundsBcbvContext = createContext<ByCompoundByVariant>({})
@@ -79,39 +79,27 @@ const BlendComponent = ({
         errors?.blends?.[blendIndex]?.components?.[componentIndex]
     return (
         <fieldset className={'border ' + (componentError && 'invalid')}>
-            <Grid
-                auxClasses="col-span-2 place-items-stretch gap-2 p-2"
-                colSpec="[fit-content(200px)_auto]"
-            >
-                <Centered>
-                    <FormSelectWithOptions
-                        name={`${component}.compound`}
-                        optionValues={compounds}
-                        onChange={() =>
-                            update({ ...watchRow, variant: undefined })
-                        }
-                    />
-                </Centered>
-                <Centered>
-                    <FormSelectWithOptions
-                        name={`${component}.variant`}
-                        optionValues={variants}
-                    />
-                </Centered>
-                <Centered>
-                    <FormInput
-                        placeholder="dose"
-                        type="number"
-                        name={`${component}.dose`}
-                        valueAsNumber
-                        min={0.0001}
-                        step={0.0001}
-                    />
-                </Centered>
-                <Centered>
-                    <FormInput type="checkbox" name={`${component}.selected`} />
-                </Centered>
-            </Grid>
+            <FlexRow auxClasses="col-span-2 gap-2 p-2">
+                <FormInput type="checkbox" name={`${component}.selected`} />
+                <FormInput
+                    placeholder="dose (mg)"
+                    type="number"
+                    name={`${component}.dose`}
+                    min={0.0001}
+                    step={0.0001}
+                />
+                <FormSelectWithOptions
+                    name={`${component}.compound`}
+                    optionValues={compounds}
+                    onChange={() =>
+                        update({ ...watchRow, variant: undefined })
+                    }
+                />
+                <FormSelectWithOptions
+                    name={`${component}.variant`}
+                    optionValues={variants}
+                />
+            </FlexRow>
         </fieldset>
     )
 }
@@ -135,35 +123,33 @@ const BlendComponents = ({ parentIndex }: BlendComponentsProps) => {
         `blends.${parentIndex}.components`,
     )
     return (
-        <>
-            <div className="grid gap-1">
-                <fieldset
-                    className={
-                        'border ' + (componentContainerError && 'invalid')
+        <fieldset
+            className={
+                'border ' + (componentContainerError && 'invalid')
+            }
+        >
+            <legend>components</legend>
+            {fields.map((field, index) => (
+                <BlendComponent
+                    key={field.id}
+                    blendIndex={parentIndex}
+                    componentIndex={index}
+                    remove={() => remove(index)}
+                    update={(c: BlendEditorComponentRow) =>
+                        update(index, c)
                     }
-                >
-                    <legend>components</legend>
-                    {fields.map((field, index) => (
-                        <BlendComponent
-                            key={field.id}
-                            blendIndex={parentIndex}
-                            componentIndex={index}
-                            remove={() => remove(index)}
-                            update={(c: BlendEditorComponentRow) =>
-                                update(index, c)
-                            }
-                        />
-                    ))}
-                    <Button onClick={() => append(blendComponentRowInit())}>
-                        Add component
-                    </Button>
-                    <Button onClick={() => remove(selecteds)}>
-                        Remove selected
-                    </Button>
-                </fieldset>
-                <ErrorMessage text={componentContainerError?.root?.message} />
-            </div>
-        </>
+                />
+            ))}
+            <FlexRow auxClasses='justify-center'>
+                <Button onClick={() => append(blendComponentRowInit())}>
+                    Add component
+                </Button>
+                <Button onClick={() => remove(selecteds)}>
+                    Remove selected
+                </Button>
+            </FlexRow>
+            <ErrorMessage text={componentContainerError?.root?.message} />
+        </fieldset>
     )
 }
 
@@ -262,10 +248,15 @@ export const BlendsEditor = ({ isLoggedIn }: EditorProps) => {
                                                     'invalid')
                                             }
                                         >
-                                            <Grid colSpec={2} auxClasses="gap">
-                                                <GridCol auxClasses="gap">
+                                            <FlexRow>
+                                                <fieldset className='gap-2 p-2'>
+                                                    <FormInput
+                                                        type="checkbox"
+                                                        name={`blends.${index}.selected`}
+                                                    />
                                                     <FormInput
                                                         name={`blends.${index}.blend`}
+                                                        type="text"
                                                         label="name"
                                                         placeholder="name"
                                                     />
@@ -274,17 +265,11 @@ export const BlendsEditor = ({ isLoggedIn }: EditorProps) => {
                                                         label="note"
                                                         placeholder="note"
                                                     />
-                                                    <Centered>
-                                                        <FormInput
-                                                            type="checkbox"
-                                                            name={`blends.${index}.selected`}
-                                                        />
-                                                    </Centered>
-                                                </GridCol>
+                                                </fieldset>
                                                 <BlendComponents
                                                     parentIndex={index}
                                                 />
-                                            </Grid>
+                                            </FlexRow>
                                         </fieldset>
                                     ))}
                                     <EditorCommands

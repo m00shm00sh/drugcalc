@@ -18,10 +18,33 @@ export const Grid = ({
     auxClasses ??= ''
     if (auxClasses) auxClasses = ' ' + auxClasses
     nr ??= ''
-    if (nr) nr = ` grid-cols-${nr}`
+    if (nr) nr = ` grid-rows-${nr}`
     return (
         <div
             className={`grid grid-cols-${nc}${nr}${auxClasses}`}
+            children={children}
+        />
+    )
+}
+
+type Item = {
+    children: ReactNode
+    auxClasses?: string
+}
+
+export const FlexCol = (props: Item) => <Flex rc={'col'} {...props} />
+export const FlexRow = (props: Item) => <Flex rc={'row'} {...props} />
+
+const Flex= ({
+    children,
+    auxClasses,
+    rc,
+}: GridItem & {rc: 'col'|'row'}) => {
+    auxClasses ??= ''
+    if (auxClasses) auxClasses = ' ' + auxClasses
+    return (
+        <div
+            className={`flex flex-${rc} justify-center${auxClasses}`}
             children={children}
         />
     )

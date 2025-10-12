@@ -33,7 +33,7 @@ export type BlendsMap = z.infer<typeof BlendsMapSchema>
 
 const BlendEditorComponentRowSchema = z
     .object({
-        compound: z.string(),
+        compound: z.string().nonempty('select a compound'),
         variant: z.string().optional(),
         dose: z.number().gt(0, 'dose too low'),
     })
@@ -46,8 +46,8 @@ export type BlendEditorComponentRow = z.infer<
 export const blendComponentRowInit = () =>
     ({
         compound: '',
-        dose: 0,
-    }) as BlendEditorComponentRow
+        dose: undefined, // use undef to force placeholder value
+    }) as Partial<BlendEditorComponentRow> as BlendEditorComponentRow
 
 const BlendEditorRowSchema = z
     .object({

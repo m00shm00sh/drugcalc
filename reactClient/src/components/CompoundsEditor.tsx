@@ -19,6 +19,7 @@ import { FormInput, FormTextArea } from './FormField'
 import { EditorCommands } from './EditorCommands'
 import { getSelectedIndices } from '../types/Selectable'
 import { Centered } from '../widgets/Centered'
+import { FlexRow } from '../widgets/RowCol'
 
 export const CompoundsEditor = ({ isLoggedIn }: EditorProps) => {
     const [storage, setStorage] = useLocalCompounds()
@@ -83,7 +84,12 @@ export const CompoundsEditor = ({ isLoggedIn }: EditorProps) => {
                                 (errors?.compounds?.[index] && 'invalid')
                             }
                         >
-                            <div className="grid grid-cols-4 grid-rows-2 gap-2">
+                            <FlexRow auxClasses={'gap-2 p-2'}>
+                                <FormInput
+                                    name={`compounds.${index}.selected`}
+                                    type="checkbox"
+                                    label=" "
+                                />
                                 <FormInput
                                     name={`compounds.${index}.compound`}
                                     type="text"
@@ -110,18 +116,12 @@ export const CompoundsEditor = ({ isLoggedIn }: EditorProps) => {
                                     min={0.0001}
                                     step={0.0001}
                                     max={100}
-                                    valueAsNumber
                                 />
                                 <FormTextArea
                                     name={`compounds.${index}.note`}
                                     label="note"
                                 />
-                                <FormInput
-                                    name={`compounds.${index}.selected`}
-                                    type="checkbox"
-                                    label=" "
-                                />
-                            </div>
+                            </FlexRow>
                         </fieldset>
                     ))}
                     <EditorCommands

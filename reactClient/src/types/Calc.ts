@@ -85,11 +85,11 @@ export type CalcRequestRow = z.infer<typeof CalcRequestRowSchema>
 export const calcRequestRowInit = (): CalcRequestRow => ({
     prefix: '',
     compoundOrBlend: '',
-    dose: 0,
+    dose: undefined,
     start: '',
     duration: '',
     freqName: '',
-})
+}) as Partial<CalcRequestRow> as CalcRequestRow
 
 export const cycleFieldsToCycleDescription = (
     fields: CalcRequestRow[],

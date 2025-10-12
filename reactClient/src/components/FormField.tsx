@@ -30,7 +30,6 @@ export type FieldPropsNumeric<
     E extends Element,
 > = FieldProps<T, E> & {
     type: 'number' | 'range'
-    valueAsNumber: true
     min?: number
     max?: number
     step?: number
@@ -78,14 +77,7 @@ export function FormInput<T extends FieldValues>({
     inpClasses ??= ''
     if (inpClasses) inpClasses = ' ' + inpClasses
     let placeholder
-    let valueAsNumber = undefined
-    let args = {}
-    if ('valueAsNumber' in props) {
-        args = { ...props }
-        valueAsNumber = true
-    } else if (type === 'text') {
-        args = { ...props }
-    }
+    const valueAsNumber = type === 'number'
     if (['text', 'number'].indexOf(type ?? '') >= 0 && 'placeholder' in props) {
         placeholder = props.placeholder
         inpClasses += ' indent-2'
@@ -100,9 +92,9 @@ export function FormInput<T extends FieldValues>({
                 {...register(name, {
                     onChange,
                     valueAsNumber: valueAsNumber,
-                    ...args,
+                    ...props,
                 })}
-                {...args}
+                {...props}
             />
             {type !== 'checkbox' && <ErrorMessage text={errorValue?.message} />}
         </GridCol>
@@ -192,7 +184,7 @@ export function FormTextArea<T extends FieldValues>({
         <GridCol auxClasses={blockClasses}>
             <OptionalLabel label={label} />
             <textarea
-                className={`text-gray-900 bg-gray-400 focus:ring resize-x${inpClasses}`}
+                className={`text-gray-900 bg-gray-400 focus:ring p-2 resize-x${inpClasses}`}
                 placeholder={placeholder}
                 {...register(name, { onChange })}
             />
