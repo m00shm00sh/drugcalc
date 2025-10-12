@@ -130,8 +130,7 @@ export const CompoundsEditor = ({ isLoggedIn }: EditorProps) => {
                         getSelected={() => selecteds}
                         removeRows={remove}
                         loadFromRemote={loadFromRemote}
-                        allowCommit={allowCommit}
-                        setAllowCommit={setAllowCommit}
+                        allowCommit={[allowCommit, setAllowCommit]}
                     />
                 </form>
             </FormProvider>

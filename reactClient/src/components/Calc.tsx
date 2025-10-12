@@ -1,22 +1,23 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useMemo, useState, type SyntheticEvent } from 'react'
 import {
+    FormProvider,
+    useFieldArray,
     useForm,
     useFormContext,
-    useFieldArray,
-    FormProvider,
 } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import Plot from 'react-plotly.js'
+import { useSearchParams } from 'react-router-dom'
+import { makeInvoker, useAsyncResult } from '../hooks/useAsyncFetch'
 import {
     useLocalBlends,
     useLocalCompounds,
     useLocalConfig,
     useLocalFrequencies,
 } from '../hooks/useLocalData'
-import { Grid, GridCol } from '../widgets/RowCol'
 import type {
-    CalcRequestRow,
     CalcRequestDataContainer,
+    CalcRequestRow,
     PlotlyInvocation,
 } from '../types/Calc'
 import {
@@ -30,23 +31,23 @@ import {
 } from '../types/Calc'
 import type { ByCompoundByVariant } from '../types/Compounds'
 import { reshapeCompoundKeys } from '../types/Compounds'
+import { sortedFrequenciesWithWeights } from '../types/Frequencies'
+import { getSelectedIndices } from '../types/Selectable'
 import {
     fetchBlends,
     fetchCompounds,
     fetchFrequencies,
-    fetchVariants,
-    fetchTransformerNames,
     fetchTransformerFrequencies,
+    fetchTransformerNames,
+    fetchVariants,
     postJson,
 } from '../util/fetcher'
 import memoize from '../util/memoize'
-import { makeInvoker, useAsyncResult } from '../hooks/useAsyncFetch'
-import { FormInput, FormSelectWithOptions } from './FormField'
-import { sortedFrequenciesWithWeights } from '../types/Frequencies'
-import { getSelectedIndices } from '../types/Selectable'
 import { Centered } from '../widgets/Centered'
-import { EditorCommands } from './EditorCommands'
 import { ErrorMessage } from '../widgets/ErrorMessage'
+import { Grid, GridCol } from '../widgets/RowCol'
+import { EditorCommands } from './EditorCommands'
+import { FormInput, FormSelectWithOptions } from './FormField'
 
 type WithAuxDeps<T extends unknown[], U extends unknown[]> = [
     (...args: [...T]) => Promise<readonly string[]>,

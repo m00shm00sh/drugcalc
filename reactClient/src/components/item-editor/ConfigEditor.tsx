@@ -164,7 +164,6 @@ export const ConfigEditor = () => {
                         appendRow={() => append(configEditorRowInit())}
                         getSelected={() => selecteds}
                         removeRows={remove}
-                        allowCommit={false}
                     />
                 </form>
             </FormProvider>
