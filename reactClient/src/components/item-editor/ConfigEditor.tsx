@@ -18,7 +18,7 @@ import {
 } from '../../types/Config'
 import { getSelectedIndices } from '../../types/Selectable'
 import { Centered } from '../../widgets/Centered'
-import { Grid, GridCol } from '../../widgets/RowCol'
+import { FlexRow, GridCol } from '../../widgets/RowCol'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput, FormSelectWithOptions } from '../FormField'
 
@@ -77,7 +77,12 @@ const ConfigItem = ({ index, update }: ConfigItemProps) => {
     const componentError = errors?.config?.[index]
     return (
         <fieldset className={`border ${componentError ? 'invalid' : ''}`}>
-            <Grid colSpec="3" auxClasses="gap-2 p-2">
+            <FlexRow auxClasses="gap-2 p-2">
+                <FormInput
+                    type="checkbox"
+                    name={`config.${index}.selected`}
+                    inpClasses="pl-2"
+                />
                 <FormSelectWithOptions
                     name={`config.${index}.type`}
                     optionValues={keyNames}
@@ -91,12 +96,7 @@ const ConfigItem = ({ index, update }: ConfigItemProps) => {
                     }}
                 />
                 <SetItem index={index} type={type} value={value} />
-                <FormInput
-                    type="checkbox"
-                    name={`config.${index}.selected`}
-                    inpClasses="pl-2"
-                />
-            </Grid>
+            </FlexRow>
         </fieldset>
     )
 }
