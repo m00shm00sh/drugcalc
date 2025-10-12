@@ -27,7 +27,7 @@ import { Centered } from '../../widgets/Centered'
 import { ErrorMessage } from '../../widgets/ErrorMessage'
 import { FlexRow, GridCol } from '../../widgets/RowCol'
 import { EditorCommands } from '../EditorCommands'
-import type { EditorProps } from '../EditorProps'
+import type { EditorProps } from '../EditorCommands'
 import { FormInput } from '../FormField'
 
 type FrequencyComponentProps = {

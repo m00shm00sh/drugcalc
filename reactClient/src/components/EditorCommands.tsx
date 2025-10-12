@@ -1,5 +1,8 @@
 import { Button } from '../widgets/Button'
-import type { EditorProps } from './EditorProps'
+
+export type EditorProps = {
+    isLoggedIn: boolean
+}
 
 type EditorCommandsProps = EditorProps & {
     appendRow: () => void

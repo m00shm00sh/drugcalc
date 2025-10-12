@@ -18,7 +18,7 @@ import { selectedItemsFromRemoteFormLoader } from '../../util/load-from-remote'
 import { Centered } from '../../widgets/Centered'
 import { FlexRow } from '../../widgets/RowCol'
 import { EditorCommands } from '../EditorCommands'
-import type { EditorProps } from '../EditorProps'
+import type { EditorProps } from '../EditorCommands'
 import { FormInput, FormTextArea } from '../FormField'
 
 export const CompoundsEditor = ({ isLoggedIn }: EditorProps) => {

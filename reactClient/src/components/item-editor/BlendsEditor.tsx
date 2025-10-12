@@ -37,7 +37,7 @@ import { Centered } from '../../widgets/Centered'
 import { ErrorMessage } from '../../widgets/ErrorMessage'
 import { FlexRow } from '../../widgets/RowCol'
 import { EditorCommands } from '../EditorCommands'
-import type { EditorProps } from '../EditorProps'
+import type { EditorProps } from '../EditorCommands'
 import { FormInput, FormSelectWithOptions, FormTextArea } from '../FormField'
 
 const LocalCompoundsBcbvContext = createContext<ByCompoundByVariant>({})
