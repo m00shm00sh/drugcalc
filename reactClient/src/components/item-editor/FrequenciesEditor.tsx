@@ -1,34 +1,34 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { useLocalFrequencies } from '../hooks/useLocalData'
-import { Button } from '../widgets/Button'
-import { GridCol, FlexRow } from '../widgets/RowCol'
-import { selectedItemsFromRemoteFormLoader } from '../util/load-from-remote'
-import type {
-    FrequencyEditorRow,
-    FrequencyEditorDataContainer,
-} from '../types/Frequencies'
+import type { UseFieldArrayRemove } from 'react-hook-form'
 import {
-    frequencyEditorComponentItemInit,
-    frequencyEditorRowInit,
-    FrequencyEditorDataContainerSchema,
-    frequencyMapToEditorFields,
-    loadFrequencyDetailsFromRemote,
-    frequencyEditorFieldsToMap,
-} from '../types/Frequencies'
-import {
+    FormProvider,
+    useFieldArray,
     useForm,
     useFormContext,
-    useFieldArray,
-    FormProvider,
 } from 'react-hook-form'
-import type { UseFieldArrayRemove } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import type { EditorProps } from './EditorProps'
-import { EditorCommands } from './EditorCommands'
-import { FormInput } from './FormField'
-import { Centered } from '../widgets/Centered'
-import { getSelectedIndices } from '../types/Selectable'
-import { ErrorMessage } from '../widgets/ErrorMessage'
+import { useLocalFrequencies } from '../../hooks/useLocalData'
+import type {
+    FrequencyEditorDataContainer,
+    FrequencyEditorRow,
+} from '../../types/Frequencies'
+import {
+    frequencyEditorComponentItemInit,
+    FrequencyEditorDataContainerSchema,
+    frequencyEditorFieldsToMap,
+    frequencyEditorRowInit,
+    frequencyMapToEditorFields,
+    loadFrequencyDetailsFromRemote,
+} from '../../types/Frequencies'
+import { getSelectedIndices } from '../../types/Selectable'
+import { selectedItemsFromRemoteFormLoader } from '../../util/load-from-remote'
+import { Button } from '../../widgets/Button'
+import { Centered } from '../../widgets/Centered'
+import { ErrorMessage } from '../../widgets/ErrorMessage'
+import { FlexRow, GridCol } from '../../widgets/RowCol'
+import { EditorCommands } from '../EditorCommands'
+import type { EditorProps } from '../EditorProps'
+import { FormInput } from '../FormField'
 
 type FrequencyComponentProps = {
     remove: UseFieldArrayRemove
@@ -75,7 +75,7 @@ const FrequencyComponents = ({ parentIndex }: FrequencyComponentsProps) => {
     )
     return (
         <fieldset
-            className={'border ' + (componentContainerError && 'invalid')}
+            className={`border ${componentContainerError && 'invalid'}`}
         >
             <legend>frequencies</legend>
             <GridCol auxClasses="gap-2 p-2">

@@ -1,11 +1,11 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import './App.css'
 import { Calc } from './components/Calc'
-import { BlendsEditor } from './components/BlendsEditor'
-import { CompoundsEditor } from './components/CompoundsEditor'
-import { FrequenciesEditor } from './components/FrequenciesEditor'
+import { BlendsEditor } from './components/item-editor/BlendsEditor'
+import { CompoundsEditor } from './components/item-editor/CompoundsEditor'
+import { FrequenciesEditor } from './components/item-editor/FrequenciesEditor'
 import { NavBar } from './components/NavBar'
-import { ConfigEditor } from './components/ConfigEditor'
+import { ConfigEditor } from './components/item-editor/ConfigEditor'
 
 const isLoggedIn = false
 const App = () => {

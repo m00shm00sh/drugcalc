@@ -1,25 +1,25 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { useForm, useFieldArray, FormProvider } from 'react-hook-form'
-import { useLocalCompounds } from '../hooks/useLocalData'
-import { selectedItemsFromRemoteFormLoader } from '../util/load-from-remote'
+import { FormProvider, useFieldArray, useForm } from 'react-hook-form'
+import { useLocalCompounds } from '../../hooks/useLocalData'
 import type {
     CompoundEditorDataContainer,
     CompoundEditorRow,
-} from '../types/Compounds'
+} from '../../types/Compounds'
 import {
     CompoundEditorDataContainerSchema,
     compoundEditorFieldsToMap,
     compoundMapToEditorFields,
     compoundRowInit,
     loadCompoundDetailsFromRemote,
-} from '../types/Compounds'
-import { zodResolver } from '@hookform/resolvers/zod'
-import type { EditorProps } from './EditorProps'
-import { FormInput, FormTextArea } from './FormField'
-import { EditorCommands } from './EditorCommands'
-import { getSelectedIndices } from '../types/Selectable'
-import { Centered } from '../widgets/Centered'
-import { FlexRow } from '../widgets/RowCol'
+} from '../../types/Compounds'
+import { getSelectedIndices } from '../../types/Selectable'
+import { selectedItemsFromRemoteFormLoader } from '../../util/load-from-remote'
+import { Centered } from '../../widgets/Centered'
+import { FlexRow } from '../../widgets/RowCol'
+import { EditorCommands } from '../EditorCommands'
+import type { EditorProps } from '../EditorProps'
+import { FormInput, FormTextArea } from '../FormField'
 
 export const CompoundsEditor = ({ isLoggedIn }: EditorProps) => {
     const [storage, setStorage] = useLocalCompounds()

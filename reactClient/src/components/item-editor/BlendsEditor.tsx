@@ -1,44 +1,44 @@
-import { useState, createContext, useContext, useMemo } from 'react'
-import { makeInvoker, useAsyncResult } from '../hooks/useAsyncFetch'
-import { useLocalBlends, useLocalCompounds } from '../hooks/useLocalData'
-import { Button } from '../widgets/Button'
-import memoize from '../util/memoize'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { createContext, useContext, useMemo, useState } from 'react'
+import type { UseFieldArrayRemove } from 'react-hook-form'
+import {
+    FormProvider,
+    useFieldArray,
+    useForm,
+    useFormContext,
+} from 'react-hook-form'
+import { makeInvoker, useAsyncResult } from '../../hooks/useAsyncFetch'
+import { useLocalBlends, useLocalCompounds } from '../../hooks/useLocalData'
+import type {
+    BlendEditorComponentRow,
+    BlendEditorDataContainer,
+    BlendEditorRow,
+} from '../../types/Blends'
+import {
+    blendComponentRowInit,
+    BlendEditorDataContainerSchema,
+    blendEditorFieldsToMap,
+    blendMapToEditorFields,
+    blendRowInit,
+    loadBlendDetailsFromRemote,
+} from '../../types/Blends'
+import type { ByCompoundByVariant } from '../../types/Compounds'
+import { reshapeCompoundKeys } from '../../types/Compounds'
+import { getSelectedIndices } from '../../types/Selectable'
 import {
     fetchCompounds,
     fetchVariants,
     memoizedRemoteVariants,
-} from '../util/fetcher'
-import { selectedItemsFromRemoteFormLoader } from '../util/load-from-remote'
-import type {
-    BlendEditorComponentRow,
-    BlendEditorRow,
-    BlendEditorDataContainer,
-} from '../types/Blends'
-import {
-    blendEditorFieldsToMap,
-    blendComponentRowInit,
-    BlendEditorDataContainerSchema,
-    blendRowInit,
-    blendMapToEditorFields,
-    loadBlendDetailsFromRemote,
-} from '../types/Blends'
-import type { ByCompoundByVariant } from '../types/Compounds'
-import { reshapeCompoundKeys } from '../types/Compounds'
-import {
-    useForm,
-    useFormContext,
-    useFieldArray,
-    FormProvider,
-} from 'react-hook-form'
-import type { UseFieldArrayRemove } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { EditorCommands } from './EditorCommands'
-import type { EditorProps } from './EditorProps'
-import { FormInput, FormSelectWithOptions, FormTextArea } from './FormField'
-import { Centered } from '../widgets/Centered'
-import { ErrorMessage } from '../widgets/ErrorMessage'
-import { FlexRow } from '../widgets/RowCol'
-import { getSelectedIndices } from '../types/Selectable'
+} from '../../util/fetcher'
+import { selectedItemsFromRemoteFormLoader } from '../../util/load-from-remote'
+import memoize from '../../util/memoize'
+import { Button } from '../../widgets/Button'
+import { Centered } from '../../widgets/Centered'
+import { ErrorMessage } from '../../widgets/ErrorMessage'
+import { FlexRow } from '../../widgets/RowCol'
+import { EditorCommands } from '../EditorCommands'
+import type { EditorProps } from '../EditorProps'
+import { FormInput, FormSelectWithOptions, FormTextArea } from '../FormField'
 
 const LocalCompoundsBcbvContext = createContext<ByCompoundByVariant>({})
 const MergedCompoundNamesContext = createContext<string[]>([])
@@ -78,7 +78,7 @@ const BlendComponent = ({
     const componentError =
         errors?.blends?.[blendIndex]?.components?.[componentIndex]
     return (
-        <fieldset className={'border ' + (componentError && 'invalid')}>
+        <fieldset className={`border ${componentError && 'invalid'}`}>
             <FlexRow auxClasses="col-span-2 gap-2 p-2">
                 <FormInput type="checkbox" name={`${component}.selected`} />
                 <FormInput
@@ -125,7 +125,7 @@ const BlendComponents = ({ parentIndex }: BlendComponentsProps) => {
     return (
         <fieldset
             className={
-                'border ' + (componentContainerError && 'invalid')
+                `border ${componentContainerError && 'invalid'}`
             }
         >
             <legend>components</legend>

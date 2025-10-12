@@ -107,6 +107,13 @@ export const cycleFieldsToCycleDescription = (
         return d
     })
 
+export const importFromQueryString = (q: URLSearchParams): CalcRequestRow[] => {
+
+}
+export const exportToQueryString = (rows: readonly CalcRequestRow[]) => {
+
+}
+
 export type AuxData = {
     compounds?: CompoundsMap
     blends?: BlendsMap

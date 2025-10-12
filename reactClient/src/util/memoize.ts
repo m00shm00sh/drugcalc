@@ -8,10 +8,10 @@ export default function memoize<R, T extends unknown[]>(
         future: Promise<R>
     }
     const cache = new Map<string, cacheEntry>()
-    return async function (...args: [...T]): Promise<R> {
+    return async (...args: [...T]): Promise<R> => {
         const hashedK = keyHasher(...args)
         const e = cache.get(hashedK)
-        const now = new Date().getTime()
+        const now = Date.now()
         if (e === undefined || now - e.inserted > timeoutMsec) {
             const fut = new Promise<R>((accept, reject) => {
                 try {
@@ -28,8 +28,8 @@ export default function memoize<R, T extends unknown[]>(
             return await fut
         }
         setTimeout(
-            function (k: string) {
-                const now = new Date().getTime()
+            (k: string) => {
+                const now = Date.now()
                 const e = cache.get(k)
                 if (e === undefined || now - e.inserted < timeoutMsec) return
                 cache.delete(hashedK)
