@@ -42,7 +42,7 @@ export function selectedItemsFromRemoteFormLoader<
         const data = getValues(arrayKey)
         const newData = await loader(data)
         for (const [i, d] of newData.entries()) {
-            if (!d?.selected) continue
+            if (!data[i]?.selected) continue
             if (d === undefined) {
                 for (const ek of errorKeys(i)) {
                     setError(ek, {

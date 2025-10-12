@@ -22,8 +22,8 @@ import {
 import memoize from './memoize'
 import { iso8601ToNumber } from '../types/duration'
 import { zodNonemptyStringArraySchema } from '../types/string'
+import type { ValueOrSupplier } from './filter-setif'
 
-type valueOrSupplier<T extends object> = T | (() => T)
 
 async function fetchJson<
     T extends object,
@@ -31,7 +31,7 @@ async function fetchJson<
 >(
     relativeLink: string,
     schema: ZT,
-    on404: valueOrSupplier<z.infer<typeof schema>>,
+    on404: ValueOrSupplier<z.infer<typeof schema>>,
 ): Promise<z.infer<typeof schema>>
 
 async function fetchJson<
@@ -45,7 +45,7 @@ async function fetchJson<
 >(
     relativeLink: string,
     schema: ZT,
-    on404?: valueOrSupplier<z.infer<typeof schema>>,
+    on404?: ValueOrSupplier<z.infer<typeof schema>>,
 ): Promise<Nullable<z.infer<typeof schema>>> {
     const response = await fetch(`${BACKEND}${relativeLink}`, {
         headers: {
@@ -57,7 +57,7 @@ async function fetchJson<
     if (response.status === 404) {
         if (on404 === undefined) return undefined
         if (typeof on404 === 'function') return on404()
-        return on404
+        return on404 as z.infer<typeof schema>
     }
     const data = await response.json()
     return schema.parse(data)
