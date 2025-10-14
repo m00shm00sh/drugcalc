@@ -43,3 +43,5 @@ export const useLocalFrequencies = () =>
     filterOutDeleter(useLocalStorageWithZodDeserializer('frequencies', FrequenciesMapSchema, {}))
 export const useLocalConfig = () =>
     filterOutDeleter(useLocalStorageWithZodDeserializer('config', ConfigSchema, {}))
+
+export const useLocalToken = () => filterOutDeleter(useLocalStorage<string>('login', ''))
