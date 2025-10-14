@@ -30,8 +30,8 @@ import {
     fetchVariants,
     memoizedRemoteVariants,
 } from '../../util/fetcher'
-import { selectedItemsFromRemoteFormLoader } from '../../util/load-from-remote'
 import memoize from '../../util/memoize'
+import { selectedItemsFromRemoteFormLoader, selectedItemsToRemoteSender } from '../../util/remote-load-store'
 import { Button } from '../../widgets/Button'
 import { Centered } from '../../widgets/Centered'
 import { ErrorMessage } from '../../widgets/ErrorMessage'
@@ -216,12 +216,15 @@ export const BlendsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
         update,
     )
 
-    const doSubmit = async (data: BlendEditorRow[]) => {
-        console.log(data)
-        const map = blendEditorFieldsToMap(data)
-        if (allowCommit) throw Error('unimplemented')
-        else setStorage(map)
-    }
+    const doSubmit = selectedItemsToRemoteSender(
+        methods,
+        'blends',
+        blendEditorFieldsToMap,
+        '/api/data/blends',
+        setStorage,
+        allowCommit,
+        loginToken
+    )
 
     return (
         <>

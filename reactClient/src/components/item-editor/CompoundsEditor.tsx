@@ -14,14 +14,14 @@ import {
     loadCompoundDetailsFromRemote,
 } from '../../types/Compounds'
 import { getSelectedIndices } from '../../types/Selectable'
-import { selectedItemsFromRemoteFormLoader } from '../../util/load-from-remote'
 import { Centered } from '../../widgets/Centered'
 import { Flex } from '../../widgets/RowCol'
 import { EditorCommands } from '../EditorCommands'
 import type { EditorProps } from '../EditorCommands'
 import { FormInput, FormTextArea } from '../FormField'
+import { selectedItemsFromRemoteFormLoader, selectedItemsToRemoteSender } from '../../util/remote-load-store'
 
-export const CompoundsEditor = ({ isLoggedIn }: EditorProps) => {
+export const CompoundsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
     const [storage, setStorage] = useLocalCompounds()
 
     const initData = () => {
@@ -52,12 +52,15 @@ export const CompoundsEditor = ({ isLoggedIn }: EditorProps) => {
         update,
     )
 
-    const doSubmit = async (data: CompoundEditorRow[]) => {
-        console.log(data)
-        const map = compoundEditorFieldsToMap(data)
-        if (allowCommit) throw Error('unimplemented')
-        else setStorage(map)
-    }
+    const doSubmit = selectedItemsToRemoteSender(
+        methods,
+        'compounds',
+        compoundEditorFieldsToMap,
+        '/api/data/compounds',
+        setStorage,
+        allowCommit,
+        loginToken
+    )
 
     const {
         watch,

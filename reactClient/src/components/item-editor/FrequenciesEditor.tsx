@@ -21,7 +21,7 @@ import {
     loadFrequencyDetailsFromRemote,
 } from '../../types/Frequencies'
 import { getSelectedIndices } from '../../types/Selectable'
-import { selectedItemsFromRemoteFormLoader } from '../../util/load-from-remote'
+import { selectedItemsFromRemoteFormLoader, selectedItemsToRemoteSender } from '../../util/remote-load-store'
 import { Button } from '../../widgets/Button'
 import { Centered } from '../../widgets/Centered'
 import { ErrorMessage } from '../../widgets/ErrorMessage'
@@ -103,7 +103,7 @@ const FrequencyComponents = ({ parentIndex }: FrequencyComponentsProps) => {
     )
 }
 
-export const FrequenciesEditor = ({ isLoggedIn }: EditorProps) => {
+export const FrequenciesEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
     const [storage, setStorage] = useLocalFrequencies()
 
     const initData = () => {
@@ -135,14 +135,15 @@ export const FrequenciesEditor = ({ isLoggedIn }: EditorProps) => {
         update,
     )
 
-    const doSubmit = async (data: FrequencyEditorRow[]) => {
-        console.log(data)
-        const map = frequencyEditorFieldsToMap(data)
-        if (allowCommit) throw Error('unimplemented')
-        else {
-            setStorage(map)
-        }
-    }
+    const doSubmit = selectedItemsToRemoteSender(
+        methods,
+        'frequencies',
+        frequencyEditorFieldsToMap,
+        '/api/data/frequencies',
+        setStorage,
+        allowCommit,
+        loginToken
+    )
 
     const {
         formState: { errors },

@@ -1,28 +1,28 @@
 import { z } from 'zod'
-import { type Nullable, require } from './util'
-import { BACKEND } from './constants'
 import {
     BlendEntrySchema,
     BlendNamesListSchema,
     type BlendEntry,
 } from '../types/Blends'
 import {
-    type ByCompoundByVariant,
-    type CompoundName,
-    type CompoundInfo,
+    CompoundInfoSchema,
     CompoundNamesListSchema,
     VariantNamesListSchema,
-    CompoundInfoSchema,
+    type ByCompoundByVariant,
+    type CompoundInfo,
+    type CompoundName,
 } from '../types/Compounds'
+import { iso8601ToNumber } from '../types/duration'
 import {
     FrequencyEntrySchema,
     FrequencyNamesWithWeightsSchema,
     type FrequencyEntry,
 } from '../types/Frequencies'
-import memoize from './memoize'
-import { iso8601ToNumber } from '../types/duration'
 import { zodNonemptyStringArraySchema } from '../types/string'
+import { BACKEND } from './constants'
 import type { ValueOrSupplier } from './filter-setif'
+import memoize from './memoize'
+import { require, type Nullable } from './util'
 
 
 async function fetchJson<
@@ -63,8 +63,10 @@ async function fetchJson<
     return schema.parse(data)
 }
 
+export const NO_RESPONSE = z.undefined()
+
 export async function postJson<
-    R extends object,
+    R,
     T extends object,
     ZT extends z.ZodType<R> = z.ZodType<R>,
 >(
@@ -88,6 +90,11 @@ export async function postJson<
             `couldn't post ${relativeLink}: ${text}`,
         )
     }
+    if (<unknown>responseSchema === NO_RESPONSE) {
+        await response.text()
+        return undefined as z.infer<typeof responseSchema>
+    }
+
     const data = await response.json()
     return responseSchema.parse(data)
 }
