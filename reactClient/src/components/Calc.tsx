@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMemo, useState, type SyntheticEvent } from 'react'
 import { FormProvider, useFieldArray, useForm, useFormContext } from 'react-hook-form'
-import Plot from 'react-plotly.js'
+import createPlotlyComponent from 'react-plotly.js/factory'
 import { useSearchParams } from 'react-router-dom'
 import { makeInvoker, useAsyncResult } from '../hooks/useAsyncFetch'
 import {
@@ -41,6 +41,11 @@ import { ErrorMessage } from '../widgets/ErrorMessage'
 import { Flex, Grid } from '../widgets/RowCol'
 import { EditorCommands } from './EditorCommands'
 import { FormInput, FormSelectWithOptions } from './FormField'
+// either this or a dummy typescript declaration file;
+// use "regular" Plotly from react-plotly.js for development
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const Plotly = require('plotly.js-gl2d-dist-min/')
+const Plot = createPlotlyComponent(Plotly)
 
 type WithAuxDeps<T extends unknown[], U extends unknown[]> = [
     (...args: [...T]) => Promise<readonly string[]>,
