@@ -25,9 +25,9 @@ import { selectedItemsFromRemoteFormLoader } from '../../util/load-from-remote'
 import { Button } from '../../widgets/Button'
 import { Centered } from '../../widgets/Centered'
 import { ErrorMessage } from '../../widgets/ErrorMessage'
-import { FlexRow, GridCol } from '../../widgets/RowCol'
-import { EditorCommands } from '../EditorCommands'
+import { Flex } from '../../widgets/RowCol'
 import type { EditorProps } from '../EditorCommands'
+import { EditorCommands } from '../EditorCommands'
 import { FormInput } from '../FormField'
 
 type FrequencyComponentProps = {
@@ -78,7 +78,7 @@ const FrequencyComponents = ({ parentIndex }: FrequencyComponentsProps) => {
             className={`border ${componentContainerError && 'invalid'}`}
         >
             <legend>frequencies</legend>
-            <GridCol auxClasses="gap-2 p-2">
+            <Flex dir='col' auxClasses="gap-2 p-2">
                 {fields.map((field, index) => (
                     <FrequencyComponent
                         key={field.id}
@@ -87,18 +87,18 @@ const FrequencyComponents = ({ parentIndex }: FrequencyComponentsProps) => {
                         remove={remove}
                     />
                 ))}
-                <FlexRow>
-                    <Button
+                <Flex dir='row'>
+                    <Button colorClass='sky-400'
                         onClick={() => append(frequencyEditorComponentItemInit())}
                     >
                         Add component
                     </Button>
-                    <Button onClick={() => remove(selecteds)}>
+                    <Button colorClass='amber-400' onClick={() => remove(selecteds)}>
                         Remove selected
                     </Button>
-                </FlexRow>
+                </Flex>
                 <ErrorMessage text={componentContainerError?.root?.message} />
-            </GridCol>
+            </Flex>
         </fieldset>
     )
 }
@@ -169,7 +169,7 @@ export const FrequenciesEditor = ({ isLoggedIn }: EditorProps) => {
                                 (errors?.frequencies?.[index] && 'invalid')
                             }
                         >
-                            <FlexRow auxClasses="gap">
+                            <Flex dir='row' auxClasses="gap">
                                 <FormInput
                                     type="checkbox"
                                     name={`frequencies.${index}.selected`}
@@ -181,7 +181,7 @@ export const FrequenciesEditor = ({ isLoggedIn }: EditorProps) => {
                                     placeholder="name"
                                 />
                                 <FrequencyComponents parentIndex={index} />
-                            </FlexRow>
+                            </Flex>
                         </fieldset>
                     ))}
                     <EditorCommands

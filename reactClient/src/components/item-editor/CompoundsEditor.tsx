@@ -16,7 +16,7 @@ import {
 import { getSelectedIndices } from '../../types/Selectable'
 import { selectedItemsFromRemoteFormLoader } from '../../util/load-from-remote'
 import { Centered } from '../../widgets/Centered'
-import { FlexRow } from '../../widgets/RowCol'
+import { Flex } from '../../widgets/RowCol'
 import { EditorCommands } from '../EditorCommands'
 import type { EditorProps } from '../EditorCommands'
 import { FormInput, FormTextArea } from '../FormField'
@@ -84,7 +84,7 @@ export const CompoundsEditor = ({ isLoggedIn }: EditorProps) => {
                                 (errors?.compounds?.[index] && 'invalid')
                             }
                         >
-                            <FlexRow auxClasses={'gap-2 p-2'}>
+                            <Flex dir='row' auxClasses={'gap-2 p-2'}>
                                 <FormInput
                                     name={`compounds.${index}.selected`}
                                     type="checkbox"
@@ -121,7 +121,7 @@ export const CompoundsEditor = ({ isLoggedIn }: EditorProps) => {
                                     name={`compounds.${index}.note`}
                                     label="note"
                                 />
-                            </FlexRow>
+                            </Flex>
                         </fieldset>
                     ))}
                     <EditorCommands

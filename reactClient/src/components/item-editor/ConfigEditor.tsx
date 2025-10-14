@@ -18,7 +18,7 @@ import {
 } from '../../types/Config'
 import { getSelectedIndices } from '../../types/Selectable'
 import { Centered } from '../../widgets/Centered'
-import { FlexRow, GridCol } from '../../widgets/RowCol'
+import { Flex } from '../../widgets/RowCol'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput, FormSelectWithOptions } from '../FormField'
 
@@ -77,7 +77,7 @@ const ConfigItem = ({ index, update }: ConfigItemProps) => {
     const componentError = errors?.config?.[index]
     return (
         <fieldset className={`border ${componentError ? 'invalid' : ''}`}>
-            <FlexRow auxClasses="gap-2 p-2">
+            <Flex dir='row' auxClasses="gap-2 p-2">
                 <FormInput
                     type="checkbox"
                     name={`config.${index}.selected`}
@@ -96,7 +96,7 @@ const ConfigItem = ({ index, update }: ConfigItemProps) => {
                     }}
                 />
                 <SetItem index={index} type={type} value={value} />
-            </FlexRow>
+            </Flex>
         </fieldset>
     )
 }
@@ -147,7 +147,7 @@ export const ConfigEditor = () => {
                     <fieldset
                         className={`border ${componentError && 'invalid'}`}
                     >
-                        <GridCol>
+                        <Flex dir='col'>
                             {fields.map((field, index) => (
                                 <ConfigItem
                                     key={field.id}
@@ -157,7 +157,7 @@ export const ConfigEditor = () => {
                                     }
                                 />
                             ))}
-                        </GridCol>
+                        </Flex>
                     </fieldset>
                     <EditorCommands
                         isLoggedIn={false}

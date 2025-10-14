@@ -3,7 +3,7 @@ import type { FieldError, FieldPath, FieldValues } from 'react-hook-form'
 import { useFormContext } from 'react-hook-form'
 import type { Nullable } from '../util/util'
 import { ErrorMessage } from '../widgets/ErrorMessage'
-import { GridCol } from '../widgets/RowCol'
+import { Flex } from '../widgets/RowCol'
 
 export type FieldProps<T extends FieldValues, E extends Element> = {
     type?: string
@@ -20,7 +20,7 @@ export type FieldPropsText<
     T extends FieldValues,
     E extends Element,
 > = FieldProps<T, E> & {
-    type: 'text'
+    type: 'text' | 'password'
     minLength?: number
     maxLength?: number
 } & FieldHasPlaceholder
@@ -78,12 +78,12 @@ export function FormInput<T extends FieldValues>({
     if (inpClasses) inpClasses = ' ' + inpClasses
     let placeholder
     const valueAsNumber = type === 'number'
-    if (['text', 'number'].indexOf(type ?? '') >= 0 && 'placeholder' in props) {
+    if (['text', 'password', 'number'].indexOf(type ?? '') >= 0 && 'placeholder' in props) {
         placeholder = props.placeholder
         inpClasses += ' indent-2'
     }
     return (
-        <GridCol auxClasses={blockClasses}>
+        <Flex dir='col' auxClasses={blockClasses}>
             <OptionalLabel label={label} />
             <input
                 className={`bg-gray-400 text-gray-900 focus:ring w-min align-middle resize-x${inpClasses}`}
@@ -97,7 +97,7 @@ export function FormInput<T extends FieldValues>({
                 {...props}
             />
             {type !== 'checkbox' && <ErrorMessage text={errorValue?.message} />}
-        </GridCol>
+        </Flex>
     )
 }
 
@@ -150,7 +150,7 @@ export function FormSelectWithOptions<T extends FieldValues>({
     if (Object.keys(optionValues).length < 1) return <></>
     const errorValue = getChain<FieldError>(errors, name)
     return (
-        <GridCol auxClasses={blockClasses}>
+        <Flex dir='col' auxClasses={blockClasses}>
             <OptionalLabel label={label} />
             <select
                 className={`text-gray-900 bg-gray-400 focus:ring p-1 resize-x${inpClasses}`}
@@ -160,7 +160,7 @@ export function FormSelectWithOptions<T extends FieldValues>({
                 <OptionValues optionValues={optionValues} />
             </select>
             <ErrorMessage text={errorValue?.message} />
-        </GridCol>
+        </Flex>
     )
 }
 
@@ -181,7 +181,7 @@ export function FormTextArea<T extends FieldValues>({
     if (inpClasses) inpClasses = ' ' + inpClasses
     const errorValue = getChain<FieldError>(errors, name)
     return (
-        <GridCol auxClasses={blockClasses}>
+        <Flex dir='col' auxClasses={blockClasses}>
             <OptionalLabel label={label} />
             <textarea
                 className={`text-gray-900 bg-gray-400 focus:ring p-2 resize-x${inpClasses}`}
@@ -189,6 +189,6 @@ export function FormTextArea<T extends FieldValues>({
                 {...register(name, { onChange })}
             />
             <ErrorMessage text={errorValue?.message} />
-        </GridCol>
+        </Flex>
     )
 }

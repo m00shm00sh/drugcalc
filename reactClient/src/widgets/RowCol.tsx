@@ -1,50 +1,54 @@
 import type { ReactNode } from 'react'
 
+const ColSpec = {
+    'nc-1': 'grid-cols-1',
+    'nc-2': 'grid-cols-2',
+    'nc-3': 'grid-cols-3',
+    'nc-4': 'grid-cols-4'
+}
+
+const FlexDir = {
+    'row': 'flex-row',
+    'col': 'flex-col'
+}
+
 type GridItem = {
     children: ReactNode
     auxClasses?: string
-    colSpec?: number | string
-    rowSpec?: number | string
+    colSpec: keyof typeof ColSpec
 }
 
-export const GridCol = (props: GridItem) => <Grid {...props} colSpec={1} />
+type FlexItem = {
+    children: ReactNode
+    auxClasses?: string
+    dir: keyof typeof FlexDir
+}
 
 export const Grid = ({
     children,
     auxClasses,
-    colSpec: nc,
-    rowSpec: nr,
+    colSpec,
 }: GridItem) => {
     auxClasses ??= ''
     if (auxClasses) auxClasses = ' ' + auxClasses
-    nr ??= ''
-    if (nr) nr = ` grid-rows-${nr}`
     return (
         <div
-            className={`grid grid-cols-${nc}${nr}${auxClasses}`}
+            className={`grid ${ColSpec[colSpec]} ${auxClasses}`}
             children={children}
         />
     )
 }
 
-type Item = {
-    children: ReactNode
-    auxClasses?: string
-}
-
-export const FlexCol = (props: Item) => <Flex rc={'col'} {...props} />
-export const FlexRow = (props: Item) => <Flex rc={'row'} {...props} />
-
-const Flex= ({
+export const Flex = ({
+    dir,
     children,
     auxClasses,
-    rc,
-}: GridItem & {rc: 'col'|'row'}) => {
+}: FlexItem) => {
     auxClasses ??= ''
     if (auxClasses) auxClasses = ' ' + auxClasses
     return (
         <div
-            className={`flex flex-${rc} justify-center${auxClasses}`}
+            className={`flex ${FlexDir[dir]} justify-center ${auxClasses}`}
             children={children}
         />
     )

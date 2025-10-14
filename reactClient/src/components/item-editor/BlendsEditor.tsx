@@ -35,9 +35,9 @@ import memoize from '../../util/memoize'
 import { Button } from '../../widgets/Button'
 import { Centered } from '../../widgets/Centered'
 import { ErrorMessage } from '../../widgets/ErrorMessage'
-import { FlexRow } from '../../widgets/RowCol'
-import { EditorCommands } from '../EditorCommands'
+import { Flex } from '../../widgets/RowCol'
 import type { EditorProps } from '../EditorCommands'
+import { EditorCommands } from '../EditorCommands'
 import { FormInput, FormSelectWithOptions, FormTextArea } from '../FormField'
 
 const LocalCompoundsBcbvContext = createContext<ByCompoundByVariant>({})
@@ -79,7 +79,7 @@ const BlendComponent = ({
         errors?.blends?.[blendIndex]?.components?.[componentIndex]
     return (
         <fieldset className={`border ${componentError && 'invalid'}`}>
-            <FlexRow auxClasses="col-span-2 gap-2 p-2">
+            <Flex dir='row' auxClasses="col-span-2 gap-2 p-2">
                 <FormInput type="checkbox" name={`${component}.selected`} />
                 <FormInput
                     placeholder="dose (mg)"
@@ -99,7 +99,7 @@ const BlendComponent = ({
                     name={`${component}.variant`}
                     optionValues={variants}
                 />
-            </FlexRow>
+            </Flex>
         </fieldset>
     )
 }
@@ -140,20 +140,20 @@ const BlendComponents = ({ parentIndex }: BlendComponentsProps) => {
                     }
                 />
             ))}
-            <FlexRow auxClasses='justify-center'>
-                <Button onClick={() => append(blendComponentRowInit())}>
+            <Flex dir='row' auxClasses='justify-center'>
+                <Button colorClass='sky-400' onClick={() => append(blendComponentRowInit())}>
                     Add component
                 </Button>
-                <Button onClick={() => remove(selecteds)}>
+                <Button colorClass='amber-400' onClick={() => remove(selecteds)}>
                     Remove selected
                 </Button>
-            </FlexRow>
+            </Flex>
             <ErrorMessage text={componentContainerError?.root?.message} />
         </fieldset>
     )
 }
 
-export const BlendsEditor = ({ isLoggedIn }: EditorProps) => {
+export const BlendsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
     const [localCompoundsFromStorage] = useLocalCompounds()
     const localCompoundNames = useMemo(
         () => reshapeCompoundKeys(localCompoundsFromStorage),
@@ -248,7 +248,7 @@ export const BlendsEditor = ({ isLoggedIn }: EditorProps) => {
                                                     'invalid')
                                             }
                                         >
-                                            <FlexRow>
+                                            <Flex dir='row'>
                                                 <fieldset className='gap-2 p-2'>
                                                     <FormInput
                                                         type="checkbox"
@@ -269,7 +269,7 @@ export const BlendsEditor = ({ isLoggedIn }: EditorProps) => {
                                                 <BlendComponents
                                                     parentIndex={index}
                                                 />
-                                            </FlexRow>
+                                            </Flex>
                                         </fieldset>
                                     ))}
                                     <EditorCommands

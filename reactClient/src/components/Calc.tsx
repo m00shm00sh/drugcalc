@@ -47,7 +47,7 @@ import {
 import memoize from '../util/memoize'
 import { Centered } from '../widgets/Centered'
 import { ErrorMessage } from '../widgets/ErrorMessage'
-import { Grid, GridCol } from '../widgets/RowCol'
+import { Flex, Grid } from '../widgets/RowCol'
 import { EditorCommands } from './EditorCommands'
 import { FormInput, FormSelectWithOptions } from './FormField'
 
@@ -168,7 +168,7 @@ const CycleDescriptionEditorRow = ({
     const rowError = errors?.cycle?.[index]
     return (
         <fieldset className={'border ' + (rowError ? 'invalid' : '')}>
-            <Grid colSpec={4} rowSpec={2} auxClasses="gap-2">
+            <Grid colSpec='nc-4' auxClasses="gap-2">
                 <FormInput
                     type="checkbox"
                     label=" "
@@ -355,48 +355,46 @@ export const Calc = () => {
             <Centered>
                 <h1 className="text-2xl">Cycle</h1>
             </Centered>
-            <GridCol>
+            <Flex dir='col'>
                 <FormProvider {...methods}>
                     <Centered>
                         <form
                             onSubmit={methods.handleSubmit((e) => doSubmit(e))}
                         >
-                            <GridCol>
-                                {fields.map((field, index) => (
-                                    <CycleDescriptionEditorRow
-                                        key={field.id}
-                                        index={index}
-                                        update={(e) => update(index, e)}
-                                        getCompounds={[
-                                            getCompounds,
-                                            [localCompoundNames],
-                                        ]}
-                                        getVariants={[
-                                            getVariants,
-                                            [localCompoundNames],
-                                        ]}
-                                        getBlends={[
-                                            getBlends,
-                                            [localBlendNames],
-                                        ]}
-                                        getFrequencies={[
-                                            getFrequencies,
-                                            [localFrequencyItems],
-                                        ]}
-                                    />
-                                ))}
-                                <ErrorMessage text={errors?.cycle?.message} />
-                                <EditorCommands
-                                    isLoggedIn={false}
-                                    appendRow={() =>
-                                        append([calcRequestRowInit()])
-                                    }
-                                    getSelected={() => selecteds}
-                                    removeRows={remove}
-                                    submitStr="Evaluate"
-                                    save2={[saveFormToQueryString, 'Save form to URL']}
+                            {fields.map((field, index) => (
+                                <CycleDescriptionEditorRow
+                                    key={field.id}
+                                    index={index}
+                                    update={(e) => update(index, e)}
+                                    getCompounds={[
+                                        getCompounds,
+                                        [localCompoundNames],
+                                    ]}
+                                    getVariants={[
+                                        getVariants,
+                                        [localCompoundNames],
+                                    ]}
+                                    getBlends={[
+                                        getBlends,
+                                        [localBlendNames],
+                                    ]}
+                                    getFrequencies={[
+                                        getFrequencies,
+                                        [localFrequencyItems],
+                                    ]}
                                 />
-                            </GridCol>
+                            ))}
+                            <ErrorMessage text={errors?.cycle?.message} />
+                            <EditorCommands
+                                isLoggedIn={false}
+                                appendRow={() =>
+                                    append([calcRequestRowInit()])
+                                }
+                                getSelected={() => selecteds}
+                                removeRows={remove}
+                                submitStr="Evaluate"
+                                save2={[saveFormToQueryString, 'Save form to URL']}
+                            />
                         </form>
                     </Centered>
                 </FormProvider>
@@ -405,7 +403,7 @@ export const Calc = () => {
                         <Plot data={result.data} layout={result.layout} />
                     )}
                 </Centered>
-            </GridCol>
+            </Flex>
         </>
     )
 }
