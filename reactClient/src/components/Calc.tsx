@@ -41,6 +41,7 @@ import { ErrorMessage } from '../widgets/ErrorMessage'
 import { Flex, Grid } from '../widgets/RowCol'
 import { EditorCommands } from './EditorCommands'
 import { FormInput, FormSelectWithOptions } from './FormField'
+import classNames from 'classnames'
 // either this or a dummy typescript declaration file;
 // use "regular" Plotly from react-plotly.js for development
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -163,8 +164,13 @@ const CycleDescriptionEditorRow = ({
 
     const rowError = errors?.cycle?.[index]
     return (
-        <fieldset className={`border ${rowError ? 'invalid' : ''}`}>
-            <Grid colSpec="nc-4" auxClasses="gap-2 justify-items-center">
+        <fieldset
+            className={classNames(
+                'border',
+                rowError && 'invalid'
+            )}
+        >
+            <Grid colSpec="nc-4" auxClasses={['gap-2', 'justify-items-center']}>
                 <FormInput
                     type="checkbox"
                     label=" "

@@ -1,3 +1,4 @@
+import classNames from 'classnames'
 import type { ReactNode } from 'react'
 
 const ColSpec = {
@@ -14,28 +15,32 @@ const FlexDir = {
 
 type GridItem = {
     children: ReactNode
-    auxClasses?: string
+    auxClasses?: readonly string[]
     colSpec: keyof typeof ColSpec
 }
 
 type FlexItem = {
     children: ReactNode
-    auxClasses?: string
+    auxClasses?: readonly string[]
     dir: keyof typeof FlexDir
 }
 
-export const Grid = ({ children, auxClasses, colSpec }: GridItem) => {
-    auxClasses ??= ''
-    return <div className={`grid ${ColSpec[colSpec]} ${auxClasses}`}>
+export const Grid = ({ children, auxClasses, colSpec }: GridItem) =>
+    <div className={classNames(
+        'grid',
+        ColSpec[colSpec],
+        ...(auxClasses ?? [])
+    )}>
         {children}
     </div>
-}
 
-export const Flex = ({ dir, children, auxClasses }: FlexItem) => {
-    auxClasses ??= ''
-    return (
-        <div className={`flex ${FlexDir[dir]} justify-center ${auxClasses}`}>
-            {children}
-        </div>
-    )
-}
+export const Flex = ({ dir, children, auxClasses }: FlexItem) =>
+    <div className={classNames(
+        'flex',
+        FlexDir[dir],
+        'justify-center',
+        ...(auxClasses ?? [])
+    )}>
+        {children}
+
+    </div>

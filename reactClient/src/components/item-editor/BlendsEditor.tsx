@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import classNames from 'classnames'
 import { createContext, useContext, useMemo, useState } from 'react'
 import type { UseFieldArrayRemove } from 'react-hook-form'
 import { FormProvider, useFieldArray, useForm, useFormContext } from 'react-hook-form'
@@ -67,8 +68,13 @@ const BlendComponent = ({ blendIndex, componentIndex, update }: BlendComponentPr
     )
     const componentError = errors?.blends?.[blendIndex]?.components?.[componentIndex]
     return (
-        <fieldset className={`border ${componentError && 'invalid'}`}>
-            <Flex dir="row" auxClasses="col-span-2 gap-2 p-2">
+        <fieldset
+            className={classNames(
+                'border',
+                componentError && 'invalid'
+            )}
+        >
+            <Flex dir="row" auxClasses={['gap-2', 'p-2']}>
                 <FormInput type="checkbox" name={`${component}.selected`} />
                 <FormInput
                     placeholder="dose (mg)"
@@ -104,7 +110,12 @@ const BlendComponents = ({ parentIndex }: BlendComponentsProps) => {
     const componentContainerError = errors?.blends?.[parentIndex]?.components
     const selecteds = getSelectedIndices(watch, `blends.${parentIndex}.components`)
     return (
-        <fieldset className={`border ${componentContainerError && 'invalid'}`}>
+        <fieldset
+            className={classNames(
+                'border',
+                componentContainerError && 'invalid'
+            )}
+        >
             <legend>components</legend>
             {fields.map((field, index) => (
                 <BlendComponent

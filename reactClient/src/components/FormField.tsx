@@ -1,3 +1,4 @@
+import classNames from 'classnames'
 import type { ReactElement, SyntheticEvent } from 'react'
 import type { FieldError, FieldPath, FieldValues } from 'react-hook-form'
 import { useFormContext } from 'react-hook-form'
@@ -80,7 +81,12 @@ export function FormInput<T extends FieldValues>({
         <Flex dir="col" auxClasses={blockClasses}>
             <OptionalLabel label={label} />
             <input
-                className={`bg-gray-400 text-gray-900 focus:ring w-min align-middle resize-x${inpClasses}`}
+                className={classNames(
+                    'bg-gray-400 text-gray-900',
+                    'focus:ring',
+                    'w-min resize-x p-1',
+                    ...inpClasses
+                )}
                 type={type}
                 placeholder={placeholder}
                 {...register(name, {
@@ -143,7 +149,12 @@ export function FormSelectWithOptions<T extends FieldValues>({
         <Flex dir="col" auxClasses={blockClasses}>
             <OptionalLabel label={label} />
             <select
-                className={`text-gray-900 bg-gray-400 focus:ring p-1 resize-x${inpClasses}`}
+                className={classNames(
+                    'bg-gray-400 text-gray-900',
+                    'focus:ring',
+                    'p-1 resize-x align-middle',
+                    ...inpClasses
+                )}
                 {...(defaultValue && { defaultValue: defaultValue })}
                 {...register(name, { onChange })}
             >
@@ -173,7 +184,12 @@ export function FormTextArea<T extends FieldValues>({
         <Flex dir="col" auxClasses={blockClasses}>
             <OptionalLabel label={label} />
             <textarea
-                className={`text-gray-900 bg-gray-400 focus:ring p-2 resize-x${inpClasses}`}
+                className={classNames(
+                    'bg-gray-400 text-gray-900',
+                    'focus:ring',
+                    'p-2 resize-x',
+                    ...inpClasses
+                )}
                 placeholder={placeholder}
                 {...register(name, { onChange })}
             />

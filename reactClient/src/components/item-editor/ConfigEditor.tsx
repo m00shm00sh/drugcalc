@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import classNames from 'classnames'
 import type { SyntheticEvent } from 'react'
 import { FormProvider, useFieldArray, useForm, useFormContext } from 'react-hook-form'
 import { useLocalConfig } from '../../hooks/useLocalData'
@@ -70,8 +71,13 @@ const ConfigItem = ({ index, update }: ConfigItemProps) => {
 
     const componentError = errors?.config?.[index]
     return (
-        <fieldset className={`border ${componentError ? 'invalid' : ''}`}>
-            <Flex dir="row" auxClasses="gap-2 p-2">
+        <fieldset
+            className={classNames(
+                'border',
+                componentError && 'invalid'
+            )}
+        >
+            <Flex dir="row" auxClasses={['gap-2', 'p-2']}>
                 <FormInput type="checkbox" name={`config.${index}.selected`} inpClasses="pl-2" />
                 <FormSelectWithOptions
                     name={`config.${index}.type`}
@@ -114,14 +120,12 @@ export const ConfigEditor = () => {
 
     const {
         control,
-        formState: { errors },
         watch,
     } = methods
     const { fields, append, update, remove } = useFieldArray({
         control,
         name: `config`,
     })
-    const componentError = errors?.config
     const selecteds = getSelectedIndices(watch, `config`)
 
     return (
@@ -132,7 +136,7 @@ export const ConfigEditor = () => {
             </Centered>
             <FormProvider {...methods}>
                 <form onSubmit={methods.handleSubmit((e) => doSubmit(e))}>
-                    <fieldset className={`border ${componentError && 'invalid'}`}>
+                    <fieldset>
                         <Flex dir="col">
                             {fields.map((field, index) => (
                                 <ConfigItem

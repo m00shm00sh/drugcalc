@@ -1,3 +1,5 @@
+import classNames from "classnames"
+
 const ColorClass = {
     'gray-400': 'bg-gray-400',
     'sky-400': 'bg-sky-400',
@@ -15,14 +17,17 @@ export const Button = ({
     className,
     ...props
 }: React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement> & {
-    colorClass: keyof typeof ColorClass
+    colorClass?: keyof typeof ColorClass
 }) => {
-    className ??= ''
     type ??= 'button'
     colorClass ??= 'gray-400'
     return (
         <button
-            className={`${ColorClass[colorClass]} rounded-xl px-2 ${className}`}
+            className={classNames(
+                ColorClass[colorClass],
+                'rounded-xl p-2',
+                className
+            )}
             type={type}
             {...props}
         />

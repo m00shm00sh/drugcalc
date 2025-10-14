@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import classNames from 'classnames'
 import { useState } from 'react'
 import { FormProvider, useFieldArray, useForm } from 'react-hook-form'
 import { useLocalCompounds } from '../../hooks/useLocalData'
@@ -77,9 +78,12 @@ export const CompoundsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
                     {fields.map((field, index) => (
                         <fieldset
                             key={field.id}
-                            className={`border ${errors?.compounds?.[index] && 'invalid'}`}
+                            className={classNames(
+                                'border',
+                                errors?.compounds?.[index] && 'invalid'
+                            )}
                         >
-                            <Flex dir="row" auxClasses={'gap-2 p-2'}>
+                            <Flex dir="row" auxClasses={['gap-2', 'p-2']}>
                                 <FormInput
                                     name={`compounds.${index}.selected`}
                                     type="checkbox"

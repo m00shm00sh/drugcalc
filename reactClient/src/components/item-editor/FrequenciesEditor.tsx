@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import classNames from 'classnames'
 import { useState } from 'react'
 import type { UseFieldArrayRemove } from 'react-hook-form'
 import { FormProvider, useFieldArray, useForm, useFormContext } from 'react-hook-form'
@@ -56,9 +57,14 @@ const FrequencyComponents = ({ parentIndex }: FrequencyComponentsProps) => {
     const componentContainerError = errors?.frequencies?.[parentIndex]?.values
     const selecteds = getSelectedIndices(watch, `frequencies.${parentIndex}.values`)
     return (
-        <fieldset className={`border ${componentContainerError && 'invalid'}`}>
+        <fieldset
+            className={classNames(
+                'border',
+                componentContainerError && 'invalid'
+            )}
+        >
             <legend>frequencies</legend>
-            <Flex dir="col" auxClasses="gap-2 p-2">
+            <Flex dir="col" auxClasses={['gap-2', 'p-2']}>
                 {fields.map((field, index) => (
                     <FrequencyComponent
                         key={field.id}
@@ -134,9 +140,12 @@ export const FrequenciesEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
                     {fields.map((field, index) => (
                         <fieldset
                             key={field.id}
-                            className={`border ${errors?.frequencies?.[index] && 'invalid'}`}
+                            className={classNames(
+                                'border',
+                                errors?.frequencies?.[index] && 'invalid'
+                            )}
                         >
-                            <Flex dir="row" auxClasses="gap">
+                            <Flex dir="row" auxClasses={['gap']}>
                                 <FormInput type="checkbox" name={`frequencies.${index}.selected`} />
                                 <FormInput
                                     name={`frequencies.${index}.frequency`}

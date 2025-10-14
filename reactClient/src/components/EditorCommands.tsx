@@ -57,8 +57,8 @@ export const EditorCommands = ({
                     {submitStr
                         ? submitStr
                         : (allowCommit ?? [])[0]
-                          ? 'Commit selected to remote'
-                          : 'Save'}
+                            ? 'Commit selected to remote'
+                            : 'Save'}
                 </Button>
                 {isLoggedIn && toggleCommit !== undefined && (
                     <Button colorClass="zinc-600" onClick={toggleCommit}>
