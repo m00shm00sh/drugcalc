@@ -133,7 +133,7 @@ const CycleDescriptionEditorRow = ({
                         args: [],
                         initial: [],
                     }),
-                    'compound',
+                    'transformer',
                 ]
             case calcRequestPrefixMapping['blend']:
                 return [
@@ -168,7 +168,7 @@ const CycleDescriptionEditorRow = ({
     const rowError = errors?.cycle?.[index]
     return (
         <fieldset className={'border ' + (rowError ? 'invalid' : '')}>
-            <Grid colSpec='nc-4' auxClasses="gap-2">
+            <Grid colSpec="nc-4" auxClasses="gap-2 justify-items-center">
                 <FormInput
                     type="checkbox"
                     label=" "
