@@ -7,7 +7,7 @@ import { LoginRequestSchema, LoginResponseSchema } from '../types/Login'
 import { postJson } from '../util/fetcher'
 import { Button } from '../widgets/Button'
 import { Centered } from '../widgets/Centered'
-import { Grid } from '../widgets/RowCol'
+import { Flex } from '../widgets/RowCol'
 import { FormInput } from './FormField'
 
 export const Login = () => {
@@ -30,17 +30,24 @@ export const Login = () => {
             </Centered>
         </div>
     ) : (
-        <FormProvider {...methods}>
-            <form onSubmit={methods.handleSubmit((l) => doLogin(l))}>
-                <Grid colSpec={2}>
-                    <div>user</div>
-                    <FormInput name="name" placeholder="user" type="text" />
-                    <div>password</div>
-                    <FormInput name="pass" placeholder="password" type="password" />
-                    <Button type="submit">Login</Button>
-                </Grid>
-            </form>
-        </FormProvider>
+        <>
+            <Centered>
+                <h1 className="text-2xl">Login</h1>
+            </Centered>
+            <FormProvider {...methods}>
+                <form onSubmit={methods.handleSubmit((l) => doLogin(l))}>
+                    <Flex dir='col' auxClasses={['gap-2']}>
+                        <FormInput name="name" type="text"
+                            label="user" placeholder="user"
+                        />
+                        <FormInput name="pass" type="password"
+                            label="password" placeholder="password"
+                        />
+                        <Button type="submit">Login</Button>
+                    </Flex>
+                </form>
+            </FormProvider>
+        </>
     )
 }
 
