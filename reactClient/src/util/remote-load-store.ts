@@ -17,8 +17,7 @@ type RHFKey<FormContainer> = RHFKey1<FormContainer> & Path<FormContainer>
 
 export function selectedItemsFromRemoteFormLoader<
     FormContainer extends FieldValues,
-    FormRow extends FieldArray<FormContainer, RHFKey1<FormContainer>> &
-        Selectable,
+    FormRow extends FieldArray<FormContainer, RHFKey1<FormContainer>> & Selectable,
 >(
     formMethods: UseFormReturn<FormContainer>,
     arrayKey: RHFKey<FormContainer>,
@@ -82,14 +81,13 @@ export function selectedItemsToRemoteSender<
         const selectedRows = rows.filter((e) => e.selected)
         const map = mapEncoder(selectedRows)
         if (toRemote) {
-            require(!!auth, "specify auth token")
+            require(!!auth, 'specify auth token')
             try {
                 await postJson(postEndpoint, NO_RESPONSE, map, {
-                    'Authorization': `Bearer ${auth}`
+                    Authorization: `Bearer ${auth}`,
                 })
             } catch (e) {
-                if (e instanceof Error)
-                    setError(arrayKey, { message: e.message })
+                if (e instanceof Error) setError(arrayKey, { message: e.message })
             }
         } else setLocalStorage(map)
     }

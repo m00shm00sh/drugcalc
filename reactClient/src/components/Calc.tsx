@@ -1,11 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMemo, useState, type SyntheticEvent } from 'react'
-import {
-    FormProvider,
-    useFieldArray,
-    useForm,
-    useFormContext,
-} from 'react-hook-form'
+import { FormProvider, useFieldArray, useForm, useFormContext } from 'react-hook-form'
 import Plot from 'react-plotly.js'
 import { useSearchParams } from 'react-router-dom'
 import { makeInvoker, useAsyncResult } from '../hooks/useAsyncFetch'
@@ -15,11 +10,7 @@ import {
     useLocalConfig,
     useLocalFrequencies,
 } from '../hooks/useLocalData'
-import type {
-    CalcRequestDataContainer,
-    CalcRequestRow,
-    PlotlyInvocation,
-} from '../types/Calc'
+import type { CalcRequestDataContainer, CalcRequestRow, PlotlyInvocation } from '../types/Calc'
 import {
     calcRequestContainerToRequest,
     CalcRequestDataContainerSchema,
@@ -86,8 +77,8 @@ const CycleDescriptionEditorRow = ({
 
     const [getCompoundsInvocation, selectCompoundOrBlendLabel] = (() => {
         switch (prefixValue) {
-            case calcRequestPrefixMapping['compound']:
-            case calcRequestPrefixMapping['transformer']:
+            case calcRequestPrefixMapping.compound:
+            case calcRequestPrefixMapping.transformer:
                 return [
                     makeInvoker({
                         func: getCompounds[0],
@@ -97,7 +88,7 @@ const CycleDescriptionEditorRow = ({
                     }),
                     'compound',
                 ]
-            case calcRequestPrefixMapping['blend']:
+            case calcRequestPrefixMapping.blend:
                 return [
                     makeInvoker({
                         func: getBlends[0],
@@ -116,7 +107,7 @@ const CycleDescriptionEditorRow = ({
 
     const [getVariantsInvocation, selectVariantsLabel] = (() => {
         switch (prefixValue) {
-            case calcRequestPrefixMapping['compound']:
+            case calcRequestPrefixMapping.compound:
                 return [
                     makeInvoker({
                         func: getVariants[0],
@@ -126,7 +117,7 @@ const CycleDescriptionEditorRow = ({
                     }),
                     'variant',
                 ]
-            case calcRequestPrefixMapping['transformer']:
+            case calcRequestPrefixMapping.transformer:
                 return [
                     makeInvoker({
                         func: fetchTransformerNames,
@@ -135,7 +126,7 @@ const CycleDescriptionEditorRow = ({
                     }),
                     'transformer',
                 ]
-            case calcRequestPrefixMapping['blend']:
+            case calcRequestPrefixMapping.blend:
                 return [
                     makeInvoker({
                         func: fetchEmptyList,
@@ -154,7 +145,7 @@ const CycleDescriptionEditorRow = ({
             func: async () => {
                 const all = await getFrequencies[0]()
                 const xform =
-                    prefixValue === calcRequestPrefixMapping['transformer']
+                    prefixValue === calcRequestPrefixMapping.transformer
                         ? await fetchTransformerFrequencies()
                         : []
                 return [...all, ...xform]
@@ -167,7 +158,7 @@ const CycleDescriptionEditorRow = ({
 
     const rowError = errors?.cycle?.[index]
     return (
-        <fieldset className={'border ' + (rowError ? 'invalid' : '')}>
+        <fieldset className={`border ${rowError ? 'invalid' : ''}`}>
             <Grid colSpec="nc-4" auxClasses="gap-2 justify-items-center">
                 <FormInput
                     type="checkbox"
@@ -184,12 +175,10 @@ const CycleDescriptionEditorRow = ({
                         update({
                             ...watchRow,
                             compoundOrBlend: '',
-                            ...(newPrefix !==
-                                calcRequestPrefixMapping['blend'] && {
+                            ...(newPrefix !== calcRequestPrefixMapping.blend && {
                                 variantOrTransformer: undefined,
                             }),
-                            ...(newPrefix ===
-                                calcRequestPrefixMapping['transformer'] && {
+                            ...(newPrefix === calcRequestPrefixMapping.transformer && {
                                 dose: undefined,
                             }),
                         })
@@ -205,10 +194,10 @@ const CycleDescriptionEditorRow = ({
                     name={`${row}.variantOrTransformer`}
                     optionValues={selectVariantOrTransformer}
                 />
-                {prefixValue !== calcRequestPrefixMapping['transformer'] && (
+                {prefixValue !== calcRequestPrefixMapping.transformer && (
                     <FormInput
                         label="dose"
-                        placeholder='dose (mg)'
+                        placeholder="dose (mg)"
                         blockClasses="row-2 col-1"
                         name={`${row}.dose`}
                         type="number"
@@ -217,21 +206,21 @@ const CycleDescriptionEditorRow = ({
                     />
                 )}
                 <FormInput
-                    blockClasses='row-2 col-2'
+                    blockClasses="row-2 col-2"
                     placeholder="iso8601-ish"
                     label="start"
                     type="text"
                     name={`${row}.start`}
                 />
                 <FormInput
-                    blockClasses='row-2 col-3'
+                    blockClasses="row-2 col-3"
                     placeholder="iso8601-ish"
                     label="duration"
                     type="text"
                     name={`${row}.duration`}
                 />
                 <FormSelectWithOptions
-                    blockClasses='row-2 col-4'
+                    blockClasses="row-2 col-4"
                     label="frequency"
                     name={`${row}.freqName`}
                     optionValues={selectFrequency}
@@ -246,9 +235,7 @@ export const Calc = () => {
     const [localBlends] = useLocalBlends()
     const [localCompounds] = useLocalCompounds()
     const [localFrequencies] = useLocalFrequencies()
-    const [result, setResult] = useState<PlotlyInvocation>(
-        plotlyEmptyInvocation,
-    )
+    const [result, setResult] = useState<PlotlyInvocation>(plotlyEmptyInvocation)
     const [localCompoundsFromStorage] = useLocalCompounds()
     const localCompoundNames = useMemo(
         () => reshapeCompoundKeys(localCompoundsFromStorage),
@@ -309,7 +296,13 @@ export const Calc = () => {
         },
         resolver: zodResolver(CalcRequestDataContainerSchema),
     })
-    const { control, formState: {errors}, getValues, setError, watch } = methods
+    const {
+        control,
+        formState: { errors },
+        getValues,
+        setError,
+        watch,
+    } = methods
     const { append, update, remove, fields } = useFieldArray({
         control,
         name: `cycle`,
@@ -319,7 +312,6 @@ export const Calc = () => {
         const r = getValues('cycle')
         setSearchParams(exportRowsToQueryString(r))
     }
-
 
     const doSubmit = async (r: CalcRequestDataContainer) => {
         try {
@@ -355,41 +347,25 @@ export const Calc = () => {
             <Centered>
                 <h1 className="text-2xl">Cycle</h1>
             </Centered>
-            <Flex dir='col'>
+            <Flex dir="col">
                 <FormProvider {...methods}>
                     <Centered>
-                        <form
-                            onSubmit={methods.handleSubmit((e) => doSubmit(e))}
-                        >
+                        <form onSubmit={methods.handleSubmit((e) => doSubmit(e))}>
                             {fields.map((field, index) => (
                                 <CycleDescriptionEditorRow
                                     key={field.id}
                                     index={index}
                                     update={(e) => update(index, e)}
-                                    getCompounds={[
-                                        getCompounds,
-                                        [localCompoundNames],
-                                    ]}
-                                    getVariants={[
-                                        getVariants,
-                                        [localCompoundNames],
-                                    ]}
-                                    getBlends={[
-                                        getBlends,
-                                        [localBlendNames],
-                                    ]}
-                                    getFrequencies={[
-                                        getFrequencies,
-                                        [localFrequencyItems],
-                                    ]}
+                                    getCompounds={[getCompounds, [localCompoundNames]]}
+                                    getVariants={[getVariants, [localCompoundNames]]}
+                                    getBlends={[getBlends, [localBlendNames]]}
+                                    getFrequencies={[getFrequencies, [localFrequencyItems]]}
                                 />
                             ))}
                             <ErrorMessage text={errors?.cycle?.message} />
                             <EditorCommands
                                 isLoggedIn={false}
-                                appendRow={() =>
-                                    append([calcRequestRowInit()])
-                                }
+                                appendRow={() => append([calcRequestRowInit()])}
                                 getSelected={() => selecteds}
                                 removeRows={remove}
                                 submitStr="Evaluate"
@@ -399,9 +375,7 @@ export const Calc = () => {
                     </Centered>
                 </FormProvider>
                 <Centered>
-                    {result.data.length > 0 && (
-                        <Plot data={result.data} layout={result.layout} />
-                    )}
+                    {result.data.length > 0 && <Plot data={result.data} layout={result.layout} />}
                 </Centered>
             </Flex>
         </>

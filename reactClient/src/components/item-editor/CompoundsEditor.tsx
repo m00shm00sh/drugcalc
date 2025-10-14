@@ -2,10 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { FormProvider, useFieldArray, useForm } from 'react-hook-form'
 import { useLocalCompounds } from '../../hooks/useLocalData'
-import type {
-    CompoundEditorDataContainer,
-    CompoundEditorRow,
-} from '../../types/Compounds'
+import type { CompoundEditorDataContainer, CompoundEditorRow } from '../../types/Compounds'
 import {
     CompoundEditorDataContainerSchema,
     compoundEditorFieldsToMap,
@@ -14,19 +11,21 @@ import {
     loadCompoundDetailsFromRemote,
 } from '../../types/Compounds'
 import { getSelectedIndices } from '../../types/Selectable'
+import {
+    selectedItemsFromRemoteFormLoader,
+    selectedItemsToRemoteSender,
+} from '../../util/remote-load-store'
 import { Centered } from '../../widgets/Centered'
 import { Flex } from '../../widgets/RowCol'
-import { EditorCommands } from '../EditorCommands'
 import type { EditorProps } from '../EditorCommands'
+import { EditorCommands } from '../EditorCommands'
 import { FormInput, FormTextArea } from '../FormField'
-import { selectedItemsFromRemoteFormLoader, selectedItemsToRemoteSender } from '../../util/remote-load-store'
 
 export const CompoundsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
     const [storage, setStorage] = useLocalCompounds()
 
     const initData = () => {
-        if (Object.keys(storage).length > 0)
-            return compoundMapToEditorFields(storage)
+        if (Object.keys(storage).length > 0) return compoundMapToEditorFields(storage)
         return [compoundRowInit()]
     }
     const methods = useForm<CompoundEditorDataContainer>({
@@ -59,7 +58,7 @@ export const CompoundsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
         '/api/data/compounds',
         setStorage,
         allowCommit,
-        loginToken
+        loginToken,
     )
 
     const {
@@ -74,20 +73,13 @@ export const CompoundsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
                 <h1 className="text-2xl">Data editor - compounds</h1>
             </Centered>
             <FormProvider {...methods}>
-                <form
-                    onSubmit={methods.handleSubmit((e) =>
-                        doSubmit(e.compounds),
-                    )}
-                >
+                <form onSubmit={methods.handleSubmit((e) => doSubmit(e.compounds))}>
                     {fields.map((field, index) => (
                         <fieldset
                             key={field.id}
-                            className={
-                                'border ' +
-                                (errors?.compounds?.[index] && 'invalid')
-                            }
+                            className={`border ${errors?.compounds?.[index] && 'invalid'}`}
                         >
-                            <Flex dir='row' auxClasses={'gap-2 p-2'}>
+                            <Flex dir="row" auxClasses={'gap-2 p-2'}>
                                 <FormInput
                                     name={`compounds.${index}.selected`}
                                     type="checkbox"
@@ -120,10 +112,7 @@ export const CompoundsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
                                     step={0.0001}
                                     max={100}
                                 />
-                                <FormTextArea
-                                    name={`compounds.${index}.note`}
-                                    label="note"
-                                />
+                                <FormTextArea name={`compounds.${index}.note`} label="note" />
                             </Flex>
                         </fieldset>
                     ))}

@@ -1,23 +1,21 @@
 import { z } from 'zod'
+import { fetchCompoundDetailsOrNull } from '../util/fetcher'
+import { setIf } from '../util/filter-setif'
+import memoize from '../util/memoize'
+import quote from '../util/quote'
+import { fieldsToMap, mapToFields } from '../util/reshaper'
+import type { Nullable } from '../util/util'
+import { requireNotNull } from '../util/util'
 import {
     displayToIso8601,
     iso8601ToDisplay,
     zodDisplayDurationStringSchema,
     zodIsoDurationStringSchema,
 } from './duration'
-import quote from '../util/quote'
-import { setIf } from '../util/filter-setif'
-import memoize from '../util/memoize'
-import type { Nullable } from '../util/util'
-import { requireNotNull } from '../util/util'
-import { fieldsToMap, mapToFields } from '../util/reshaper'
-import { fetchCompoundDetailsOrNull } from '../util/fetcher'
-import { zodNonemptyStringSchema } from './string'
 import { SelectableSchema } from './Selectable'
+import { zodNonemptyStringSchema } from './string'
 
-export const CompoundNamesListSchema = z.readonly(
-    z.array(z.string().regex(/^([^=]+)(?:=(.*))?$/)),
-)
+export const CompoundNamesListSchema = z.readonly(z.array(z.string().regex(/^([^=]+)(?:=(.*))?$/)))
 export type CompoundNamesList = z.infer<typeof CompoundNamesListSchema>
 
 export const VariantNamesListSchema = z.readonly(z.array(z.string()))
@@ -40,10 +38,7 @@ export type CompoundsMap = z.infer<typeof CompoundsMapSchema>
 export type CompoundName = [string] | [string, string]
 
 export const unpackCompoundName = (cn: string): CompoundName => {
-    const [, b, v] = requireNotNull(
-        cn.match(/^([^=]+)(?:=(.*))?$/),
-        'regex failed',
-    )
+    const [, b, v] = requireNotNull(cn.match(/^([^=]+)(?:=(.*))?$/), 'regex failed')
     requireNotNull(b, `bad compound name: ${cn}`)
     if (v) return [b, v]
     return [b]
@@ -52,7 +47,7 @@ export const unpackCompoundName = (cn: string): CompoundName => {
 export const packCompoundName = (cn: CompoundName): string => {
     const [b, v] = cn
     let s: string = b
-    if (v ?? '') s += '=' + v
+    if (v ?? '') s += `=${v}`
     return s
 }
 
@@ -60,7 +55,7 @@ export const quoteCompoundName = (cn: CompoundName): string => {
     // eslint-disable-next-line prefer-const
     let [b, v] = cn.map(quote)
     v ??= ''
-    if (v.indexOf(' ') != -1) v = `"${v.replace('"', '\\"')}"`
+    if (v.indexOf(' ') !== -1) v = `"${v.replace('"', '\\"')}"`
     let s = `[${b}`
     if (v) s += `,${v}`
     s += ']'
@@ -86,9 +81,7 @@ export const reshapeCompoundKeys = (m: CompoundsMap): ByCompoundByVariant => {
 export const COMPOUND_BASE_PATTERN = '[^.](?!.*=).*'
 
 const CompoundNameEntrySchema = z.object({
-    compound: z
-        .string()
-        .regex(RegExp(`^${COMPOUND_BASE_PATTERN}$`), 'invalid compound name'),
+    compound: z.string().regex(RegExp(`^${COMPOUND_BASE_PATTERN}$`), 'invalid compound name'),
     variant: z.string().optional(),
 })
 
@@ -123,7 +116,7 @@ export const CompoundEditorDataContainerSchema = z.object({
                 ctx.addIssue({
                     code: 'custom',
                     path: [i, 'compound'],
-                    message: 'Compound ' + (d.variant ? '...' : 'respecified'),
+                    message: `Compound ${d.variant ? '...' : 'respecified'}`,
                 })
                 if (d.variant)
                     ctx.addIssue({
@@ -136,32 +129,25 @@ export const CompoundEditorDataContainerSchema = z.object({
     }),
 })
 
-export type CompoundEditorDataContainer = z.infer<
-    typeof CompoundEditorDataContainerSchema
->
+export type CompoundEditorDataContainer = z.infer<typeof CompoundEditorDataContainerSchema>
 
 export const compoundNameOf = (r: CompoundNameEntry): CompoundName =>
     r.variant ? [r.compound, r.variant] : [r.compound]
 
-export const compoundEditorFieldsToMap = (
-    fields: CompoundEditorRow[],
-): CompoundsMap =>
+export const compoundEditorFieldsToMap = (fields: CompoundEditorRow[]): CompoundsMap =>
     fieldsToMap(
         fields,
         (r) => packCompoundName(compoundNameOf(r)),
         (r) => {
             const v: CompoundInfo = { halfLife: displayToIso8601(r.halfLife) }
             // react-hook-form coerces undefined to Nan when valueAsNumber is active on an input
-            if (r.pctActive && !isNaN(r.pctActive))
-                v.pctActive = r.pctActive / 100
+            if (r.pctActive && !Number.isNaN(r.pctActive)) v.pctActive = r.pctActive / 100
             setIf(v, 'note', r.note)
             return v
         },
     )
 
-export const compoundMapToEditorFields = (
-    map: CompoundsMap,
-): CompoundEditorRow[] =>
+export const compoundMapToEditorFields = (map: CompoundsMap): CompoundEditorRow[] =>
     mapToFields(
         map,
         (k) => {
@@ -182,21 +168,15 @@ export const compoundMapToEditorFields = (
         },
     )
 
-const fetchDetails = memoize(
-    fetchCompoundDetailsOrNull,
-    packCompoundName,
-    60000,
-)
+const fetchDetails = memoize(fetchCompoundDetailsOrNull, packCompoundName, 60000)
 
 export const loadCompoundDetailsFromRemote = async (
     row: CompoundEditorRow,
 ): Promise<Nullable<CompoundEditorRow>> =>
-    fetchDetails(compoundNameOf(row)).then(
-        (i?: CompoundInfo): Nullable<CompoundEditorRow> => {
-            if (!i) return undefined
-            const o: CompoundEditorRow = { ...row, ...i }
-            o.halfLife = iso8601ToDisplay(o.halfLife)
-            if (o.pctActive) o.pctActive *= 100
-            return o
-        },
-    )
+    fetchDetails(compoundNameOf(row)).then((i?: CompoundInfo): Nullable<CompoundEditorRow> => {
+        if (!i) return undefined
+        const o: CompoundEditorRow = { ...row, ...i }
+        o.halfLife = iso8601ToDisplay(o.halfLife)
+        if (o.pctActive) o.pctActive *= 100
+        return o
+    })

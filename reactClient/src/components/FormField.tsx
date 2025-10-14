@@ -16,19 +16,13 @@ export type FieldProps<T extends FieldValues, E extends Element> = {
 
 type FieldHasPlaceholder = { placeholder: string }
 
-export type FieldPropsText<
-    T extends FieldValues,
-    E extends Element,
-> = FieldProps<T, E> & {
+export type FieldPropsText<T extends FieldValues, E extends Element> = FieldProps<T, E> & {
     type: 'text' | 'password'
     minLength?: number
     maxLength?: number
 } & FieldHasPlaceholder
 
-export type FieldPropsNumeric<
-    T extends FieldValues,
-    E extends Element,
-> = FieldProps<T, E> & {
+export type FieldPropsNumeric<T extends FieldValues, E extends Element> = FieldProps<T, E> & {
     type: 'number' | 'range'
     min?: number
     max?: number
@@ -44,7 +38,7 @@ function getChain<R>(o: unknown, ks: string): Nullable<R> {
     for (const k of ks.split('.')) {
         if (o === undefined) return undefined
         const k_N = Number(k)
-        if (!isNaN(k_N)) {
+        if (!Number.isNaN(k_N)) {
             const o_ = o as Array<unknown>
             o = o_[k_N]
             continue
@@ -56,7 +50,7 @@ function getChain<R>(o: unknown, ks: string): Nullable<R> {
 }
 
 const OptionalLabel = ({ label }: { label: Nullable<string> }) => {
-    if (!label) return <></>
+    if (!label) return
     return <label>{label}</label>
 }
 
@@ -75,15 +69,15 @@ export function FormInput<T extends FieldValues>({
     } = useFormContext<T>()
     const errorValue = getChain<FieldError>(errors, name)
     inpClasses ??= ''
-    if (inpClasses) inpClasses = ' ' + inpClasses
-    let placeholder
+    if (inpClasses) inpClasses = ` ${inpClasses}`
+    let placeholder: Nullable<string>
     const valueAsNumber = type === 'number'
     if (['text', 'password', 'number'].indexOf(type ?? '') >= 0 && 'placeholder' in props) {
         placeholder = props.placeholder
         inpClasses += ' indent-2'
     }
     return (
-        <Flex dir='col' auxClasses={blockClasses}>
+        <Flex dir="col" auxClasses={blockClasses}>
             <OptionalLabel label={label} />
             <input
                 className={`bg-gray-400 text-gray-900 focus:ring w-min align-middle resize-x${inpClasses}`}
@@ -102,16 +96,12 @@ export function FormInput<T extends FieldValues>({
 }
 
 type OptionValues = readonly string[] | Record<string, string>
-const OptionValues = ({
-    optionValues,
-}: {
-    optionValues: OptionValues
-}): ReactElement => {
-    if (optionValues instanceof Array)
+const OptionValues = ({ optionValues }: { optionValues: OptionValues }): ReactElement => {
+    if (Array.isArray(optionValues))
         return (
             <>
-                {optionValues.map((ov, oi) => (
-                    <option key={oi} value={ov}>
+                {optionValues.map((ov) => (
+                    <option key={ov} value={ov}>
                         {ov}
                     </option>
                 ))}
@@ -119,8 +109,8 @@ const OptionValues = ({
         )
     return (
         <>
-            {Object.entries(optionValues).map(([ok, ov], oi) => (
-                <option key={oi} value={ov}>
+            {Object.entries(optionValues).map(([ok, ov]) => (
+                <option key={ov} value={ov}>
                     {ok}
                 </option>
             ))}
@@ -139,18 +129,18 @@ export function FormSelectWithOptions<T extends FieldValues>({
 }: FieldProps<T, HTMLSelectElement> & {
     defaultValue?: string
     optionValues: OptionValues
-}): ReactElement {
+}): Nullable<ReactElement> {
     const {
         register,
         formState: { errors },
     } = useFormContext<T>()
     inpClasses ??= ''
-    if (inpClasses) inpClasses = ' ' + inpClasses
-    if (optionValues instanceof Array && optionValues.length < 1) return <></>
-    if (Object.keys(optionValues).length < 1) return <></>
+    if (inpClasses) inpClasses = ` ${inpClasses}`
+    if (Array.isArray(optionValues) && optionValues.length < 1) return
+    if (Object.keys(optionValues).length < 1) return
     const errorValue = getChain<FieldError>(errors, name)
     return (
-        <Flex dir='col' auxClasses={blockClasses}>
+        <Flex dir="col" auxClasses={blockClasses}>
             <OptionalLabel label={label} />
             <select
                 className={`text-gray-900 bg-gray-400 focus:ring p-1 resize-x${inpClasses}`}
@@ -171,17 +161,16 @@ export function FormTextArea<T extends FieldValues>({
     label,
     name,
     onChange,
-}: FieldProps<T, HTMLTextAreaElement> &
-    Partial<FieldHasPlaceholder>): ReactElement {
+}: FieldProps<T, HTMLTextAreaElement> & Partial<FieldHasPlaceholder>): ReactElement {
     const {
         register,
         formState: { errors },
     } = useFormContext<T>()
     inpClasses ??= ''
-    if (inpClasses) inpClasses = ' ' + inpClasses
+    if (inpClasses) inpClasses = ` ${inpClasses}`
     const errorValue = getChain<FieldError>(errors, name)
     return (
-        <Flex dir='col' auxClasses={blockClasses}>
+        <Flex dir="col" auxClasses={blockClasses}>
             <OptionalLabel label={label} />
             <textarea
                 className={`text-gray-900 bg-gray-400 focus:ring p-2 resize-x${inpClasses}`}

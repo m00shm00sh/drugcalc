@@ -1,12 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { createContext, useContext, useMemo, useState } from 'react'
 import type { UseFieldArrayRemove } from 'react-hook-form'
-import {
-    FormProvider,
-    useFieldArray,
-    useForm,
-    useFormContext,
-} from 'react-hook-form'
+import { FormProvider, useFieldArray, useForm, useFormContext } from 'react-hook-form'
 import { makeInvoker, useAsyncResult } from '../../hooks/useAsyncFetch'
 import { useLocalBlends, useLocalCompounds } from '../../hooks/useLocalData'
 import type {
@@ -25,20 +20,19 @@ import {
 import type { ByCompoundByVariant } from '../../types/Compounds'
 import { reshapeCompoundKeys } from '../../types/Compounds'
 import { getSelectedIndices } from '../../types/Selectable'
-import {
-    fetchCompounds,
-    fetchVariants,
-    memoizedRemoteVariants,
-} from '../../util/fetcher'
+import { fetchCompounds, fetchVariants, memoizedRemoteVariants } from '../../util/fetcher'
 import memoize from '../../util/memoize'
-import { selectedItemsFromRemoteFormLoader, selectedItemsToRemoteSender } from '../../util/remote-load-store'
-import { Button } from '../../widgets/Button'
+import {
+    selectedItemsFromRemoteFormLoader,
+    selectedItemsToRemoteSender,
+} from '../../util/remote-load-store'
 import { Centered } from '../../widgets/Centered'
 import { ErrorMessage } from '../../widgets/ErrorMessage'
 import { Flex } from '../../widgets/RowCol'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput, FormSelectWithOptions, FormTextArea } from '../FormField'
+import { ComponentEditor } from './ComponentEditorCommands'
 
 const LocalCompoundsBcbvContext = createContext<ByCompoundByVariant>({})
 const MergedCompoundNamesContext = createContext<string[]>([])
@@ -50,11 +44,7 @@ type BlendComponentProps = {
     blendIndex: number
     componentIndex: number
 }
-const BlendComponent = ({
-    blendIndex,
-    componentIndex,
-    update,
-}: BlendComponentProps) => {
+const BlendComponent = ({ blendIndex, componentIndex, update }: BlendComponentProps) => {
     const {
         watch,
         formState: { errors },
@@ -75,11 +65,10 @@ const BlendComponent = ({
             auxDeps: [localBcbv],
         }),
     )
-    const componentError =
-        errors?.blends?.[blendIndex]?.components?.[componentIndex]
+    const componentError = errors?.blends?.[blendIndex]?.components?.[componentIndex]
     return (
         <fieldset className={`border ${componentError && 'invalid'}`}>
-            <Flex dir='row' auxClasses="col-span-2 gap-2 p-2">
+            <Flex dir="row" auxClasses="col-span-2 gap-2 p-2">
                 <FormInput type="checkbox" name={`${component}.selected`} />
                 <FormInput
                     placeholder="dose (mg)"
@@ -91,14 +80,9 @@ const BlendComponent = ({
                 <FormSelectWithOptions
                     name={`${component}.compound`}
                     optionValues={compounds}
-                    onChange={() =>
-                        update({ ...watchRow, variant: undefined })
-                    }
+                    onChange={() => update({ ...watchRow, variant: undefined })}
                 />
-                <FormSelectWithOptions
-                    name={`${component}.variant`}
-                    optionValues={variants}
-                />
+                <FormSelectWithOptions name={`${component}.variant`} optionValues={variants} />
             </Flex>
         </fieldset>
     )
@@ -118,16 +102,9 @@ const BlendComponents = ({ parentIndex }: BlendComponentsProps) => {
         name: `blends.${parentIndex}.components`,
     })
     const componentContainerError = errors?.blends?.[parentIndex]?.components
-    const selecteds = getSelectedIndices(
-        watch,
-        `blends.${parentIndex}.components`,
-    )
+    const selecteds = getSelectedIndices(watch, `blends.${parentIndex}.components`)
     return (
-        <fieldset
-            className={
-                `border ${componentContainerError && 'invalid'}`
-            }
-        >
+        <fieldset className={`border ${componentContainerError && 'invalid'}`}>
             <legend>components</legend>
             {fields.map((field, index) => (
                 <BlendComponent
@@ -135,19 +112,13 @@ const BlendComponents = ({ parentIndex }: BlendComponentsProps) => {
                     blendIndex={parentIndex}
                     componentIndex={index}
                     remove={() => remove(index)}
-                    update={(c: BlendEditorComponentRow) =>
-                        update(index, c)
-                    }
+                    update={(c: BlendEditorComponentRow) => update(index, c)}
                 />
             ))}
-            <Flex dir='row' auxClasses='justify-center'>
-                <Button colorClass='sky-400' onClick={() => append(blendComponentRowInit())}>
-                    Add component
-                </Button>
-                <Button colorClass='amber-400' onClick={() => remove(selecteds)}>
-                    Remove selected
-                </Button>
-            </Flex>
+            <ComponentEditor
+                addRow={() => append(blendComponentRowInit())}
+                removeSelected={() => remove(selecteds)}
+            />
             <ErrorMessage text={componentContainerError?.root?.message} />
         </fieldset>
     )
@@ -175,8 +146,7 @@ export const BlendsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
     const [storage, setStorage] = useLocalBlends()
 
     const initData = () => {
-        if (Object.keys(storage).length > 0)
-            return blendMapToEditorFields(storage)
+        if (Object.keys(storage).length > 0) return blendMapToEditorFields(storage)
         return [blendRowInit()]
     }
 
@@ -223,7 +193,7 @@ export const BlendsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
         '/api/data/blends',
         setStorage,
         allowCommit,
-        loginToken
+        loginToken,
     )
 
     return (
@@ -237,22 +207,16 @@ export const BlendsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
                     <LocalCompoundsBcbvContext value={localCompoundNames}>
                         <MergedCompoundNamesContext value={compoundNames}>
                             <VariantsFetcherContext value={getVariants}>
-                                <form
-                                    onSubmit={methods.handleSubmit((e) =>
-                                        doSubmit(e.blends),
-                                    )}
-                                >
+                                <form onSubmit={methods.handleSubmit((e) => doSubmit(e.blends))}>
                                     {fields.map((field, index) => (
                                         <fieldset
                                             key={field.id}
                                             className={
-                                                'border ' +
-                                                (errors?.blends?.[index] &&
-                                                    'invalid')
+                                                `border ${errors?.blends?.[index] && 'invalid'}`
                                             }
                                         >
-                                            <Flex dir='row'>
-                                                <fieldset className='gap-2 p-2'>
+                                            <Flex dir="row">
+                                                <fieldset className="gap-2 p-2">
                                                     <FormInput
                                                         type="checkbox"
                                                         name={`blends.${index}.selected`}
@@ -269,9 +233,7 @@ export const BlendsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
                                                         placeholder="note"
                                                     />
                                                 </fieldset>
-                                                <BlendComponents
-                                                    parentIndex={index}
-                                                />
+                                                <BlendComponents parentIndex={index} />
                                             </Flex>
                                         </fieldset>
                                     ))}

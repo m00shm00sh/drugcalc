@@ -39,10 +39,9 @@ export function useAsyncResult<R>(invocation: _Invokable<R>): R {
     const [result, setResult] = useState<R>(invocation.initial)
     const deps = [
         ...invocation.args,
-        ...(invocation.auxDeps !== undefined
-            ? invocation.auxDeps
-            : [invocation.func]),
+        ...(invocation.auxDeps !== undefined ? invocation.auxDeps : [invocation.func]),
     ]
+    // biome-ignore lint/correctness/useExhaustiveDependencies: see three lines above
     useEffect(() => {
         const fetchResult = async () => {
             const result = await invocation.func(...invocation.args)
@@ -50,7 +49,7 @@ export function useAsyncResult<R>(invocation: _Invokable<R>): R {
         }
         fetchResult()
         return () => {}
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, deps)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [...deps])
     return result
 }

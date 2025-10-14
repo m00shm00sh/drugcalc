@@ -22,13 +22,9 @@ const ISO8601_TIME_RX = RegExp(
         ')+$',
 )
 
-export const zodDisplayDurationStringSchema = z
-    .string()
-    .regex(DURATION_RX, 'invalid duration')
+export const zodDisplayDurationStringSchema = z.string().regex(DURATION_RX, 'invalid duration')
 
-export const zodIsoDurationStringSchema = z
-    .string()
-    .regex(ISO8601_TIME_RX, 'invalid duration')
+export const zodIsoDurationStringSchema = z.string().regex(ISO8601_TIME_RX, 'invalid duration')
 
 const iso8601Tokens = (t: string): [string, string, string] => {
     const m = t.match(ISO8601_TIME_RX)

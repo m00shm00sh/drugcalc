@@ -6,7 +6,7 @@ const ColorClass = {
     'blue-500': 'bg-blue-500',
     'indigo-400': 'bg-indigo-400',
     'emerald-400': 'bg-emerald-400',
-    'zinc-600': 'bg-zinc-600'
+    'zinc-600': 'bg-zinc-600',
 }
 
 export const Button = ({
@@ -14,10 +14,9 @@ export const Button = ({
     colorClass,
     className,
     ...props
-}: React.DetailedHTMLProps<
-    React.ButtonHTMLAttributes<HTMLButtonElement>,
-    HTMLButtonElement
-> & { colorClass: keyof typeof ColorClass }) => {
+}: React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement> & {
+    colorClass: keyof typeof ColorClass
+}) => {
     className ??= ''
     type ??= 'button'
     colorClass ??= 'gray-400'

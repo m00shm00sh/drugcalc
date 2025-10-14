@@ -1,10 +1,6 @@
 import { z } from 'zod'
 import type { CompoundName } from './Compounds'
-import {
-    compoundNameOf,
-    packCompoundName,
-    unpackCompoundName,
-} from './Compounds'
+import { compoundNameOf, packCompoundName, unpackCompoundName } from './Compounds'
 import { fieldsToMap, mapToFields } from '../util/reshaper'
 import { fetchBlendDetailsOrNull } from '../util/fetcher'
 import { setIf } from '../util/filter-setif'
@@ -39,9 +35,7 @@ const BlendEditorComponentRowSchema = z
     })
     .extend(SelectableSchema.shape)
 
-export type BlendEditorComponentRow = z.infer<
-    typeof BlendEditorComponentRowSchema
->
+export type BlendEditorComponentRow = z.infer<typeof BlendEditorComponentRowSchema>
 
 export const blendComponentRowInit = () =>
     ({
@@ -53,35 +47,30 @@ const BlendEditorRowSchema = z
     .object({
         blend: zodNonemptyStringSchema('invalid blend name'),
         note: z.string().optional(),
-        components: z
-            .array(BlendEditorComponentRowSchema)
-            .superRefine((data, ctx) => {
-                const seen: string[] = []
-                for (const [i, d] of data.entries()) {
-                    const cn = packCompoundName([
-                        d.compound,
-                        d.variant,
-                    ] as CompoundName)
-                    if (seen.includes(cn)) {
-                        ctx.addIssue({
-                            code: 'custom',
-                            path: [i, 'compound'],
-                            message: 'Compound respecified',
-                        })
-                        ctx.addIssue({
-                            code: 'custom',
-                            path: [i, 'variant'],
-                            message: ' ',
-                        })
-                    } else seen.push(cn)
-                }
-                if (seen.length < 2) {
+        components: z.array(BlendEditorComponentRowSchema).superRefine((data, ctx) => {
+            const seen: string[] = []
+            for (const [i, d] of data.entries()) {
+                const cn = packCompoundName([d.compound, d.variant] as CompoundName)
+                if (seen.includes(cn)) {
                     ctx.addIssue({
                         code: 'custom',
-                        message: 'not enough distinct components',
+                        path: [i, 'compound'],
+                        message: 'Compound respecified',
                     })
-                }
-            }),
+                    ctx.addIssue({
+                        code: 'custom',
+                        path: [i, 'variant'],
+                        message: ' ',
+                    })
+                } else seen.push(cn)
+            }
+            if (seen.length < 2) {
+                ctx.addIssue({
+                    code: 'custom',
+                    message: 'not enough distinct components',
+                })
+            }
+        }),
     })
     .extend(SelectableSchema.shape)
 
@@ -108,13 +97,9 @@ export const BlendEditorDataContainerSchema = z.object({
     }),
 })
 
-export type BlendEditorDataContainer = z.infer<
-    typeof BlendEditorDataContainerSchema
->
+export type BlendEditorDataContainer = z.infer<typeof BlendEditorDataContainerSchema>
 
-const componentFieldsToMap = (
-    fields: BlendEditorComponentRow[],
-): BlendComponentsMap =>
+const componentFieldsToMap = (fields: BlendEditorComponentRow[]): BlendComponentsMap =>
     fieldsToMap(
         fields,
         (r) => packCompoundName(compoundNameOf(r)),
@@ -134,9 +119,7 @@ export const blendEditorFieldsToMap = (fields: BlendEditorRow[]): BlendsMap =>
         },
     )
 
-export const componentMapToFields = (
-    map: BlendComponentsMap,
-): BlendEditorComponentRow[] =>
+export const componentMapToFields = (map: BlendComponentsMap): BlendEditorComponentRow[] =>
     mapToFields(
         map,
         (k) => {

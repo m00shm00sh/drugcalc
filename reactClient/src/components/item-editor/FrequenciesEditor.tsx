@@ -1,17 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import type { UseFieldArrayRemove } from 'react-hook-form'
-import {
-    FormProvider,
-    useFieldArray,
-    useForm,
-    useFormContext,
-} from 'react-hook-form'
+import { FormProvider, useFieldArray, useForm, useFormContext } from 'react-hook-form'
 import { useLocalFrequencies } from '../../hooks/useLocalData'
-import type {
-    FrequencyEditorDataContainer,
-    FrequencyEditorRow,
-} from '../../types/Frequencies'
+import type { FrequencyEditorDataContainer, FrequencyEditorRow } from '../../types/Frequencies'
 import {
     frequencyEditorComponentItemInit,
     FrequencyEditorDataContainerSchema,
@@ -21,36 +13,29 @@ import {
     loadFrequencyDetailsFromRemote,
 } from '../../types/Frequencies'
 import { getSelectedIndices } from '../../types/Selectable'
-import { selectedItemsFromRemoteFormLoader, selectedItemsToRemoteSender } from '../../util/remote-load-store'
-import { Button } from '../../widgets/Button'
+import {
+    selectedItemsFromRemoteFormLoader,
+    selectedItemsToRemoteSender,
+} from '../../util/remote-load-store'
 import { Centered } from '../../widgets/Centered'
 import { ErrorMessage } from '../../widgets/ErrorMessage'
 import { Flex } from '../../widgets/RowCol'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput } from '../FormField'
+import { ComponentEditor } from './ComponentEditorCommands'
 
 type FrequencyComponentProps = {
     remove: UseFieldArrayRemove
     frequencyIndex: number
     componentIndex: number
 }
-const FrequencyComponent = ({
-    frequencyIndex,
-    componentIndex,
-}: FrequencyComponentProps) => {
+const FrequencyComponent = ({ frequencyIndex, componentIndex }: FrequencyComponentProps) => {
     const component = `frequencies.${frequencyIndex}.values.${componentIndex}`
     return (
         <fieldset className="gap-2 border flex flex-row">
-            <FormInput
-                type="checkbox"
-                name={`${component}.selected`}
-            />
-            <FormInput
-                type="text"
-                placeholder="iso8601-ish"
-                name={`${component}.value`}
-            />
+            <FormInput type="checkbox" name={`${component}.selected`} />
+            <FormInput type="text" placeholder="iso8601-ish" name={`${component}.value`} />
         </fieldset>
     )
 }
@@ -69,16 +54,11 @@ const FrequencyComponents = ({ parentIndex }: FrequencyComponentsProps) => {
         name: `frequencies.${parentIndex}.values`,
     })
     const componentContainerError = errors?.frequencies?.[parentIndex]?.values
-    const selecteds = getSelectedIndices(
-        watch,
-        `frequencies.${parentIndex}.values`,
-    )
+    const selecteds = getSelectedIndices(watch, `frequencies.${parentIndex}.values`)
     return (
-        <fieldset
-            className={`border ${componentContainerError && 'invalid'}`}
-        >
+        <fieldset className={`border ${componentContainerError && 'invalid'}`}>
             <legend>frequencies</legend>
-            <Flex dir='col' auxClasses="gap-2 p-2">
+            <Flex dir="col" auxClasses="gap-2 p-2">
                 {fields.map((field, index) => (
                     <FrequencyComponent
                         key={field.id}
@@ -87,16 +67,10 @@ const FrequencyComponents = ({ parentIndex }: FrequencyComponentsProps) => {
                         remove={remove}
                     />
                 ))}
-                <Flex dir='row'>
-                    <Button colorClass='sky-400'
-                        onClick={() => append(frequencyEditorComponentItemInit())}
-                    >
-                        Add component
-                    </Button>
-                    <Button colorClass='amber-400' onClick={() => remove(selecteds)}>
-                        Remove selected
-                    </Button>
-                </Flex>
+                <ComponentEditor
+                    addRow={() => append(frequencyEditorComponentItemInit())}
+                    removeSelected={() => remove(selecteds)}
+                />
                 <ErrorMessage text={componentContainerError?.root?.message} />
             </Flex>
         </fieldset>
@@ -107,8 +81,7 @@ export const FrequenciesEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
     const [storage, setStorage] = useLocalFrequencies()
 
     const initData = () => {
-        if (Object.keys(storage).length > 0)
-            return frequencyMapToEditorFields(storage)
+        if (Object.keys(storage).length > 0) return frequencyMapToEditorFields(storage)
         return [frequencyEditorRowInit()]
     }
 
@@ -142,7 +115,7 @@ export const FrequenciesEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
         '/api/data/frequencies',
         setStorage,
         allowCommit,
-        loginToken
+        loginToken,
     )
 
     const {
@@ -157,24 +130,14 @@ export const FrequenciesEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
                 <h1 className="text-2xl">Data editor - frequencies</h1>
             </Centered>
             <FormProvider {...methods}>
-                <form
-                    onSubmit={methods.handleSubmit((e) =>
-                        doSubmit(e.frequencies),
-                    )}
-                >
+                <form onSubmit={methods.handleSubmit((e) => doSubmit(e.frequencies))}>
                     {fields.map((field, index) => (
                         <fieldset
                             key={field.id}
-                            className={
-                                'border ' +
-                                (errors?.frequencies?.[index] && 'invalid')
-                            }
+                            className={`border ${errors?.frequencies?.[index] && 'invalid'}`}
                         >
-                            <Flex dir='row' auxClasses="gap">
-                                <FormInput
-                                    type="checkbox"
-                                    name={`frequencies.${index}.selected`}
-                                />
+                            <Flex dir="row" auxClasses="gap">
+                                <FormInput type="checkbox" name={`frequencies.${index}.selected`} />
                                 <FormInput
                                     name={`frequencies.${index}.frequency`}
                                     type="text"

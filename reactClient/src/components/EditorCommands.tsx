@@ -27,26 +27,25 @@ export const EditorCommands = ({
     save2,
 }: EditorCommandsProps) => {
     if (allowCommit && save2)
-        throw Error("incompatible usage: both allowCommit and save2 are specified")
-    const toggleCommit =
-        allowCommit ? () => allowCommit[1](!allowCommit[0]) : undefined
+        throw Error('incompatible usage: both allowCommit and save2 are specified')
+    const toggleCommit = allowCommit ? () => allowCommit[1](!allowCommit[0]) : undefined
     return (
-        <Flex dir='col'>
-            <Flex dir='row'>
-                <Button colorClass='sky-400' onClick={appendRow}>
+        <Flex dir="col">
+            <Flex dir="row">
+                <Button colorClass="sky-400" onClick={appendRow}>
                     Add
                 </Button>
-                <Button colorClass='amber-400' onClick={() => removeRows(getSelected())}>
+                <Button colorClass="amber-400" onClick={() => removeRows(getSelected())}>
                     Remove selected
                 </Button>
                 {/* we need a nullary indirection so removeAll is called with the correct arity */}
-                <Button colorClass='red-400' onClick={() => removeRows()}>
+                <Button colorClass="red-400" onClick={() => removeRows()}>
                     Clear
                 </Button>
             </Flex>
-            <Flex dir='row'>
+            <Flex dir="row">
                 {loadFromRemote !== undefined && (
-                    <Button colorClass='indigo-400' onClick={loadFromRemote}>
+                    <Button colorClass="indigo-400" onClick={loadFromRemote}>
                         Load selected from remote
                     </Button>
                 )}
@@ -55,15 +54,19 @@ export const EditorCommands = ({
                     colorClass={loadFromRemote ? 'blue-500' : 'emerald-400'}
                     type="submit"
                 >
-                    {submitStr ? submitStr : (allowCommit ?? [])[0] ? 'Commit selected to remote' : 'Save'}
+                    {submitStr
+                        ? submitStr
+                        : (allowCommit ?? [])[0]
+                          ? 'Commit selected to remote'
+                          : 'Save'}
                 </Button>
                 {isLoggedIn && toggleCommit !== undefined && (
-                    <Button colorClass='zinc-600' onClick={toggleCommit}>
+                    <Button colorClass="zinc-600" onClick={toggleCommit}>
                         toggle commit to remote
                     </Button>
                 )}
                 {save2 !== undefined && (
-                    <Button colorClass='blue-500' onClick={save2[0]}>
+                    <Button colorClass="blue-500" onClick={save2[0]}>
                         {save2[1]}
                     </Button>
                 )}

@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import type { z } from 'zod'
 import type { Dispatch, SetStateAction } from 'react'
 import { useLocalStorage } from 'usehooks-ts'
 
@@ -9,16 +9,14 @@ import { ConfigSchema } from '../types/Config'
 
 type ULSReturn<T> = [T, Dispatch<SetStateAction<T>>, () => void]
 
-function filterOutDeleter<T>(
-    uls: ULSReturn<T>,
-): [T, Dispatch<SetStateAction<T>>] {
+function filterOutDeleter<T>(uls: ULSReturn<T>): [T, Dispatch<SetStateAction<T>>] {
     return [uls[0], uls[1]]
 }
 
-function zodDeserialize<
-    T extends object,
-    ZT extends z.ZodType<T> = z.ZodType<T>,
->(item: string, schema: ZT): z.infer<typeof schema> {
+function zodDeserialize<T extends object, ZT extends z.ZodType<T> = z.ZodType<T>>(
+    item: string,
+    schema: ZT,
+): z.infer<typeof schema> {
     return schema.parse(JSON.parse(item))
 }
 
@@ -38,22 +36,10 @@ function useLocalStorageWithZodDeserializer<
 }
 
 export const useLocalBlends = () =>
-    filterOutDeleter(
-        useLocalStorageWithZodDeserializer('blends', BlendsMapSchema, {}),
-    )
+    filterOutDeleter(useLocalStorageWithZodDeserializer('blends', BlendsMapSchema, {}))
 export const useLocalCompounds = () =>
-    filterOutDeleter(
-        useLocalStorageWithZodDeserializer('compounds', CompoundsMapSchema, {}),
-    )
+    filterOutDeleter(useLocalStorageWithZodDeserializer('compounds', CompoundsMapSchema, {}))
 export const useLocalFrequencies = () =>
-    filterOutDeleter(
-        useLocalStorageWithZodDeserializer(
-            'frequencies',
-            FrequenciesMapSchema,
-            {},
-        ),
-    )
+    filterOutDeleter(useLocalStorageWithZodDeserializer('frequencies', FrequenciesMapSchema, {}))
 export const useLocalConfig = () =>
-    filterOutDeleter(
-        useLocalStorageWithZodDeserializer('config', ConfigSchema, {}),
-    )
+    filterOutDeleter(useLocalStorageWithZodDeserializer('config', ConfigSchema, {}))

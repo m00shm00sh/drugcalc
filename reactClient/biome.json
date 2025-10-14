@@ -13,11 +13,14 @@
         "useIgnoreFile": true
     },
     "formatter": {
-        "indentStyle": "space"
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 100
     },
     "javascript": {
         "formatter": {
-            "quoteStyle": "single"
+            "quoteStyle": "single",
+            "semicolons": "asNeeded"
         }
     },
     "css": {
@@ -28,7 +31,17 @@
     "linter": {
         "enabled": true,
         "rules": {
-            "recommended": true
+            "recommended": true,
+            "correctness": {
+                "noUnusedVariables": {
+                    "options": {
+                        "ignoreRestSiblings": false
+                    }
+                }
+            }
+        },
+        "domains": {
+            "react": "all"
         }
     }
 }

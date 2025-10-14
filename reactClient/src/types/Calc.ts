@@ -30,9 +30,7 @@ export const CycleDescriptionSchema = z.union([
     CycleDescriptionSharedSchema.extend({
         // compound
         prefix: z.literal('').optional(),
-        variantOrTransformer: zodNonemptyStringSchema(
-            'select a variant or transformer',
-        ).optional(),
+        variantOrTransformer: zodNonemptyStringSchema('select a variant or transformer').optional(),
         dose: z.number().gt(0),
     }),
     CycleDescriptionSharedSchema.extend({
@@ -55,8 +53,7 @@ const extractCompoundsFromCycle = (rows: CycleDescription[]): string[] =>
         .filter((e) => e.prefix === undefined)
         .map((e) => {
             const c: CompoundName = [e.compoundOrBlend]
-            if (!e.prefix && e.variantOrTransformer)
-                c.push(e.variantOrTransformer)
+            if (!e.prefix && e.variantOrTransformer) c.push(e.variantOrTransformer)
             return packCompoundName(c)
         })
         .filterDistinct()
@@ -76,24 +73,20 @@ export const calcRequestPrefixMapping: Record<string, string> = {
     transformer: '.t',
 }
 
-const CalcRequestRowSchema = z.intersection(
-    CycleDescriptionSchema,
-    SelectableSchema,
-)
+const CalcRequestRowSchema = z.intersection(CycleDescriptionSchema, SelectableSchema)
 export type CalcRequestRow = z.infer<typeof CalcRequestRowSchema>
 
-export const calcRequestRowInit = (): CalcRequestRow => ({
-    prefix: '',
-    compoundOrBlend: '',
-    dose: undefined,
-    start: '',
-    duration: '',
-    freqName: '',
-}) as Partial<CalcRequestRow> as CalcRequestRow
+export const calcRequestRowInit = (): CalcRequestRow =>
+    ({
+        prefix: '',
+        compoundOrBlend: '',
+        dose: undefined,
+        start: '',
+        duration: '',
+        freqName: '',
+    }) as Partial<CalcRequestRow> as CalcRequestRow
 
-export const cycleFieldsToCycleDescription = (
-    fields: CalcRequestRow[],
-): CycleDescription[] =>
+export const cycleFieldsToCycleDescription = (fields: CalcRequestRow[]): CycleDescription[] =>
     fields.map((e) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { selected, ...d } = {
@@ -107,27 +100,32 @@ export const cycleFieldsToCycleDescription = (
         return d
     })
 
+const Q_FLAGS = 'fl'
+const Q_COMPOUND_OR_BLEND = 'cb'
+const Q_VARIANT_OR_TRANSFORMER = 'vx'
+const Q_DOSE = 'd'
+const Q_START = 's'
+const Q_DURATION = 't'
+const Q_FREQ_NAME = 'fn'
 
-const Q_FLAGS = "fl"
-const Q_COMPOUND_OR_BLEND = "cb"
-const Q_VARIANT_OR_TRANSFORMER = "vx"
-const Q_DOSE = "d"
-const Q_START = "s"
-const Q_DURATION = "t"
-const Q_FREQ_NAME = "fn"
-
-const encodeFlag = (fl: ".b"|".t"|""|undefined): string => {
+const encodeFlag = (fl: '.b' | '.t' | '' | undefined): string => {
     switch (fl) {
-        case ".b": return "b"
-        case ".t": return "t"
-        default: return ""
+        case '.b':
+            return 'b'
+        case '.t':
+            return 't'
+        default:
+            return ''
     }
 }
 const decodeFlag = (fl: string) => {
     switch (fl) {
-        case "b": return ".b"
-        case "t": return ".t"
-        default: return ""
+        case 'b':
+            return '.b'
+        case 't':
+            return '.t'
+        default:
+            return ''
     }
 }
 
@@ -145,10 +143,8 @@ export const importRowsFromQueryString = (q: URLSearchParams): CalcRequestRow[] 
         if (qTok.length !== qCBlen)
             throw Error(`length mismatch for param ${qNam}: got ${qTok.length}, exp ${qCBlen}`)
     }
-    if (qFL.length > 0)
-        checkLen(qFL, Q_FLAGS)
-    if (qVX.length > 0)
-        checkLen(qVX, Q_VARIANT_OR_TRANSFORMER)
+    if (qFL.length > 0) checkLen(qFL, Q_FLAGS)
+    if (qVX.length > 0) checkLen(qVX, Q_VARIANT_OR_TRANSFORMER)
     checkLen(qD, Q_DOSE)
     checkLen(qS, Q_START)
     checkLen(qT, Q_DURATION)
@@ -163,7 +159,7 @@ export const importRowsFromQueryString = (q: URLSearchParams): CalcRequestRow[] 
             dose: Number(qD),
             start: qS[i],
             duration: qT[i],
-            freqName: qFN[i]
+            freqName: qFN[i],
         })
     }
     // components/Calc's form validator will validate these values
@@ -172,14 +168,13 @@ export const importRowsFromQueryString = (q: URLSearchParams): CalcRequestRow[] 
 export const exportRowsToQueryString = (rows: readonly CalcRequestRow[]): URLSearchParams => {
     const q = new URLSearchParams()
     const noPrefixes = rows.find((e) => e.prefix) === undefined
-    const noVX = rows.find((e) => ('variantOrTransformer' in e && e.variantOrTransformer)) === undefined
+    const noVX =
+        rows.find((e) => 'variantOrTransformer' in e && e.variantOrTransformer) === undefined
 
     for (const r of rows) {
-        if (!noPrefixes)
-            q.append(Q_FLAGS, encodeFlag(r.prefix))
+        if (!noPrefixes) q.append(Q_FLAGS, encodeFlag(r.prefix))
         q.append(Q_COMPOUND_OR_BLEND, r.compoundOrBlend)
-        if (!noVX)
-            q.append(Q_VARIANT_OR_TRANSFORMER, getOrElse(r, 'variantOrTransformer', ''))
+        if (!noVX) q.append(Q_VARIANT_OR_TRANSFORMER, getOrElse(r, 'variantOrTransformer', ''))
         q.append(Q_DOSE, getOrElse(r, 'dose', 0).toString())
         q.append(Q_START, r.start)
         q.append(Q_DURATION, r.duration)
@@ -198,9 +193,7 @@ export const CalcRequestDataContainerSchema = z.object({
     cycle: z.array(CalcRequestRowSchema).min(1),
 })
 
-export type CalcRequestDataContainer = z.infer<
-    typeof CalcRequestDataContainerSchema
->
+export type CalcRequestDataContainer = z.infer<typeof CalcRequestDataContainerSchema>
 
 export const calcRequestDataContainerInit = (): CalcRequestDataContainer => ({
     cycle: [calcRequestRowInit()],
@@ -223,21 +216,13 @@ export const calcRequestContainerToRequest = (
     const cycle = cycleFieldsToCycleDescription(container.cycle)
     const data: AuxData = {}
     const localCompoundNames = Object.keys(localCompounds)
-    if (
-        localCompoundNames.filterIntersecting(extractCompoundsFromCycle(cycle))
-            .length > 0
-    )
+    if (localCompoundNames.filterIntersecting(extractCompoundsFromCycle(cycle)).length > 0)
         data.compounds = localCompounds
-    if (
-        Object.keys(localBlends).filterIntersecting(
-            extractBlendsFromCycle(cycle),
-        ).length > 0
-    )
+    if (Object.keys(localBlends).filterIntersecting(extractBlendsFromCycle(cycle)).length > 0)
         data.blends = localBlends
     if (
-        Object.keys(localFrequencies).filterIntersecting(
-            extractFrequenciesFromCycle(cycle),
-        ).length > 0
+        Object.keys(localFrequencies).filterIntersecting(extractFrequenciesFromCycle(cycle))
+            .length > 0
     )
         data.frequencies = localFrequencies
     const req: CalcRequest = {
@@ -296,12 +281,8 @@ const plotlyLayout: Partial<Plotly.Layout> = {
     hovermode: 'x unified',
 }
 
-const resultItemToPlotlyData = (
-    name: string,
-    xyl: XYList,
-): Partial<Plotly.PlotData> => {
-    if (xyl.xType === 'duration')
-        throw Error(`unexpected xylist type: duration`)
+const resultItemToPlotlyData = (name: string, xyl: XYList): Partial<Plotly.PlotData> => {
+    if (xyl.xType === 'duration') throw Error(`unexpected xylist type: duration`)
     return {
         x: xyl.x,
         y: xyl.y,

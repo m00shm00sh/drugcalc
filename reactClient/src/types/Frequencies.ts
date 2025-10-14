@@ -29,9 +29,7 @@ const FrequencyEditorComponentItemSchema = z
         value: zodDisplayDurationStringSchema,
     })
     .extend(SelectableSchema.shape)
-export type FrequencyEditorComponentItem = z.infer<
-    typeof FrequencyEditorComponentItemSchema
->
+export type FrequencyEditorComponentItem = z.infer<typeof FrequencyEditorComponentItemSchema>
 
 export const frequencyEditorComponentItemInit = () =>
     ({
@@ -68,31 +66,23 @@ export const FrequencyEditorDataContainerSchema = z.object({
     }),
 })
 
-export type FrequencyEditorDataContainer = z.infer<
-    typeof FrequencyEditorDataContainerSchema
->
+export type FrequencyEditorDataContainer = z.infer<typeof FrequencyEditorDataContainerSchema>
 
-const componentFieldsToEntry = (
-    fields: FrequencyEditorComponentItem[],
-): FrequencyEntry => ({ values: fields.map((e) => displayToIso8601(e.value)) })
+const componentFieldsToEntry = (fields: FrequencyEditorComponentItem[]): FrequencyEntry => ({
+    values: fields.map((e) => displayToIso8601(e.value)),
+})
 
-export const frequencyEditorFieldsToMap = (
-    fields: FrequencyEditorRow[],
-): FrequenciesMap =>
+export const frequencyEditorFieldsToMap = (fields: FrequencyEditorRow[]): FrequenciesMap =>
     fieldsToMap(
         fields,
         (r) => r.frequency,
         (r) => componentFieldsToEntry(r.values),
     )
 
-const entryToComponentFields = (
-    entry: FrequencyEntry,
-): FrequencyEditorComponentItem[] =>
+const entryToComponentFields = (entry: FrequencyEntry): FrequencyEditorComponentItem[] =>
     entry.values.map((e) => ({ value: iso8601ToDisplay(e) }))
 
-export const frequencyMapToEditorFields = (
-    map: FrequenciesMap,
-): FrequencyEditorRow[] =>
+export const frequencyMapToEditorFields = (map: FrequenciesMap): FrequencyEditorRow[] =>
     mapToFields(
         map,
         (k) => ({ frequency: k }) as Partial<FrequencyEditorRow>,
@@ -111,36 +101,30 @@ const fetchDetails = memoize(
 export const loadFrequencyDetailsFromRemote = async (
     row: FrequencyEditorRow,
 ): Promise<Nullable<FrequencyEditorRow>> =>
-    fetchDetails(row.frequency).then(
-        (f?: FrequencyEntry): Nullable<FrequencyEditorRow> => {
-            if (!f) return undefined
-            const o: FrequencyEditorRow = {
-                ...row,
-                values: entryToComponentFields(f),
-            }
-            return o
-        },
-    )
+    fetchDetails(row.frequency).then((f?: FrequencyEntry): Nullable<FrequencyEditorRow> => {
+        if (!f) return undefined
+        const o: FrequencyEditorRow = {
+            ...row,
+            values: entryToComponentFields(f),
+        }
+        return o
+    })
 
 export const FrequencyNamesWithWeightsSchema = z.record(
     zodNonemptyStringSchema('invalid frequency name'),
     zodIsoDurationStringSchema,
 )
-export type FrequencyNamesWithWeights = z.infer<
-    typeof FrequencyNamesWithWeightsSchema
->
+export type FrequencyNamesWithWeights = z.infer<typeof FrequencyNamesWithWeightsSchema>
 
 export const sortedFrequenciesWithWeights = (m: FrequenciesMap) =>
     Object.fromEntries(
         Object.entries(m)
             .map(
                 ([k, v]) =>
-                    [
-                        k,
-                        v.values
-                            .map((e) => displayToNumber(e))
-                            .reduce((a, x) => a + x),
-                    ] as [string, number],
+                    [k, v.values.map((e) => displayToNumber(e)).reduce((a, x) => a + x)] as [
+                        string,
+                        number,
+                    ],
             )
             .sort((a, b) => a[1] - b[1]),
     )

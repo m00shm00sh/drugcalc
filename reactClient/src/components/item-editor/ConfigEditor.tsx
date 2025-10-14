@@ -1,11 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { SyntheticEvent } from 'react'
-import {
-    FormProvider,
-    useFieldArray,
-    useForm,
-    useFormContext,
-} from 'react-hook-form'
+import { FormProvider, useFieldArray, useForm, useFormContext } from 'react-hook-form'
 import { useLocalConfig } from '../../hooks/useLocalData'
 import type { ConfigEditorContainer, ConfigEditorRow } from '../../types/Config'
 import {
@@ -27,7 +22,7 @@ type SetItemProps = {
     type: string
     value: unknown
 }
-const SetItem = ({index, type, value}: SetItemProps) => {
+const SetItem = ({ index, type, value }: SetItemProps) => {
     const name = type
     if (!isConfigItem(name)) throw Error('failed test for config key')
     const setItemField = configEditorFields[name]
@@ -60,7 +55,6 @@ const SetItem = ({index, type, value}: SetItemProps) => {
     }
 }
 
-
 type ConfigItemProps = {
     index: number
     update: (row: ConfigEditorRow) => void
@@ -77,19 +71,14 @@ const ConfigItem = ({ index, update }: ConfigItemProps) => {
     const componentError = errors?.config?.[index]
     return (
         <fieldset className={`border ${componentError ? 'invalid' : ''}`}>
-            <Flex dir='row' auxClasses="gap-2 p-2">
-                <FormInput
-                    type="checkbox"
-                    name={`config.${index}.selected`}
-                    inpClasses="pl-2"
-                />
+            <Flex dir="row" auxClasses="gap-2 p-2">
+                <FormInput type="checkbox" name={`config.${index}.selected`} inpClasses="pl-2" />
                 <FormSelectWithOptions
                     name={`config.${index}.type`}
                     optionValues={keyNames}
                     onChange={(e: SyntheticEvent<HTMLSelectElement>) => {
                         const type = e.currentTarget.value
-                        if (!isConfigItem(type))
-                            throw Error('failed test for config key')
+                        if (!isConfigItem(type)) throw Error('failed test for config key')
                         const value = configEditorFields[type].default
                         clearErrors(`config.${index}.value`)
                         update({ type, value })
@@ -104,8 +93,7 @@ const ConfigItem = ({ index, update }: ConfigItemProps) => {
 export const ConfigEditor = () => {
     const [storedConfig, setStoredConfig] = useLocalConfig()
     const initConfig = () => {
-        if (Object.keys(storedConfig).length > 0)
-            return configToEditorFields(storedConfig)
+        if (Object.keys(storedConfig).length > 0) return configToEditorFields(storedConfig)
         return [configEditorRowInit()]
     }
 
@@ -144,17 +132,13 @@ export const ConfigEditor = () => {
             </Centered>
             <FormProvider {...methods}>
                 <form onSubmit={methods.handleSubmit((e) => doSubmit(e))}>
-                    <fieldset
-                        className={`border ${componentError && 'invalid'}`}
-                    >
-                        <Flex dir='col'>
+                    <fieldset className={`border ${componentError && 'invalid'}`}>
+                        <Flex dir="col">
                             {fields.map((field, index) => (
                                 <ConfigItem
                                     key={field.id}
                                     index={index}
-                                    update={(row: ConfigEditorRow) =>
-                                        update(index, row)
-                                    }
+                                    update={(row: ConfigEditorRow) => update(index, row)}
                                 />
                             ))}
                         </Flex>

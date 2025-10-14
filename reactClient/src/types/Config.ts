@@ -15,9 +15,7 @@ export const ConfigSchema = z.object({
 export type Config = z.infer<typeof ConfigSchema>
 
 const zConfigItem = (name: string, value: z.core.SomeType) =>
-    z
-        .object({ type: z.literal(name), value: value })
-        .extend(SelectableSchema.shape)
+    z.object({ type: z.literal(name), value: value }).extend(SelectableSchema.shape)
 
 export const ConfigEditorSchema = z.discriminatedUnion('type', [
     zConfigItem('tickDuration', zodDisplayDurationStringSchema),
@@ -30,12 +28,11 @@ export type ConfigEditorRow = z.infer<typeof ConfigEditorSchema> & {
 
 export const configEditorRowInit = (): ConfigEditorRow => ({
     type: 'tickDuration',
-    value: configEditorFields['tickDuration'].default,
+    value: configEditorFields.tickDuration.default,
 })
 
 export const isConfigItem = (s: string): s is keyof Config =>
-    ['tickDuration', 'cutoffMilligrams', 'doLambdaDoseCorrection'].indexOf(s) >=
-    0
+    ['tickDuration', 'cutoffMilligrams', 'doLambdaDoseCorrection'].indexOf(s) >= 0
 
 export const ConfigEditorContainerSchema = z.object({
     config: z.array(ConfigEditorSchema).superRefine((data, ctx) => {
@@ -111,10 +108,7 @@ const transformConfigItemFromField = (k: keyof Config, v: unknown): unknown => {
     return v
 }
 
-const transformConfigItemToField = (
-    k: keyof Config,
-    v: Config[keyof Config],
-): unknown => {
+const transformConfigItemToField = (k: keyof Config, v: Config[keyof Config]): unknown => {
     switch (k) {
         case 'doLambdaDoseCorrection':
             return ['false', 'true'][Number(v)]
@@ -124,9 +118,7 @@ const transformConfigItemToField = (
     return v as string | number
 }
 
-export const configEditorFieldsToConfig = (
-    fields: ConfigEditorRow[],
-): Config => {
+export const configEditorFieldsToConfig = (fields: ConfigEditorRow[]): Config => {
     const seen: (keyof Config)[] = []
     for (const [i, { type }] of fields.entries()) {
         if (!isConfigItem(type)) throw Error('failed test for config key')
@@ -135,10 +127,7 @@ export const configEditorFieldsToConfig = (
         seen.push(type)
     }
     return Object.fromEntries(
-        fields.map(({ type, value }) => [
-            type,
-            transformConfigItemFromField(type, value),
-        ]),
+        fields.map(({ type, value }) => [type, transformConfigItemFromField(type, value)]),
     )
 }
 

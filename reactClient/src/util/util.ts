@@ -2,10 +2,7 @@ export function doThrow(message: string): never {
     throw Error(message)
 }
 
-export function requireNotNull<T>(
-    arg: T | null | undefined,
-    message: string = '',
-): T {
+export function requireNotNull<T>(arg: T | null | undefined, message: string = ''): T {
     return arg ?? doThrow(message ?? 'null check failed')
 }
 

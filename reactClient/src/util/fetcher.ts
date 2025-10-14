@@ -1,9 +1,5 @@
 import { z } from 'zod'
-import {
-    BlendEntrySchema,
-    BlendNamesListSchema,
-    type BlendEntry,
-} from '../types/Blends'
+import { BlendEntrySchema, BlendNamesListSchema, type BlendEntry } from '../types/Blends'
 import {
     CompoundInfoSchema,
     CompoundNamesListSchema,
@@ -24,25 +20,18 @@ import type { ValueOrSupplier } from './filter-setif'
 import memoize from './memoize'
 import { require, type Nullable } from './util'
 
-
-async function fetchJson<
-    T extends object,
-    ZT extends z.ZodType<T> = z.ZodType<T>,
->(
+async function fetchJson<T extends object, ZT extends z.ZodType<T> = z.ZodType<T>>(
     relativeLink: string,
     schema: ZT,
     on404: ValueOrSupplier<z.infer<typeof schema>>,
 ): Promise<z.infer<typeof schema>>
 
-async function fetchJson<
-    T extends object,
-    ZT extends z.ZodType<T> = z.ZodType<T>,
->(relativeLink: string, schema: ZT): Promise<Nullable<z.infer<typeof schema>>>
+async function fetchJson<T extends object, ZT extends z.ZodType<T> = z.ZodType<T>>(
+    relativeLink: string,
+    schema: ZT,
+): Promise<Nullable<z.infer<typeof schema>>>
 
-async function fetchJson<
-    T extends object,
-    ZT extends z.ZodType<T> = z.ZodType<T>,
->(
+async function fetchJson<T extends object, ZT extends z.ZodType<T> = z.ZodType<T>>(
     relativeLink: string,
     schema: ZT,
     on404?: ValueOrSupplier<z.infer<typeof schema>>,
@@ -65,11 +54,7 @@ async function fetchJson<
 
 export const NO_RESPONSE = z.undefined()
 
-export async function postJson<
-    R,
-    T extends object,
-    ZT extends z.ZodType<R> = z.ZodType<R>,
->(
+export async function postJson<R, T extends object, ZT extends z.ZodType<R> = z.ZodType<R>>(
     relativeLink: string,
     responseSchema: ZT,
     body: T,
@@ -86,9 +71,7 @@ export async function postJson<
     })
     if (!response.ok) {
         const text = await response.text()
-        throw Error(
-            `couldn't post ${relativeLink}: ${text}`,
-        )
+        throw Error(`couldn't post ${relativeLink}: ${text}`)
     }
     if (<unknown>responseSchema === NO_RESPONSE) {
         await response.text()
@@ -99,25 +82,18 @@ export async function postJson<
     return responseSchema.parse(data)
 }
 
-function merge<T>(
-    remote: readonly T[],
-    local: readonly T[],
-    sortBy?: (a: T, b: T) => number,
-): T[] {
+function merge<T>(remote: readonly T[], local: readonly T[], sortBy?: (a: T, b: T) => number): T[] {
     const data = [...remote, ...local]
     data.sort(sortBy)
     return data.filterDistinct()
 }
 
 export const memoizedRemoteCompounds = memoize(
-    async () =>
-        await fetchJson('/api/data/compounds', CompoundNamesListSchema, []),
+    async () => await fetchJson('/api/data/compounds', CompoundNamesListSchema, []),
     () => '',
     60000,
 )
-export const fetchCompounds = async (
-    bcbv: ByCompoundByVariant,
-): Promise<string[]> =>
+export const fetchCompounds = async (bcbv: ByCompoundByVariant): Promise<string[]> =>
     merge(await memoizedRemoteCompounds(), Object.keys(bcbv ?? {}))
 
 // exported for components/BlendsEditor/VariantsFetcherContext
@@ -125,20 +101,13 @@ export const memoizedRemoteVariants = memoize(
     async (cName: string) => {
         require(!!cName, 'unexpected empty cName')
         const b = encodeURIComponent(cName).replace('%20', '+')
-        return await fetchJson(
-            `/api/data/compounds/${b}`,
-            VariantNamesListSchema,
-            [],
-        )
+        return await fetchJson(`/api/data/compounds/${b}`, VariantNamesListSchema, [])
     },
     (s: string) => s,
     60000,
 )
 
-export const fetchVariants = async (
-    bcbv: ByCompoundByVariant,
-    cName: string,
-): Promise<string[]> =>
+export const fetchVariants = async (bcbv: ByCompoundByVariant, cName: string): Promise<string[]> =>
     cName ? merge(await memoizedRemoteVariants(cName), bcbv[cName] ?? []) : []
 
 function uriEncode(s: string): string {
@@ -152,10 +121,7 @@ export async function fetchCompoundDetailsOrNull(
     // eslint-disable-next-line prefer-const
     let [b, v] = cName.map(uriEncode)
     if (!v) v = '-'
-    const response = await fetchJson(
-        `/api/data/compounds/${b}/${v}`,
-        CompoundInfoSchema,
-    )
+    const response = await fetchJson(`/api/data/compounds/${b}/${v}`, CompoundInfoSchema)
     if (response) {
         if (!response.pctActive) response.pctActive = 1.0
     }
@@ -171,9 +137,7 @@ export const memoizedRemoteBlends = memoize(
 export const fetchBlends = async (local: string[]): Promise<string[]> =>
     merge(await memoizedRemoteBlends(), local)
 
-export async function fetchBlendDetailsOrNull(
-    bName: string,
-): Promise<Nullable<BlendEntry>> {
+export async function fetchBlendDetailsOrNull(bName: string): Promise<Nullable<BlendEntry>> {
     require(!!bName, 'invalid blend name')
     const b = uriEncode(bName)
     const response = await fetchJson(`/api/data/blends/${b}`, BlendEntrySchema)
@@ -188,17 +152,13 @@ export const memoizedRemoteFrequenciesWithWeights = memoize(
             {},
         )
         // sorted from backend then remapped
-        return Object.fromEntries(
-            Object.entries(remote).map(([k, v]) => [k, iso8601ToNumber(v)]),
-        )
+        return Object.fromEntries(Object.entries(remote).map(([k, v]) => [k, iso8601ToNumber(v)]))
     },
     () => '',
     60000,
 )
 
-export const fetchFrequencies = async (
-    local: Record<string, number>,
-): Promise<string[]> => {
+export const fetchFrequencies = async (local: Record<string, number>): Promise<string[]> => {
     // splice uniquely and sort
     const data = Object.entries({
         ...(await memoizedRemoteFrequenciesWithWeights()),
@@ -212,10 +172,7 @@ export async function fetchFrequencyDetailsOrNull(
 ): Promise<Nullable<FrequencyEntry>> {
     require(!!fName, 'invalid frequency name')
     const f = uriEncode(fName)
-    const response = await fetchJson(
-        `/api/data/frequencies/${f}`,
-        FrequencyEntrySchema,
-    )
+    const response = await fetchJson(`/api/data/frequencies/${f}`, FrequencyEntrySchema)
     return response
 }
 
