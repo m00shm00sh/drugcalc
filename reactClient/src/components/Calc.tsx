@@ -357,7 +357,6 @@ export const Calc = () => {
 
     return (
         <>
-            <title>Cycle editor</title>
             <Centered>
                 <h1 className="text-2xl">Cycle</h1>
             </Centered>
