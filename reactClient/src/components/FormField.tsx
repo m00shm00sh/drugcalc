@@ -10,8 +10,8 @@ export type FieldProps<T extends FieldValues, E extends Element> = {
     type?: string
     label?: string
     name: FieldPath<T>
-    blockClasses?: string
-    inpClasses?: string
+    blockClasses?: readonly string[]
+    inpClasses?: readonly string[]
     onChange?: (event: SyntheticEvent<E>) => void
 }
 
@@ -69,8 +69,7 @@ export function FormInput<T extends FieldValues>({
         formState: { errors },
     } = useFormContext<T>()
     const errorValue = getChain<FieldError>(errors, name)
-    const inputClasses = (inpClasses ?? '').split(' ')
-    if (inpClasses) inpClasses = ` ${inpClasses}`
+    const inputClasses = [...(inpClasses ?? [])]
     let placeholder: Nullable<string>
     const valueAsNumber = type === 'number'
     if (['text', 'password', 'number'].indexOf(type ?? '') >= 0 && 'placeholder' in props) {
@@ -78,7 +77,7 @@ export function FormInput<T extends FieldValues>({
         inputClasses.push('indent-2')
     }
     return (
-        <Flex dir="col" auxClasses={blockClasses?.split(' ')}>
+        <Flex dir="col" auxClasses={blockClasses}>
             <OptionalLabel label={label} />
             <input
                 className={classNames(
@@ -140,8 +139,7 @@ export function FormSelectWithOptions<T extends FieldValues>({
         register,
         formState: { errors },
     } = useFormContext<T>()
-    inpClasses ??= ''
-    if (inpClasses) inpClasses = ` ${inpClasses}`
+    const inputClasses = [...(inpClasses ?? [])]
     if (Array.isArray(optionValues) && optionValues.length < 1) return
     if (Object.keys(optionValues).length < 1) return
     const errorValue = getChain<FieldError>(errors, name)
@@ -153,7 +151,7 @@ export function FormSelectWithOptions<T extends FieldValues>({
                     'bg-gray-400 text-gray-900',
                     'focus:ring',
                     'p-1 resize-x align-middle',
-                    ...inpClasses
+                    ...inputClasses
                 )}
                 {...(defaultValue && { defaultValue: defaultValue })}
                 {...register(name, { onChange })}
@@ -177,8 +175,7 @@ export function FormTextArea<T extends FieldValues>({
         register,
         formState: { errors },
     } = useFormContext<T>()
-    inpClasses ??= ''
-    if (inpClasses) inpClasses = ` ${inpClasses}`
+    const inputClasses = [...(inpClasses ?? [])]
     const errorValue = getChain<FieldError>(errors, name)
     return (
         <Flex dir="col" auxClasses={blockClasses}>
@@ -188,7 +185,7 @@ export function FormTextArea<T extends FieldValues>({
                     'bg-gray-400 text-gray-900',
                     'focus:ring',
                     'p-2 resize-x',
-                    ...inpClasses
+                    ...inputClasses
                 )}
                 placeholder={placeholder}
                 {...register(name, { onChange })}

@@ -175,7 +175,7 @@ const CycleDescriptionEditorRow = ({
                     type="checkbox"
                     label=" "
                     name={`cycle.${index}.selected`}
-                    inpClasses="pl-2"
+                    inpClasses={['pl-2']}
                 />
                 <FormSelectWithOptions
                     label="prefix"
@@ -212,7 +212,7 @@ const CycleDescriptionEditorRow = ({
                     <FormInput
                         label="dose"
                         placeholder="dose (mg)"
-                        blockClasses="row-2 col-1"
+                        blockClasses={['row-2', 'col-1']}
                         name={`${row}.dose`}
                         type="number"
                         min={0.0001}
@@ -220,21 +220,21 @@ const CycleDescriptionEditorRow = ({
                     />
                 )}
                 <FormInput
-                    blockClasses="row-2 col-2"
+                    blockClasses={['row-2', 'col-2']}
                     placeholder="iso8601-ish"
                     label="start"
                     type="text"
                     name={`${row}.start`}
                 />
                 <FormInput
-                    blockClasses="row-2 col-3"
+                    blockClasses={['row-2', 'col-3']}
                     placeholder="iso8601-ish"
                     label="duration"
                     type="text"
                     name={`${row}.duration`}
                 />
                 <FormSelectWithOptions
-                    blockClasses="row-2 col-4"
+                    blockClasses={['row-2', 'col-4']}
                     label="frequency"
                     name={`${row}.freqName`}
                     optionValues={selectFrequency}

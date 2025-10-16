@@ -78,7 +78,7 @@ const ConfigItem = ({ index, update }: ConfigItemProps) => {
             )}
         >
             <Flex dir="row" auxClasses={['gap-2', 'p-2']}>
-                <FormInput type="checkbox" name={`config.${index}.selected`} inpClasses="pl-2" />
+                <FormInput type="checkbox" name={`config.${index}.selected`} inpClasses={['pl-2']} />
                 <FormSelectWithOptions
                     name={`config.${index}.type`}
                     optionValues={keyNames}

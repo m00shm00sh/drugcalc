@@ -26,7 +26,7 @@ export const Button = ({
             className={classNames(
                 ColorClass[colorClass],
                 'rounded-xl p-2',
-                className
+                className?.split(' ')
             )}
             type={type}
             {...props}
