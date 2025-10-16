@@ -4,6 +4,7 @@ import type {
     FieldArray,
     FieldValues,
     Path,
+    UseFieldArrayRemove,
     UseFieldArrayUpdate,
     UseFormReturn,
 } from 'react-hook-form'
@@ -69,6 +70,7 @@ export function selectedItemsToRemoteSender<
     RequestBody extends Record<string, V>,
 >(
     formMethods: UseFormReturn<FormContainer>,
+    remover: UseFieldArrayRemove,
     arrayKey: RHFKey<FormContainer>,
     mapEncoder: (rows: Row[]) => RequestBody,
     postEndpoint: string,
@@ -78,14 +80,17 @@ export function selectedItemsToRemoteSender<
 ): (rows: Row[]) => Promise<void> {
     return async (rows: Row[]) => {
         const { setError } = formMethods
-        const selectedRows = rows.filter((e) => e.selected)
-        const map = mapEncoder(selectedRows)
+        const selectedRows = rows
+            .map((e, i) => [e, i] as [Row, number])
+            .filter((e) => e[0].selected)
+        const map = mapEncoder(selectedRows.map(e => e[0]))
         if (toRemote) {
             require(!!auth, 'specify auth token')
             try {
                 await postJson(postEndpoint, NO_RESPONSE, map, {
                     Authorization: `Bearer ${auth}`,
                 })
+                remover(selectedRows.map(e => e[1]))
             } catch (e) {
                 if (e instanceof Error) setError(arrayKey, { message: e.message })
             }

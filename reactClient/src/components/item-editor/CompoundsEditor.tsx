@@ -54,6 +54,7 @@ export const CompoundsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
 
     const doSubmit = selectedItemsToRemoteSender(
         methods,
+        remove,
         'compounds',
         compoundEditorFieldsToMap,
         '/api/data/compounds',

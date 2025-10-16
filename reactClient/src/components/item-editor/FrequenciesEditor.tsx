@@ -117,6 +117,7 @@ export const FrequenciesEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
 
     const doSubmit = selectedItemsToRemoteSender(
         methods,
+        remove,
         'frequencies',
         frequencyEditorFieldsToMap,
         '/api/data/frequencies',

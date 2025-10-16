@@ -200,6 +200,7 @@ export const BlendsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
 
     const doSubmit = selectedItemsToRemoteSender(
         methods,
+        remove,
         'blends',
         blendEditorFieldsToMap,
         '/api/data/blends',
