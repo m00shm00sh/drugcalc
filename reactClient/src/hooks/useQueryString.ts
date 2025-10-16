@@ -7,7 +7,7 @@ export function useQueryString(): [URLSearchParams, Dispatch<SetStateAction<URLS
     useEffect(() => {
         if (first.current)
             first.current = false
-        else
+        else // do not set window.location directly; it will cause infinite refresh and rerender!
             window.history.pushState(null, '', `${window.location.pathname}?${p.toString()}`)
     }, [p])
     return [p, setP]
