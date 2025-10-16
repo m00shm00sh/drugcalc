@@ -2,7 +2,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMemo, useState, type SyntheticEvent } from 'react'
 import { FormProvider, useFieldArray, useForm, useFormContext } from 'react-hook-form'
 import createPlotlyComponent from 'react-plotly.js/factory'
-import { useSearchParams } from 'react-router-dom'
 import { makeInvoker, useAsyncResult } from '../hooks/useAsyncFetch'
 import {
     useLocalBlends,
@@ -42,6 +41,7 @@ import { Flex, Grid } from '../widgets/RowCol'
 import { EditorCommands } from './EditorCommands'
 import { FormInput, FormSelectWithOptions } from './FormField'
 import classNames from 'classnames'
+import { useQueryString } from '../hooks/useQueryString'
 // either this or a dummy typescript declaration file;
 // use "regular" Plotly from react-plotly.js for development
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -183,6 +183,9 @@ const CycleDescriptionEditorRow = ({
                     optionValues={selectPrefix}
                     onChange={(e: SyntheticEvent<HTMLSelectElement>) => {
                         const newPrefix = e.currentTarget.value
+                        // if previous state was non-blend, we have to clear it
+                        if ('variantOrTransformer' in watchRow)
+                            delete watchRow.variantOrTransformer
                         update({
                             ...watchRow,
                             compoundOrBlend: '',
@@ -289,7 +292,7 @@ export const Calc = () => {
         () => '',
     )
 
-    const [searchParams, setSearchParams] = useSearchParams()
+    const [searchParams, setSearchParams] = useQueryString()
 
     const initValues = () => {
         try {
