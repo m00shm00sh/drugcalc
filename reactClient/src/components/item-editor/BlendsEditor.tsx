@@ -189,11 +189,16 @@ export const BlendsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
 
     const selecteds = getSelectedIndices(watch, `blends`)
 
-    const doseForRow = (row: number) =>
-        watch(`blends.${row}`)
-            .components
-            .map((e) => e.dose)
-            .reduce((a,x) => a+x)
+    const doseForRow = (row: number) => {
+        const result =
+            watch(`blends.${row}`)
+                .components
+                .map((e) => e.dose)
+                .reduce((a,x) => a+x, 0.0)
+        // undefined -> there was nothing to reduce
+        // NaN -> RHF valueAsNumber converted an empty value into a NaN
+        return (Number.isNaN(result) || !result) ? '???' : result.toString()
+    }
 
     const loadFromRemote = selectedItemsFromRemoteFormLoader(
         methods,
