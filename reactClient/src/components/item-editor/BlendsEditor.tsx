@@ -33,7 +33,7 @@ import { Flex } from '../../widgets/RowCol'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput, FormSelectWithOptions, FormTextArea } from '../FormField'
-import { ComponentEditor } from './ComponentEditorCommands'
+import { ItemEditor } from './ItemEditorCommands'
 
 const LocalCompoundsBcbvContext = createContext<ByCompoundByVariant>({})
 const MergedCompoundNamesContext = createContext<string[]>([])
@@ -126,9 +126,10 @@ const BlendComponents = ({ parentIndex }: BlendComponentsProps) => {
                     update={(c: BlendEditorComponentRow) => update(index, c)}
                 />
             ))}
-            <ComponentEditor
+            <ItemEditor
                 addRow={() => append(blendComponentRowInit())}
-                removeSelected={() => remove(selecteds)}
+                getSelected={() => selecteds}
+                removeRows={remove}
             />
             <ErrorMessage text={componentContainerError?.root?.message} />
         </fieldset>

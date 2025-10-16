@@ -24,7 +24,7 @@ import { Flex } from '../../widgets/RowCol'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput } from '../FormField'
-import { ComponentEditor } from './ComponentEditorCommands'
+import { ItemEditor } from './ItemEditorCommands'
 
 type FrequencyComponentProps = {
     remove: UseFieldArrayRemove
@@ -73,9 +73,10 @@ const FrequencyComponents = ({ parentIndex }: FrequencyComponentsProps) => {
                         remove={remove}
                     />
                 ))}
-                <ComponentEditor
+                <ItemEditor
                     addRow={() => append(frequencyEditorComponentItemInit())}
-                    removeSelected={() => remove(selecteds)}
+                    getSelected={() => selecteds}
+                    removeRows={remove}
                 />
                 <ErrorMessage text={componentContainerError?.root?.message} />
             </Flex>

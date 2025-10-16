@@ -1,5 +1,6 @@
 import { Button } from '../widgets/Button'
 import { Flex } from '../widgets/RowCol'
+import { ItemEditor } from './item-editor/ItemEditorCommands'
 
 export type EditorProps = {
     isLoggedIn: boolean
@@ -31,18 +32,11 @@ export const EditorCommands = ({
     const toggleCommit = allowCommit ? () => allowCommit[1](!allowCommit[0]) : undefined
     return (
         <Flex dir="col">
-            <Flex dir="row">
-                <Button colorClass="sky-400" onClick={appendRow}>
-                    Add
-                </Button>
-                <Button colorClass="amber-400" onClick={() => removeRows(getSelected())}>
-                    Remove selected
-                </Button>
-                {/* we need a nullary indirection so removeAll is called with the correct arity */}
-                <Button colorClass="red-400" onClick={() => removeRows()}>
-                    Clear
-                </Button>
-            </Flex>
+            <ItemEditor
+                addRow={appendRow} getSelected={getSelected} removeRows={removeRows}
+                addMsg='Add item'
+                doClear
+            />
             <Flex dir="row">
                 {loadFromRemote !== undefined && (
                     <Button colorClass="indigo-400" onClick={loadFromRemote}>
