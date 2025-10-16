@@ -69,23 +69,23 @@ export function FormInput<T extends FieldValues>({
         formState: { errors },
     } = useFormContext<T>()
     const errorValue = getChain<FieldError>(errors, name)
-    inpClasses ??= ''
+    const inputClasses = (inpClasses ?? '').split(' ')
     if (inpClasses) inpClasses = ` ${inpClasses}`
     let placeholder: Nullable<string>
     const valueAsNumber = type === 'number'
     if (['text', 'password', 'number'].indexOf(type ?? '') >= 0 && 'placeholder' in props) {
         placeholder = props.placeholder
-        inpClasses += ' indent-2'
+        inputClasses.push('indent-2')
     }
     return (
-        <Flex dir="col" auxClasses={blockClasses}>
+        <Flex dir="col" auxClasses={blockClasses?.split(' ')}>
             <OptionalLabel label={label} />
             <input
                 className={classNames(
                     'bg-gray-400 text-gray-900',
                     'focus:ring',
                     'w-min resize-x p-1',
-                    ...inpClasses
+                    ...inputClasses
                 )}
                 type={type}
                 placeholder={placeholder}
