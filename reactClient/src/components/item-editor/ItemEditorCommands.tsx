@@ -16,14 +16,14 @@ export const ItemEditor = ({
     doClear
 }: ItemEditorProps) => (
     <Flex dir="row">
-        <Button colorClass="sky-400" onClick={() => addRow()}>
+        <Button colorClass="add-item" onClick={() => addRow()}>
             {addMsg ?? 'Add component'}
         </Button>
-        <Button colorClass="amber-400" onClick={() => removeRows(getSelected())}>
+        <Button colorClass="remove-item" onClick={() => removeRows(getSelected())}>
             Remove selected
         </Button>
         { doClear &&
-            <Button colorClass="red-400" onClick={() => removeRows()}>
+            <Button colorClass="remove-all-items" onClick={() => removeRows()}>
                 Clear
             </Button>
         }

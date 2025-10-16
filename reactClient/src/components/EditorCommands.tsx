@@ -39,28 +39,28 @@ export const EditorCommands = ({
             />
             <Flex dir="row">
                 {loadFromRemote !== undefined && (
-                    <Button colorClass="indigo-400" onClick={loadFromRemote}>
+                    <Button colorClass="pull-selected-items" onClick={loadFromRemote}>
                         Load selected from remote
                     </Button>
                 )}
                 <Button
-                    {...(!loadFromRemote && { className: 'col-start-2' })}
-                    colorClass={loadFromRemote ? 'blue-500' : 'emerald-400'}
+                    colorClass={(allowCommit ?? [])[0] ? 'save-local' : 'push-selected-items'}
                     type="submit"
                 >
                     {submitStr
                         ? submitStr
                         : (allowCommit ?? [])[0]
                             ? 'Commit selected to remote'
-                            : 'Save'}
+                            : 'Save'
+                    }
                 </Button>
                 {isLoggedIn && toggleCommit !== undefined && (
-                    <Button colorClass="zinc-600" onClick={toggleCommit}>
+                    <Button colorClass="toggle-commit" onClick={toggleCommit}>
                         toggle commit to remote
                     </Button>
                 )}
                 {save2 !== undefined && (
-                    <Button colorClass="blue-500" onClick={save2[0]}>
+                    <Button colorClass="save-local" onClick={save2[0]}>
                         {save2[1]}
                     </Button>
                 )}
