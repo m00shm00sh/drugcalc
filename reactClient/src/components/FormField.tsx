@@ -5,6 +5,7 @@ import { useFormContext } from 'react-hook-form'
 import type { Nullable } from '../util/util'
 import { ErrorMessage } from '../widgets/ErrorMessage'
 import { Flex } from '../widgets/RowCol'
+import { fieldsFilterer } from '../util/filter-setif'
 
 export type FieldProps<T extends FieldValues, E extends Element> = {
     type?: string
@@ -34,6 +35,9 @@ type FieldPropsAny<T extends FieldValues, E extends Element> =
     | FieldProps<T, E>
     | FieldPropsText<T, E>
     | FieldPropsNumeric<T, E>
+
+const getPropsForRegister = fieldsFilterer(['minLength', 'maxLength', 'min', 'max'])
+const getPropsForInput = fieldsFilterer(['minLength', 'maxLength', 'min', 'max', 'step', 'readonly'])
 
 function getChain<R>(o: unknown, ks: string): Nullable<R> {
     for (const k of ks.split('.')) {
@@ -88,12 +92,13 @@ export function FormInput<T extends FieldValues>({
                 )}
                 type={type}
                 placeholder={placeholder}
-                {...register(name, {
+                {...(name && register(name, {
                     onChange,
                     valueAsNumber: valueAsNumber,
-                    ...props,
+                    ...getPropsForRegister(props),
+                }))}
                 })}
-                {...props}
+                {...getPropsForInput(props)}
             />
             {type !== 'checkbox' && <ErrorMessage text={errorValue?.message} />}
         </Flex>

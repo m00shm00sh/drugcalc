@@ -17,6 +17,15 @@ function filterIntersecting<T>(this: readonly T[], other: readonly T[]): T[] {
 Array.prototype.filterDistinct = filterDistinct
 Array.prototype.filterIntersecting = filterIntersecting
 
+export const fieldsFilterer = (keys: readonly string[]) =>
+    <T extends object>(obj: Partial<T>) => filterFields(obj, keys)
+
+export const filterFields = <T extends object>(obj: Partial<T>, keys: readonly string[]) =>
+    Object.fromEntries(
+        Object.entries(obj)
+            .filter(([k,]) => keys.indexOf(k) >= 0)
+    ) as Partial<T>
+
 export type ValueOrSupplier<T> = T extends (...args: unknown[]) => unknown ? never : T | (() => T)
 
 // set obj.key if value is truthy; this avoids having to tell apart missing key from key with undefined value
