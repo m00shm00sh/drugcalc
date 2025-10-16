@@ -11,6 +11,7 @@ export type FieldProps<T extends FieldValues, E extends Element> = {
     type?: string
     label?: string
     name: FieldPath<T>
+    roValue?: string
     blockClasses?: readonly string[]
     inpClasses?: readonly string[]
     onChange?: (event: SyntheticEvent<E>) => void
@@ -76,6 +77,9 @@ export function FormInput<T extends FieldValues>({
     const inputClasses = [...(inpClasses ?? [])]
     let placeholder: Nullable<string>
     const valueAsNumber = type === 'number'
+    const ro = ('roValue' in props)
+    if (name && ro)
+        throw Error('name and roValue are mutually exclusive props')
     if (['text', 'password', 'number'].indexOf(type ?? '') >= 0 && 'placeholder' in props) {
         placeholder = props.placeholder
         inputClasses.push('indent-2')
@@ -97,6 +101,9 @@ export function FormInput<T extends FieldValues>({
                     valueAsNumber: valueAsNumber,
                     ...getPropsForRegister(props),
                 }))}
+                {...(ro && {
+                    readOnly: true,
+                    value: props.roValue
                 })}
                 {...getPropsForInput(props)}
             />

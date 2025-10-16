@@ -189,6 +189,12 @@ export const BlendsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
 
     const selecteds = getSelectedIndices(watch, `blends`)
 
+    const doseForRow = (row: number) =>
+        watch(`blends.${row}`)
+            .components
+            .map((e) => e.dose)
+            .reduce((a,x) => a+x)
+
     const loadFromRemote = selectedItemsFromRemoteFormLoader(
         methods,
         'blends',
@@ -239,6 +245,13 @@ export const BlendsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
                                                         type="text"
                                                         label="name"
                                                         placeholder="name"
+                                                    />
+                                                    <FormInput
+                                                        name=''
+                                                        type="text"
+                                                        placeholder=''
+                                                        roValue={doseForRow(index).toString()}
+                                                        label="total dose (calculated)"
                                                     />
                                                     <FormTextArea
                                                         name={`blends.${index}.note`}
