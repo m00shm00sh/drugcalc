@@ -14,6 +14,7 @@ import {
 } from './duration'
 import { SelectableSchema } from './Selectable'
 import { zodNonemptyStringSchema } from './string'
+import { zodSuperRefinerForUniqueArray } from './uniqueArray'
 
 export const CompoundNamesListSchema = z.readonly(z.array(z.string().regex(/^([^=]+)(?:=(.*))?$/)))
 export type CompoundNamesList = z.infer<typeof CompoundNamesListSchema>
@@ -101,32 +102,26 @@ const CompoundEditorRowSchema = CompoundNameEntrySchema.extend({
 
 export type CompoundEditorRow = z.infer<typeof CompoundEditorRowSchema>
 
-export const compoundRowInit = () =>
+export const compoundEditorRowInit = () =>
     ({
         compound: '',
         halfLife: '',
     }) as CompoundEditorRow
 
+export const uniqueCompoundNamesRefiner = (post: (names: readonly string[]) => string = () => '') =>
+    zodSuperRefinerForUniqueArray(
+        (e: CompoundNameEntry) => packCompoundName([e.compound, e.variant] as CompoundName),
+        (e: CompoundNameEntry) => {
+            const a: [string, string][] = []
+            a.push(['compound', `Compound ${e.variant ? '...' : 'respecified'}`])
+            if (e.variant) a.push(['variant', '... respecified'])
+            return a
+        },
+        post,
+    )
+
 export const CompoundEditorDataContainerSchema = z.object({
-    compounds: z.array(CompoundEditorRowSchema).superRefine((data, ctx) => {
-        const seen: string[] = []
-        for (const [i, d] of data.entries()) {
-            const cn = packCompoundName([d.compound, d.variant] as CompoundName)
-            if (seen.includes(cn)) {
-                ctx.addIssue({
-                    code: 'custom',
-                    path: [i, 'compound'],
-                    message: `Compound ${d.variant ? '...' : 'respecified'}`,
-                })
-                if (d.variant)
-                    ctx.addIssue({
-                        code: 'custom',
-                        path: [i, 'variant'],
-                        message: '... respecified',
-                    })
-            } else seen.push(cn)
-        }
-    }),
+    compounds: z.array(CompoundEditorRowSchema).superRefine(uniqueCompoundNamesRefiner()),
 })
 
 export type CompoundEditorDataContainer = z.infer<typeof CompoundEditorDataContainerSchema>

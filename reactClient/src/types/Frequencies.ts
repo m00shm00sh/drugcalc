@@ -12,6 +12,7 @@ import { fieldsToMap, mapToFields } from '../util/reshaper'
 import type { Nullable } from '../util/util'
 import { zodNonemptyStringSchema } from './string'
 import { SelectableSchema } from './Selectable'
+import { zodSuperRefinerForUniqueArray } from './uniqueArray'
 
 export const FrequencyEntrySchema = z.object({
     values: z.array(zodIsoDurationStringSchema),
@@ -52,18 +53,12 @@ export const frequencyEditorRowInit = () =>
     }) as FrequencyEditorRow
 
 export const FrequencyEditorDataContainerSchema = z.object({
-    frequencies: z.array(FrequencyEditorRowSchema).superRefine((data, ctx) => {
-        const seen: string[] = []
-        for (const [i, d] of data.entries()) {
-            if (seen.includes(d.frequency)) {
-                ctx.addIssue({
-                    code: 'custom',
-                    path: [i, 'frequency'],
-                    message: 'Frequency respecified',
-                })
-            } else seen.push(d.frequency)
-        }
-    }),
+    frequencies: z.array(FrequencyEditorRowSchema).superRefine(
+        zodSuperRefinerForUniqueArray(
+            (r: FrequencyEditorRow) => r.frequency,
+            () => [['frequency', 'Frequency respecified']],
+        ),
+    ),
 })
 
 export type FrequencyEditorDataContainer = z.infer<typeof FrequencyEditorDataContainerSchema>
