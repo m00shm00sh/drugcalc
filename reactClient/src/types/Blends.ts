@@ -4,10 +4,16 @@ import { setIf } from '../util/filter-setif'
 import memoize from '../util/memoize'
 import { fieldsToMap, mapToFields } from '../util/reshaper'
 import type { Nullable } from '../util/util'
-import { compoundNameOf, packCompoundName, uniqueCompoundNamesRefiner, unpackCompoundName } from './Compounds'
+import {
+    compoundNameOf,
+    packCompoundName,
+    uniqueCompoundNamesRefiner,
+    unpackCompoundName,
+} from './Compounds'
 import { SelectableSchema } from './Selectable'
 import { zodNonemptyStringSchema } from './string'
 import { zodSuperRefinerForUniqueArray } from './uniqueArray'
+import { zodPositiveNumberSchema } from './number'
 
 export const BlendNamesListSchema = z.readonly(z.array(z.string()))
 export type BlendNamesList = z.infer<typeof BlendNamesListSchema>
@@ -31,7 +37,7 @@ const BlendEditorComponentRowSchema = z
     .object({
         compound: z.string().nonempty('select a compound'),
         variant: z.string().optional(),
-        dose: z.number().gt(0, 'dose too low'),
+        dose: zodPositiveNumberSchema('dose'),
     })
     .extend(SelectableSchema.shape)
 

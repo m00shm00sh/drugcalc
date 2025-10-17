@@ -5,11 +5,12 @@ import {
     zodDisplayDurationStringSchema,
     zodIsoDurationStringSchema,
 } from './duration'
+import { zodPositiveNumberSchema } from './number'
 import { SelectableSchema } from './Selectable'
 
 export const ConfigSchema = z.object({
     tickDuration: zodIsoDurationStringSchema.optional(),
-    cutoffMilligrams: z.number().gt(0).optional(),
+    cutoffMilligrams: zodPositiveNumberSchema('cutoff').optional(),
     doLambdaDoseCorrection: z.boolean().optional(),
 })
 export type Config = z.infer<typeof ConfigSchema>

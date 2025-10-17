@@ -12,6 +12,7 @@ import {
 import { zodNonemptyStringSchema } from './string'
 import { SelectableSchema } from './Selectable'
 import { getOrElse, stripIf } from '../util/filter-setif'
+import { zodPositiveNumberSchema } from './number'
 
 /* even though this is strictly an outgoing type, i'm still making a zod schema because
  * prettier's typescript handling butchers indentation of union types
@@ -31,12 +32,12 @@ export const CycleDescriptionSchema = z.union([
         // compound
         prefix: z.literal('').optional(),
         variantOrTransformer: zodNonemptyStringSchema('select a variant or transformer').optional(),
-        dose: z.number().gt(0),
+        dose: zodPositiveNumberSchema('dose'),
     }),
     CycleDescriptionSharedSchema.extend({
         // blend
         prefix: z.literal('.b'),
-        dose: z.number().gt(0, 'dose too low'),
+        dose: zodPositiveNumberSchema('dose'),
     }),
     CycleDescriptionSharedSchema.extend({
         // transformer
