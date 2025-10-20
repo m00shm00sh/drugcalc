@@ -127,7 +127,7 @@ const OptionValues = ({ optionValues }: { optionValues: OptionValues }): ReactEl
     return (
         <>
             {Object.entries(optionValues).map(([ok, ov]) => (
-                <option key={ov} value={ov}>
+                <option key={ok} value={ov}>
                     {ok}
                 </option>
             ))}
