@@ -12,9 +12,11 @@ import {
     zodDisplayDurationStringSchema,
     zodIsoDurationStringSchema,
 } from './duration'
-import { SelectableSchema } from './Selectable'
-import { zodNonemptyStringSchema } from './string'
+import { SelectableSchema, zodOptBool } from './Selectable'
+import { AvailableVXsCacheSchema, zodNonemptyStringSchema } from './string'
 import { zodSuperRefinerForUniqueArray } from './uniqueArray'
+import pLimit from 'p-limit'
+import type { FieldPath, UseFieldArrayReturn, UseFormReturn } from 'react-hook-form'
 
 export const CompoundNamesListSchema = z.readonly(z.array(z.string().regex(/^([^=]+)(?:=(.*))?$/)))
 export type CompoundNamesList = z.infer<typeof CompoundNamesListSchema>
@@ -175,3 +177,91 @@ export const loadCompoundDetailsFromRemote = async (
         if (o.pctActive) o.pctActive *= 100
         return o
     })
+
+const CompoundDeleterExpandAllItemsSchema = z.object({ 'expand': zodOptBool })
+export const CompoundDeleterRowSchema = CompoundNameEntrySchema
+    .extend(SelectableSchema.shape)
+    .extend(AvailableVXsCacheSchema.shape)
+    .extend(CompoundDeleterExpandAllItemsSchema.shape)
+    .refine((r) => !(r.expand && r.variant), {error: "do not specify both variant and expand"})
+
+
+export type CompoundDeleterRow = z.infer<typeof CompoundDeleterRowSchema>
+
+export const compoundDeleterRowInit = (): CompoundDeleterRow => ({
+    compound: '',
+})
+
+export const CompoundDeleterDataContainerSchema = z.object({
+    // this is a mess to superRefine because we have to match expanders
+    compounds: z.array(CompoundDeleterRowSchema).superRefine(zodSuperRefinerForUniqueArray(
+        (e: CompoundDeleterRow) => e,
+        (e: CompoundDeleterRow) => {
+            const a: [string, string][] = []
+            a.push(['compound', `Compound ${e.variant ? '...' : 'respecified'}`])
+            if (e.variant) a.push(['variant', '... respecified'])
+            if (e.expand) a.push(['expand', 'conflict'])
+            return a
+        },
+        () => '', // post = noop
+        (seen: readonly CompoundDeleterRow[], cur: CompoundDeleterRow) => {
+            const emptyToUndef = (s: Nullable<string>) => s ? s : undefined
+
+            for (const cmp of seen) {
+                if ((cur.expand || cmp.expand) && cur.compound === cmp.compound)
+                    return true
+                if (cur.compound === cmp.compound && emptyToUndef(cur.variant) === emptyToUndef(cmp.variant))
+                    return true
+            }
+            return false
+        }
+    ))
+})
+
+export type CompoundDeleterDataContainer = z.infer<typeof CompoundDeleterDataContainerSchema>
+
+export function expandExpansionItems(
+    formMethods: UseFormReturn<CompoundDeleterDataContainer>,
+    arrayMethods: UseFieldArrayReturn<CompoundDeleterDataContainer, 'compounds'>,
+    concurrencyLimit: number = 2,
+) : () => Promise<void> {
+    const limiter = pLimit(concurrencyLimit)
+
+    const loader = async (data: CompoundDeleterRow[]): Promise<Nullable<readonly string[]>[]> =>
+        Promise.all(
+            data
+                .map((e) => (e.expand
+                    ? (e.vx !== undefined ? e.vx : memoizedRemoteVariantsOrNull(e.compound))
+                    : [])
+                )
+                .map((f) => limiter(() => f)),
+        )
+
+    return async () => {
+        const { getValues, setError, clearErrors } = formMethods
+        const { update, insert } = arrayMethods
+        const data = getValues('compounds')
+        const newData = await loader(data)
+        // use reverse order so we don't have to recompute indices
+        for (const [i, d] of newData.reverse().entries()) {
+            if (!data[i]?.expand) continue
+            if (d === undefined) {
+                setError(`compounds.${i}.compound`, {
+                    message: `couldn't fetch variants`,
+                })
+                continue
+            }
+            const [v0, ...vRest] = d
+            update(i, { compound: data[i].compound, selected: true, ...(v0 && { variant: v0 })})
+            if (vRest.length > 0) {
+                const add = vRest.map((v) => ({ compound: data[i].compound, variant: v, selected: true }))
+                insert(i + 1, add)
+            }
+            const toClear = Array(d.length)
+                .fill('')
+                .map((_, ai) => `compounds.${i + ai}` as FieldPath<CompoundDeleterDataContainer>)
+            clearErrors(toClear)
+
+        }
+    }
+}

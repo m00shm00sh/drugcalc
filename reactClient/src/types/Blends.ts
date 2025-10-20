@@ -146,3 +146,23 @@ export const loadBlendDetailsFromRemote = async (
         o.components = componentMapToFields(b.components)
         return o
     })
+
+export const BlendDeleterRowSchema = z.object({
+    blend: zodNonemptyStringSchema()
+})
+    .extend(SelectableSchema.shape)
+
+export type BlendDeleterRow = z.infer<typeof BlendDeleterRowSchema>
+
+export const blendDeleterRowInit = (): BlendDeleterRow => ({
+    blend: '',
+})
+
+export const BlendDeleterDataContainerSchema = z.object({
+    blends: z.array(BlendDeleterRowSchema)
+        .superRefine(zodSuperRefinerForUniqueArray(
+            (b: BlendDeleterRow) => b.blend,
+            () => [['blend', 'Blend respecified']],
+        ))
+})
+export type BlendDeleterDataContainer = z.infer<typeof BlendDeleterDataContainerSchema>

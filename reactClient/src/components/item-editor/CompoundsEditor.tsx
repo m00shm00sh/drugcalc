@@ -8,7 +8,7 @@ import {
     CompoundEditorDataContainerSchema,
     compoundEditorFieldsToMap,
     compoundMapToEditorFields,
-    compoundRowInit,
+    compoundEditorRowInit,
     loadCompoundDetailsFromRemote,
 } from '../../types/Compounds'
 import { getSelectedIndices } from '../../types/Selectable'
@@ -27,7 +27,7 @@ export const CompoundsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
 
     const initData = () => {
         if (Object.keys(storage).length > 0) return compoundMapToEditorFields(storage)
-        return [compoundRowInit()]
+        return [compoundEditorRowInit()]
     }
     const methods = useForm<CompoundEditorDataContainer>({
         defaultValues: { compounds: initData() },
@@ -45,7 +45,7 @@ export const CompoundsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
         loadCompoundDetailsFromRemote,
         (i: number) => [`compounds.${i}.compound`, `compounds.${i}.variant`],
         (r: CompoundEditorRow) => ({
-            ...compoundRowInit(),
+            ...compoundEditorRowInit(),
             compound: r.compound,
             variant: r.variant,
         }),
@@ -123,7 +123,7 @@ export const CompoundsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
                     ))}
                     <EditorCommands
                         isLoggedIn={isLoggedIn}
-                        appendRow={() => append(compoundRowInit())}
+                        appendRow={() => append(compoundEditorRowInit())}
                         getSelected={() => selecteds}
                         removeRows={remove}
                         loadFromRemote={loadFromRemote}

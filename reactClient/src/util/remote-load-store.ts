@@ -11,7 +11,8 @@ import type {
 import type { Selectable } from '../types/Selectable'
 import { require, type Nullable } from './util'
 import type { SetStateAction } from 'react'
-import { NO_RESPONSE, postJson } from './fetcher'
+import { del, NO_RESPONSE, postJson } from './fetcher'
+import type { Invalidatable } from './memoize'
 
 type RHFKey1<FormContainer> = keyof FormContainer & ArrayPath<FormContainer>
 type RHFKey<FormContainer> = RHFKey1<FormContainer> & Path<FormContainer>
@@ -95,5 +96,66 @@ export function selectedItemsToRemoteSender<
                 if (e instanceof Error) setError(arrayKey, { message: e.message })
             }
         } else setLocalStorage(map)
+    }
+}
+
+export function selectedItemsOnRemoteDeleter<
+    FormContainer extends FieldValues,
+    FormRow extends object & FieldArray<FormContainer, RHFKey1<FormContainer>> & Selectable,
+>(
+    formMethods: UseFormReturn<FormContainer>,
+    remover: UseFieldArrayRemove,
+    arrayKey: RHFKey<FormContainer>,
+    errorKeys: (index: number) => Path<FormContainer>[],
+    delEndpoint: string,
+    pathEncoder: (row: FormRow) => string,
+    invalidatable: Invalidatable | readonly Invalidatable[],
+    auth: Nullable<string>,
+    concurrencyLimit: number = 2,
+): (rows: FormRow[]) => Promise<void> {
+    const limiter = pLimit(concurrencyLimit)
+
+    const didDeleteOrUndefined = async (e: FormRow, path: string) =>
+        (await del(path, auth ?? '[$invalid$]') ? e : undefined)
+
+    const loader = async (data: FormRow[]): Promise<Nullable<FormRow>[]> =>
+        Promise.all(
+            data
+                .map((e) => {
+                    if (!e.selected)
+                        return e
+                    const path = pathEncoder(e)
+                    return didDeleteOrUndefined(e, `${delEndpoint}/${path}`)
+                })
+                .map((f) => limiter(() => f)),
+        )
+
+    return async () => {
+        const { getValues, setError, clearErrors } = formMethods
+        const data = getValues(arrayKey)
+        const newData = await loader(data)
+        const removeQ: number[] = []
+        for (const [i, d] of newData.entries()) {
+            if (!data[i]?.selected) continue
+            if (d === undefined) {
+                for (const ek of errorKeys(i)) {
+                    setError(ek, {
+                        message: `couldn't delete`,
+                    })
+                }
+            } else {
+                for (const ek of errorKeys(i)) {
+                    clearErrors(ek)
+                }
+                removeQ.push(i)
+            }
+        }
+        if (removeQ.length > 0) {
+            remover(removeQ)
+            if (Array.isArray(invalidatable))
+                invalidatable.forEach((e: Invalidatable) => { e.invalidateAll( )})
+            else
+                (<Invalidatable>invalidatable).invalidateAll()
+        }
     }
 }

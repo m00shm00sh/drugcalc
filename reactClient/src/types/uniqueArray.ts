@@ -1,16 +1,17 @@
 import type { z } from 'zod'
 
 export const zodSuperRefinerForUniqueArray =
-    <K extends object>(
-        getName: (item: K) => string,
+    <K extends object, NK>(
+        getName: (item: K) => NK,
         createError: (item: K) => [string, string][],
-        post: (names: readonly string[]) => string = () => '',
+        post: (names: readonly NK[]) => string = () => '',
+        hasMatch: (seen: readonly NK[], cur: NK) => boolean = (s, n) => s.includes(n)
     ) =>
         <T extends K[]>(data: T, ctx: z.core.$RefinementCtx) => {
-            const seen: string[] = []
+            const seen: NK[] = []
             for (const [index, datum] of data.entries()) {
                 const name = getName(datum)
-                if (seen.includes(name)) {
+                if (hasMatch(seen, name)) {
                     createError(datum).forEach((e) => {
                         ctx.addIssue({
                             code: 'custom',

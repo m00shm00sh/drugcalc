@@ -82,6 +82,25 @@ export async function postJson<R, T extends object, ZT extends z.ZodType<R> = z.
     return responseSchema.parse(data)
 }
 
+export async function del(
+    relativeLink: string,
+    bearer: string,
+): Promise<boolean> {
+    const response = await fetch(`${BACKEND}${relativeLink}`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${bearer}`
+        },
+    })
+    if (!response.ok) {
+        if (response.status === 404)
+            return false
+        const text = await response.text()
+        throw Error(`couldn't delete ${relativeLink}: ${text}`)
+    }
+    await response.text()
+    return true
+}
 function merge<T>(remote: readonly T[], local: readonly T[], sortBy?: (a: T, b: T) => number): T[] {
     const data = [...remote, ...local]
     data.sort(sortBy)
@@ -107,6 +126,17 @@ export const memoizedRemoteVariants = memoize(
     60000,
 )
 
+// we need to tell valid empty list and no such compound apart for CompoundsDeleter
+export const memoizedRemoteVariantsOrNull = memoize(
+    async (cName: string) => {
+        require(!!cName, 'unexpected empty cName')
+        const b = encodeURIComponent(cName).replace('%20', '+')
+        return await fetchJson(`/api/data/compounds/${b}`, VariantNamesListSchema)
+    },
+    (s: string) => s,
+    60000,
+)
+
 export const fetchVariants = async (bcbv: ByCompoundByVariant, cName: string): Promise<string[]> =>
     cName ? merge(await memoizedRemoteVariants(cName), bcbv[cName] ?? []) : []
 
@@ -114,14 +144,22 @@ function uriEncode(s: string): string {
     return encodeURIComponent(s).replaceAll('%20', '+')
 }
 
-export async function fetchCompoundDetailsOrNull(
-    cName: CompoundName,
-): Promise<Nullable<CompoundInfo>> {
+export const compoundPath = (cName: CompoundName, del: boolean = false) => {
     require(!!cName[0], 'invalid compound name')
     // eslint-disable-next-line prefer-const
     let [b, v] = cName.map(uriEncode)
     if (!v) v = '-'
-    const response = await fetchJson(`/api/data/compounds/${b}/${v}`, CompoundInfoSchema)
+    if (del)
+        return b
+    return `${b}/${v}`
+}
+
+export async function fetchCompoundDetailsOrNull(
+    cName: CompoundName,
+): Promise<Nullable<CompoundInfo>> {
+    require(!!cName[0], 'invalid compound name')
+    const path = compoundPath(cName)
+    const response = await fetchJson(`/api/data/compounds/${path}`, CompoundInfoSchema)
     if (response) {
         if (!response.pctActive) response.pctActive = 1.0
     }

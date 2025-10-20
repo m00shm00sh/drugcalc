@@ -123,3 +123,23 @@ export const sortedFrequenciesWithWeights = (m: FrequenciesMap) =>
             )
             .sort((a, b) => a[1] - b[1]),
     )
+
+export const FrequencyDeleterRowSchema = z.object({
+    frequency: zodNonemptyStringSchema()
+})
+    .extend(SelectableSchema.shape)
+
+export type FrequencyDeleterRow = z.infer<typeof FrequencyDeleterRowSchema>
+
+export const frequencyDeleterRowInit = (): FrequencyDeleterRow => ({
+    frequency: '',
+})
+
+export const FrequencyDeleterDataContainerSchema = z.object({
+    frequencies: z.array(FrequencyDeleterRowSchema)
+        .superRefine(zodSuperRefinerForUniqueArray(
+            (b: FrequencyDeleterRow) => b.frequency,
+            () => [['frequency', 'Frequency respecified']],
+        ))
+})
+export type FrequencyDeleterDataContainer = z.infer<typeof FrequencyDeleterDataContainerSchema>
