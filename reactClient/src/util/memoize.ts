@@ -21,14 +21,7 @@ export default function memoize<R, T extends unknown[]>(
         const e = cache.get(hashedK)
         const now = Date.now()
         if (e === undefined || now - e.inserted > timeoutMsec) {
-            const fut = new Promise<R>((accept, reject) => {
-                try {
-                    const result = func(...args)
-                    accept(result)
-                } catch (e) {
-                    reject(e)
-                }
-            })
+            const fut = func(...args)
             cache.set(hashedK, {
                 future: fut,
                 inserted: now,
