@@ -21,6 +21,7 @@ import {
 import { reshapeCompoundKeys } from '../../types/Compounds'
 import { getSelectedIndices } from '../../types/Selectable'
 import { fetchCompounds, fetchVariants, memoizedRemoteVariants } from '../../util/fetcher'
+import { getOrElse } from '../../util/filter-setif'
 import memoize from '../../util/memoize'
 import {
     selectedItemsFromRemoteFormLoader,
@@ -28,12 +29,12 @@ import {
 } from '../../util/remote-load-store'
 import { Centered } from '../../widgets/Centered'
 import { ErrorMessage } from '../../widgets/ErrorMessage'
+import { RequireContent } from '../../widgets/RequireContent'
 import { Flex } from '../../widgets/RowCol'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput, FormSelectWithOptions, FormTextArea } from '../FormField'
 import { ItemEditor } from './ItemEditorCommands'
-import { getOrElse } from '../../util/filter-setif'
 
 const MergedCompoundNamesContext = createContext<string[]>([])
 const VariantsFetcherContext = createContext(memoizedRemoteVariants)
@@ -139,8 +140,15 @@ type BlendsEditorBodyProps = {
     setStorage: ReturnType<typeof useLocalBlends>[1]
 }
 const BlendsEditorBody = ({ initData, loginProps: {isLoggedIn, loginToken}, setStorage} : BlendsEditorBodyProps) => {
+    const [loadError, setLoadError] = useState('')
     const methods = useForm<BlendEditorDataContainer>({
-        defaultValues: async () => ({ blends: await initData() }),
+        defaultValues: async () => {
+            try {
+                return ({ blends: await initData() })
+            } catch {
+                setLoadError('could not load initial variants')
+                return { blends: [] }
+            }},
         resolver: zodResolver(BlendEditorDataContainerSchema),
     })
     const { fields, append, remove, update } = useFieldArray({
@@ -187,7 +195,6 @@ const BlendsEditorBody = ({ initData, loginProps: {isLoggedIn, loginToken}, setS
         allowCommit,
         loginToken,
     )
-
     return (
         <FormProvider {...methods}>
             <form onSubmit={methods.handleSubmit((e) => doSubmit(e.blends))}>
@@ -227,14 +234,17 @@ const BlendsEditorBody = ({ initData, loginProps: {isLoggedIn, loginToken}, setS
                         </Flex>
                     </fieldset>
                 ))}
-                <EditorCommands
-                    isLoggedIn={isLoggedIn}
-                    appendRow={() => append(blendRowInit())}
-                    getSelected={() => selecteds}
-                    removeRows={remove}
-                    loadFromRemote={loadFromRemote}
-                    allowCommit={[allowCommit, setAllowCommit]}
-                />
+                {/* a bit hacky to conditionalize but it takes care of no network on load with init data */}
+                <RequireContent predicate={!loadError} errorText={loadError}>
+                    <EditorCommands
+                        isLoggedIn={isLoggedIn}
+                        appendRow={() => append(blendRowInit())}
+                        getSelected={() => selecteds}
+                        removeRows={remove}
+                        loadFromRemote={loadFromRemote}
+                        allowCommit={[allowCommit, setAllowCommit]}
+                    />
+                </RequireContent>
             </form>
         </FormProvider>
     )
@@ -278,32 +288,26 @@ export const BlendsEditor = (loginProps: EditorProps) => {
         makeInvoker({
             func: getCompounds,
             args: [],
-            initial: [],
+            initial: [], // do not use local compounds so we can catch network failure earlier
             auxDeps: [localCompoundNames],
         }),
     )
 
-    return (
-        <>
-            <title>Blends editor</title>
-            <Centered>
-                <h1 className="text-2xl">Data editor - blends</h1>
-            </Centered>
-            {compoundNames.length > 0 ? (
-                <MergedCompoundNamesContext value={compoundNames}>
-                    <VariantsFetcherContext value={getVariants}>
-                        <BlendsEditorBody
-                            initData={initData}
-                            loginProps={loginProps}
-                            setStorage={setStorage}
-                        />
-                    </VariantsFetcherContext>
-                </MergedCompoundNamesContext>
-            ) : (
-                <Centered className="content error-msg text-2xl">
-                    <h2>Could not load compounds</h2>
-                </Centered>
-            )}
-        </>
-    )
+    return <>
+        <title>Blends editor</title>
+        <Centered>
+            <h1 className="text-2xl">Data editor - blends</h1>
+        </Centered>
+        <RequireContent predicate={compoundNames.length > 0} errorText='could not load compounds'>
+            <MergedCompoundNamesContext value={compoundNames}>
+                <VariantsFetcherContext value={getVariants}>
+                    <BlendsEditorBody
+                        initData={initData}
+                        loginProps={loginProps}
+                        setStorage={setStorage}
+                    />
+                </VariantsFetcherContext>
+            </MergedCompoundNamesContext>
+        </RequireContent>
+    </>
 }

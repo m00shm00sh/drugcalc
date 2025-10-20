@@ -12,6 +12,7 @@ import { Flex } from '../../widgets/RowCol'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput, FormSelectWithOptions } from '../FormField'
+import { RequireContent } from '../../widgets/RequireContent'
 
 export const FrequenciesDeleter = ({ loginToken }: EditorProps) => {
     if (!loginToken)
@@ -55,44 +56,46 @@ export const FrequenciesDeleter = ({ loginToken }: EditorProps) => {
     const selecteds = getSelectedIndices(getValues, `frequencies`)
     return (
         <>
-            <title>Frequencys deleter</title>
+            <title>Frequencies deleter</title>
             <Centered>
-                <h1 className="text-2xl">Frequencys deleter</h1>
+                <h1 className="text-2xl">Frequencies deleter</h1>
             </Centered>
-            <FormProvider {...methods}>
-                <form onSubmit={methods.handleSubmit((e) => doSubmit(e.frequencies))}>
-                    {fields.map((field, index) => (
-                        <fieldset
-                            key={field.id}
-                            className={classNames(
-                                'border',
-                                errors?.frequencies?.[index] && 'invalid'
-                            )}
-                        >
-                            <Flex dir="row" auxClasses={['gap-2', 'p-2']}>
-                                <FormInput
-                                    name={`frequencies.${index}.selected`}
-                                    type="checkbox"
-                                    label=" "
-                                />
-                                <FormSelectWithOptions
-                                    name={`frequencies.${index}.frequency`}
-                                    type="text"
-                                    optionValues={frequencyNames}
-                                    label="frequency"
-                                />
-                            </Flex>
-                        </fieldset>
-                    ))}
-                    <EditorCommands
-                        appendRow={() => append(frequencyDeleterRowInit())}
-                        getSelected={() => selecteds}
-                        removeRows={remove}
-                        submitStr='Delete from remote'
-                        allowCommit={[true, () => {}]}
-                    />
-                </form>
-            </FormProvider>
+            <RequireContent predicate={frequencyNames.length > 0} errorText='could not load frequencies'>
+                <FormProvider {...methods}>
+                    <form onSubmit={methods.handleSubmit((e) => doSubmit(e.frequencies))}>
+                        {fields.map((field, index) => (
+                            <fieldset
+                                key={field.id}
+                                className={classNames(
+                                    'border',
+                                    errors?.frequencies?.[index] && 'invalid'
+                                )}
+                            >
+                                <Flex dir="row" auxClasses={['gap-2', 'p-2']}>
+                                    <FormInput
+                                        name={`frequencies.${index}.selected`}
+                                        type="checkbox"
+                                        label=" "
+                                    />
+                                    <FormSelectWithOptions
+                                        name={`frequencies.${index}.frequency`}
+                                        type="text"
+                                        optionValues={frequencyNames}
+                                        label="frequency"
+                                    />
+                                </Flex>
+                            </fieldset>
+                        ))}
+                        <EditorCommands
+                            appendRow={() => append(frequencyDeleterRowInit())}
+                            getSelected={() => selecteds}
+                            removeRows={remove}
+                            submitStr='Delete from remote'
+                            allowCommit={[true, () => {}]}
+                        />
+                    </form>
+                </FormProvider>
+            </RequireContent>
         </>
     )
 }

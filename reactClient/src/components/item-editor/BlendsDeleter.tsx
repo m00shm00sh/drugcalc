@@ -12,6 +12,7 @@ import { Flex } from '../../widgets/RowCol'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput, FormSelectWithOptions } from '../FormField'
+import { RequireContent } from '../../widgets/RequireContent'
 
 export const BlendsDeleter = ({ loginToken }: EditorProps) => {
     if (!loginToken)
@@ -53,12 +54,12 @@ export const BlendsDeleter = ({ loginToken }: EditorProps) => {
     }))
 
     const selecteds = getSelectedIndices(getValues, `blends`)
-    return (
-        <>
-            <title>Blends deleter</title>
-            <Centered>
-                <h1 className="text-2xl">Blends deleter</h1>
-            </Centered>
+    return <>
+        <title>Blends deleter</title>
+        <Centered>
+            <h1 className="text-2xl">Blends deleter</h1>
+        </Centered>
+        <RequireContent predicate={blendNames.length > 0} errorText='could not load blends'>
             <FormProvider {...methods}>
                 <form onSubmit={methods.handleSubmit((e) => doSubmit(e.blends))}>
                     {fields.map((field, index) => (
@@ -93,6 +94,6 @@ export const BlendsDeleter = ({ loginToken }: EditorProps) => {
                     />
                 </form>
             </FormProvider>
-        </>
-    )
+        </RequireContent>
+    </>
 }

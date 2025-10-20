@@ -47,6 +47,7 @@ import { useQueryString } from '../hooks/useQueryString'
 import { getOrElse, stripIf } from '../util/filter-setif'
 import type { Config } from '../types/Config'
 import type { BlendsMap } from '../types/Blends'
+import { RequireContent } from '../widgets/RequireContent'
 // either this or a dummy typescript declaration file;
 // use "regular" Plotly from react-plotly.js for development
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -384,11 +385,14 @@ export const Calc = () => {
         setSearchParams(exportRowsToQueryString(r))
     }
 
-    return initFrequencyNames.length > 0 && (
-        <>
-            <Centered>
-                <h1 className="text-2xl">Cycle</h1>
-            </Centered>
+    return <>
+        <Centered>
+            <h1 className="text-2xl">Cycle</h1>
+        </Centered>
+        <RequireContent
+            predicate={initCompoundNames.length > 0 && initFrequencyNames.length > 0}
+            errorText='could not load compounds or frequencies'
+        >
             <Flex dir="col">
                 <MergedCompoundNamesContext value={initCompoundNames}>
                     <MergedBlendNamesContext value={initBlendNames}>
@@ -410,6 +414,6 @@ export const Calc = () => {
                     </MergedBlendNamesContext>
                 </MergedCompoundNamesContext>
             </Flex>
-        </>
-    )
+        </RequireContent>
+    </>
 }

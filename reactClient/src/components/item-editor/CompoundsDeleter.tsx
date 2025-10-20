@@ -14,6 +14,7 @@ import { compoundPath, memoizedRemoteCompounds, memoizedRemoteVariants } from '.
 import { selectedItemsOnRemoteDeleter } from '../../util/remote-load-store'
 import type { Nullable } from '../../util/util'
 import { Centered } from '../../widgets/Centered'
+import { RequireContent } from '../../widgets/RequireContent'
 import { Flex } from '../../widgets/RowCol'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
@@ -92,12 +93,12 @@ export const CompoundsDeleter = ({ loginToken }: EditorProps) => {
     }))
 
     const selecteds = getSelectedIndices(watch, `compounds`)
-    return (
-        <>
-            <title>Compounds deleter</title>
-            <Centered>
-                <h1 className="text-2xl">Compounds deleter</h1>
-            </Centered>
+    return <>
+        <title>Compounds deleter</title>
+        <Centered>
+            <h1 className="text-2xl">Compounds deleter</h1>
+        </Centered>
+        <RequireContent predicate={compoundNames.length > 0} errorText='could not load compounds'>
             <FormProvider {...methods}>
                 <form onSubmit={methods.handleSubmit((e) => doSubmit(e.compounds))}>
                     {fields.map((field, index) => (
@@ -151,6 +152,6 @@ export const CompoundsDeleter = ({ loginToken }: EditorProps) => {
                     />
                 </form>
             </FormProvider>
-        </>
-    )
+        </RequireContent>
+    </>
 }
