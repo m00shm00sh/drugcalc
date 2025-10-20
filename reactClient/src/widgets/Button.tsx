@@ -2,13 +2,13 @@ import classNames from "classnames"
 
 const ColorClass = {
     'gray-400': 'bg-gray-400',
-    'add-item': 'bg-sky-400',
-    'remove-item': 'bg-amber-400',
-    'remove-all-items': 'bg-red-400',
+    'add-item': 'bg-blue-500',
+    'remove-item': 'bg-yellow-500',
+    'remove-all-items': 'bg-red-500',
     'save-local': 'bg-blue-500',
-    'pull-selected-items': 'bg-indigo-400',
-    'push-selected-items': 'bg-emerald-400',
-    'toggle-commit': 'bg-teal-700',
+    'pull-selected-items': 'bg-blue-500',
+    'push-selected-items': 'bg-green-500',
+    'toggle-commit': 'bg-red-500',
 }
 
 export const Button = ({

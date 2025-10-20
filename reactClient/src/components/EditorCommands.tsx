@@ -11,7 +11,7 @@ type EditorCommandsProps = EditorProps & {
     appendRow: () => void
     getSelected: () => number[]
     removeRows: (row?: number[]) => void // unary -> remove rows; nullary -> remove all
-    loadFromRemote?: () => Promise<void>
+    loadFromRemote?: (() => Promise<void>)|[string, () => Promise<void>]
     allowCommit?: [boolean, (value: React.SetStateAction<boolean>) => void]
     submitStr?: string
     save2?: [() => void, string]
@@ -39,12 +39,21 @@ export const EditorCommands = ({
             />
             <Flex dir="row">
                 {loadFromRemote !== undefined && (
-                    <Button colorClass="pull-selected-items" onClick={loadFromRemote}>
-                        Load selected from remote
+                    <Button
+                        colorClass="pull-selected-items"
+                        onClick={Array.isArray(loadFromRemote)
+                            ? loadFromRemote[1]
+                            : loadFromRemote
+                        }
+                    >
+                        {Array.isArray(loadFromRemote)
+                            ? loadFromRemote[0]
+                            : "Load selected from remote"
+                        }
                     </Button>
                 )}
                 <Button
-                    colorClass={(allowCommit ?? [])[0] ? 'save-local' : 'push-selected-items'}
+                    colorClass={(allowCommit ?? [])[0] ? 'push-selected-items' : 'save-local'}
                     type="submit"
                 >
                     {submitStr
