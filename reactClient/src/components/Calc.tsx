@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMemo, useState, type SyntheticEvent } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { FormProvider, useFieldArray, useForm, useFormContext } from 'react-hook-form'
 import createPlotlyComponent from 'react-plotly.js/factory'
 import { makeInvoker, useAsyncResult } from '../hooks/useAsyncFetch'
@@ -13,17 +13,18 @@ import type { CalcRequestDataContainer, CalcRequestRow, PlotlyInvocation } from 
 import {
     calcRequestContainerToRequest,
     CalcRequestDataContainerSchema,
-    calcRequestPrefixMapping,
     calcRequestRowInit,
     CycleResultSchema,
     exportRowsToQueryString,
     importRowsFromQueryString,
     plotlyEmptyInvocation,
+    prefixOptions,
+    printCB,
+    printVX,
     resultToPlotly,
 } from '../types/Calc'
-import type { ByCompoundByVariant } from '../types/Compounds'
-import { reshapeCompoundKeys } from '../types/Compounds'
-import { sortedFrequenciesWithWeights } from '../types/Frequencies'
+import { reshapeCompoundKeys, type CompoundsMap } from '../types/Compounds'
+import { sortedFrequenciesWithWeights, type FrequenciesMap } from '../types/Frequencies'
 import { getSelectedIndices } from '../types/Selectable'
 import {
     fetchBlends,
@@ -32,6 +33,7 @@ import {
     fetchTransformerFrequencies,
     fetchTransformerNames,
     fetchVariants,
+    memoizedRemoteVariants,
     postJson,
 } from '../util/fetcher'
 import memoize from '../util/memoize'
@@ -42,125 +44,42 @@ import { EditorCommands } from './EditorCommands'
 import { FormInput, FormSelectWithOptions } from './FormField'
 import classNames from 'classnames'
 import { useQueryString } from '../hooks/useQueryString'
+import { getOrElse, stripIf } from '../util/filter-setif'
+import type { Config } from '../types/Config'
+import type { BlendsMap } from '../types/Blends'
 // either this or a dummy typescript declaration file;
 // use "regular" Plotly from react-plotly.js for development
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Plotly = require('plotly.js-gl2d-dist-min/')
 const Plot = createPlotlyComponent(Plotly)
 
-type WithAuxDeps<T extends unknown[], U extends unknown[]> = [
-    (...args: [...T]) => Promise<readonly string[]>,
-    [...U],
-]
 type CycleDescriptionEditorRowProps = {
     index: number
     update: (row: CalcRequestRow) => void
-    getCompounds: WithAuxDeps<[], [ByCompoundByVariant]>
-    getVariants: WithAuxDeps<[string], [ByCompoundByVariant]>
-    getBlends: WithAuxDeps<[], [string[]]>
-    getFrequencies: WithAuxDeps<[], [Record<string, number>]>
 }
 
-const fetchEmptyList = async (): Promise<readonly string[]> => []
+const MergedCompoundNamesContext = createContext<readonly string[]>([])
+const MergedBlendNamesContext = createContext<readonly string[]>([])
+const MergedFrequencyNamesContext = createContext<readonly string[]>([])
+const VariantsFetcherContext = createContext(memoizedRemoteVariants)
 
 const CycleDescriptionEditorRow = ({
     index,
     update,
-    getCompounds,
-    getVariants,
-    getBlends,
-    getFrequencies,
 }: CycleDescriptionEditorRowProps) => {
     const {
-        watch,
+        getValues,
         formState: { errors },
     } = useFormContext<CalcRequestDataContainer>()
 
+    const compounds = useContext(MergedCompoundNamesContext)
+    const getVariants = useContext(VariantsFetcherContext)
+    const blends = useContext(MergedBlendNamesContext)
+    const frequencies = useContext(MergedFrequencyNamesContext)
+
     const row = `cycle.${index}`
-    const watchRow = watch(`cycle.${index}`)
-    const selectPrefix = calcRequestPrefixMapping
-    const prefixValue = watch(`cycle.${index}.prefix`)
-
-    const [getCompoundsInvocation, selectCompoundOrBlendLabel] = (() => {
-        switch (prefixValue) {
-            case calcRequestPrefixMapping.compound:
-            case calcRequestPrefixMapping.transformer:
-                return [
-                    makeInvoker({
-                        func: getCompounds[0],
-                        args: [],
-                        initial: [],
-                        auxDeps: getCompounds[1] as unknown[],
-                    }),
-                    'compound',
-                ]
-            case calcRequestPrefixMapping.blend:
-                return [
-                    makeInvoker({
-                        func: getBlends[0],
-                        args: [],
-                        initial: [],
-                        auxDeps: getBlends[1],
-                    }),
-                    'blend',
-                ]
-        }
-        throw Error(`unhandled prefix for compound selection: ${prefixValue}`)
-    })()
-    const selectCompoundOrBlend = useAsyncResult(getCompoundsInvocation)
-
-    const compoundOrBlendValue = watch(`cycle.${index}.compoundOrBlend`)
-
-    const [getVariantsInvocation, selectVariantsLabel] = (() => {
-        switch (prefixValue) {
-            case calcRequestPrefixMapping.compound:
-                return [
-                    makeInvoker({
-                        func: getVariants[0],
-                        args: [compoundOrBlendValue ?? ''],
-                        initial: [],
-                        auxDeps: getVariants[1] as unknown[],
-                    }),
-                    'variant',
-                ]
-            case calcRequestPrefixMapping.transformer:
-                return [
-                    makeInvoker({
-                        func: fetchTransformerNames,
-                        args: [],
-                        initial: [],
-                    }),
-                    'transformer',
-                ]
-            case calcRequestPrefixMapping.blend:
-                return [
-                    makeInvoker({
-                        func: fetchEmptyList,
-                        args: [],
-                        initial: [],
-                    }),
-                    'blend',
-                ]
-        }
-        throw Error(`unhandled prefix for compound selection: ${prefixValue}`)
-    })()
-    const selectVariantOrTransformer = useAsyncResult(getVariantsInvocation)
-
-    const selectFrequency = useAsyncResult(
-        makeInvoker({
-            func: async () => {
-                const all = await getFrequencies[0]()
-                const xform =
-                    prefixValue === calcRequestPrefixMapping.transformer
-                        ? await fetchTransformerFrequencies()
-                        : []
-                return [...all, ...xform]
-            },
-            args: [],
-            initial: [],
-            auxDeps: [getFrequencies[1], fetchTransformerFrequencies],
-        }),
-    )
+    const curRow = getValues(`cycle.${index}`)
+    const selectPrefix = prefixOptions
 
     const rowError = errors?.cycle?.[index]
     return (
@@ -181,34 +100,56 @@ const CycleDescriptionEditorRow = ({
                     label="prefix"
                     name={`${row}.prefix`}
                     optionValues={selectPrefix}
-                    onChange={(e: SyntheticEvent<HTMLSelectElement>) => {
+                    onChange={async (e) => {
                         const newPrefix = e.currentTarget.value
-                        // if previous state was non-blend, we have to clear it
-                        if ('variantOrTransformer' in watchRow)
-                            delete watchRow.variantOrTransformer
-                        update({
-                            ...watchRow,
-                            compoundOrBlend: '',
-                            ...(newPrefix !== calcRequestPrefixMapping.blend && {
-                                variantOrTransformer: undefined,
-                            }),
-                            ...(newPrefix === calcRequestPrefixMapping.transformer && {
-                                dose: undefined,
-                            }),
-                        })
+                        stripIf('variantOrTransformer' in curRow, curRow, 'variantOrTransformer')
+                        stripIf('dose' in curRow, curRow, 'dose')
+                        curRow.fn = frequencies
+                        switch (newPrefix) {
+                            case '':
+                                /* we used getValues to get value at start of value,
+                                 * not watch to get live value, so we have to assign
+                                 * the changed value because it will be stale otherwise
+                                 */
+                                curRow.prefix = ''
+                                curRow.cb = compounds
+                                // this check is silly and redundant but welcome to typescript
+                                if (curRow.prefix === '')
+                                    curRow.vx = await getVariants(curRow.compoundOrBlend)
+                                break
+                            case '.b':
+                                curRow.prefix = '.b'
+                                curRow.cb = blends
+                                break
+                            case '.t':
+                                curRow.prefix = '.t'
+                                curRow.cb = compounds
+                                // this check is silly and redundant but welcome to typescript
+                                if (curRow.prefix === '.t')
+                                    curRow.vx = await fetchTransformerNames()
+                                curRow.fn = [...curRow.fn, ...await fetchTransformerFrequencies()]
+                                break
+                        }
+                        update(curRow)
                     }}
                 />
                 <FormSelectWithOptions
-                    label={selectCompoundOrBlendLabel}
+                    label={printCB(curRow)}
                     name={`${row}.compoundOrBlend`}
-                    optionValues={selectCompoundOrBlend}
+                    optionValues={getOrElse(curRow, 'cb', [])}
+                    onChange={async (e) => {
+                        const newCompound = e.currentTarget.value
+                        if (curRow.prefix === '')
+                            curRow.vx = await getVariants(newCompound)
+                        update({...curRow})
+                    }}
                 />
                 <FormSelectWithOptions
-                    label={selectVariantsLabel}
+                    label={printVX(curRow)}
                     name={`${row}.variantOrTransformer`}
-                    optionValues={selectVariantOrTransformer}
+                    optionValues={getOrElse(curRow, 'vx', [])}
                 />
-                {prefixValue !== calcRequestPrefixMapping.transformer && (
+                {curRow.prefix !== '.t' && (
                     <FormInput
                         label="dose"
                         placeholder="dose (mg)"
@@ -237,10 +178,95 @@ const CycleDescriptionEditorRow = ({
                     blockClasses={['row-2', 'col-4']}
                     label="frequency"
                     name={`${row}.freqName`}
-                    optionValues={selectFrequency}
+                    optionValues={getOrElse(curRow, 'fn', [])}
                 />
             </Grid>
         </fieldset>
+    )
+}
+
+type CalcBodyProps = {
+    hydratedInitValues: () => Promise<CalcRequestDataContainer>
+    newRow: () => CalcRequestRow
+    localData: {
+        config: Config,
+        compounds: CompoundsMap,
+        blends: BlendsMap,
+        frequencies: FrequenciesMap
+    }
+    saveToQS: (r: CalcRequestRow[]) => void
+}
+const CalcBody = ({hydratedInitValues, newRow, localData, saveToQS} : CalcBodyProps) => {
+    const methods = useForm<CalcRequestDataContainer>({
+        defaultValues: hydratedInitValues,
+        resolver: zodResolver(CalcRequestDataContainerSchema),
+    })
+    const {
+        control,
+        formState: { errors },
+        getValues,
+        setError,
+    } = methods
+    const { append, update, remove, fields } = useFieldArray({
+        control,
+        name: `cycle`,
+    })
+
+    const [result, setResult] = useState<PlotlyInvocation>(plotlyEmptyInvocation)
+
+    const doSubmit = async (r: CalcRequestDataContainer) => {
+        try {
+            const plot = await postJson(
+                '/api/calc',
+                CycleResultSchema,
+                calcRequestContainerToRequest(
+                    r,
+                    localData.config,
+                    localData.compounds,
+                    localData.blends,
+                    localData.frequencies,
+                ),
+            )
+            setResult(resultToPlotly(plot))
+        } catch (e) {
+            if (e instanceof Error) {
+                const resultErr = e.message.substring(
+                    e.message.indexOf(':', e.message.indexOf(':') + 1) + 1,
+                )
+                setError('cycle', { message: resultErr })
+            } else {
+                alert(e)
+            }
+        }
+    }
+
+    const selecteds = getSelectedIndices(getValues, `cycle`)
+    return (
+        <Centered>
+            <FormProvider {...methods}>
+                <form onSubmit={methods.handleSubmit((e) => doSubmit(e))}>
+                    {fields.map((field, index) => (
+                        <CycleDescriptionEditorRow
+                            key={field.id}
+                            index={index}
+                            update={(e) => update(index, e)}
+                        />
+                    ))}
+                    <ErrorMessage text={errors?.cycle?.message} />
+                    <EditorCommands
+                        appendRow={() => append([newRow()])}
+                        getSelected={() => selecteds}
+                        removeRows={remove}
+                        submitStr="Evaluate"
+                        save2={[
+                            () => {saveToQS(getValues('cycle'))},
+                            'Save form to URL'
+                        ]}
+                    />
+                </form>
+            </FormProvider>
+            {result.data.length > 0 && <Plot data={result.data} layout={result.layout} />}
+        </Centered>
     )
 }
 
@@ -249,7 +275,6 @@ export const Calc = () => {
     const [localBlends] = useLocalBlends()
     const [localCompounds] = useLocalCompounds()
     const [localFrequencies] = useLocalFrequencies()
-    const [result, setResult] = useState<PlotlyInvocation>(plotlyEmptyInvocation)
     const [localCompoundsFromStorage] = useLocalCompounds()
     const localCompoundNames = useMemo(
         () => reshapeCompoundKeys(localCompoundsFromStorage),
@@ -262,12 +287,14 @@ export const Calc = () => {
         () => '',
         60000,
     )
+
     // for useAsyncFetch, auxDeps = [localCompoundNames]
     const getVariants = memoize(
         async (c: string) => await fetchVariants(localCompoundNames, c),
         (s) => s,
         60000,
     )
+
 
     const [localBlendsFromStorage] = useLocalBlends()
     const localBlendNames = useMemo(
@@ -286,110 +313,102 @@ export const Calc = () => {
         () => sortedFrequenciesWithWeights(localFrequenciesFromStorage),
         [localFrequenciesFromStorage],
     )
-    // for useAsyncFetch, auxDeps = [localFrequencyNames]
+    // for useAsyncFetch, auxDeps = [localFrequencyItems]
     const getFrequencies = memoize(
         async () => await fetchFrequencies(localFrequencyItems),
         () => '',
     )
 
+    const initFrequencyNames = useAsyncResult(makeInvoker({
+        func: getFrequencies,
+        args: [],
+        initial: [],
+        auxDeps: [localFrequencyItems],
+    }))
+
+    const newRow = useCallback(
+        (): CalcRequestRow => ({...calcRequestRowInit(), fn: initFrequencyNames}),
+        [initFrequencyNames]
+    )
+
+    const initCompoundNames = useAsyncResult(makeInvoker({
+        func: getCompounds,
+        args: [],
+        initial: [],
+        auxDeps: [localCompoundNames],
+    }))
+
+    const initBlendNames = useAsyncResult(makeInvoker({
+        func: getBlends,
+        args: [],
+        initial: [],
+        auxDeps: [localBlendNames],
+    }))
+
     const [searchParams, setSearchParams] = useQueryString()
 
-    const initValues = () => {
-        try {
-            const rows = importRowsFromQueryString(searchParams)
-            return rows.length !== 0 ? rows : [calcRequestRowInit()]
-        } catch (e) {
-            console.log(`query string import failed: ${e}`)
-            return [calcRequestRowInit()]
+    const initValues = useMemo(
+        (): CalcRequestRow[] => {
+            try {
+                const rows = importRowsFromQueryString(searchParams)
+                return rows.length !== 0 ? rows : [newRow()]
+            } catch (e) {
+                console.log(`query string import failed: ${e}`)
+                return [newRow()]
+            }
+        }, [newRow, searchParams]
+    )
+    const hydratedInitValues = async (iv: CalcRequestRow[]) => {
+        const freqs = await getFrequencies()
+        for (const row of iv) {
+            switch (row.prefix) {
+                case '':
+                    row.cb = await getCompounds()
+                    row.vx = await getVariants(row.compoundOrBlend)
+                    row.fn = freqs
+                    break
+                case '.b':
+                    row.cb = await getBlends()
+                    row.fn = freqs
+                    break
+                case '.t':
+                    row.cb = await getCompounds()
+                    row.vx = await fetchTransformerNames()
+                    row.fn = [...freqs, ...await fetchTransformerFrequencies()]
+            }
         }
+        return iv
     }
 
-    const methods = useForm<CalcRequestDataContainer>({
-        defaultValues: {
-            cycle: initValues(),
-        },
-        resolver: zodResolver(CalcRequestDataContainerSchema),
-    })
-    const {
-        control,
-        formState: { errors },
-        getValues,
-        setError,
-        watch,
-    } = methods
-    const { append, update, remove, fields } = useFieldArray({
-        control,
-        name: `cycle`,
-    })
-
-    const saveFormToQueryString = () => {
-        const r = getValues('cycle')
+    const saveFormToQueryString = (r: CalcRequestRow[]) => {
         setSearchParams(exportRowsToQueryString(r))
     }
 
-    const doSubmit = async (r: CalcRequestDataContainer) => {
-        try {
-            const plot = await postJson(
-                '/api/calc',
-                CycleResultSchema,
-                calcRequestContainerToRequest(
-                    r,
-                    storedConfig,
-                    localCompounds,
-                    localBlends,
-                    localFrequencies,
-                ),
-            )
-            setResult(resultToPlotly(plot))
-        } catch (e) {
-            if (e instanceof Error) {
-                const resultErr = e.message.substring(
-                    e.message.indexOf(':', e.message.indexOf(':') + 1) + 1,
-                )
-                setError('cycle', { message: resultErr })
-            } else {
-                alert(e)
-            }
-        }
-    }
-
-    const selecteds = getSelectedIndices(watch, `cycle`)
-
-    return (
+    return initFrequencyNames.length > 0 && (
         <>
             <Centered>
                 <h1 className="text-2xl">Cycle</h1>
             </Centered>
             <Flex dir="col">
-                <FormProvider {...methods}>
-                    <Centered>
-                        <form onSubmit={methods.handleSubmit((e) => doSubmit(e))}>
-                            {fields.map((field, index) => (
-                                <CycleDescriptionEditorRow
-                                    key={field.id}
-                                    index={index}
-                                    update={(e) => update(index, e)}
-                                    getCompounds={[getCompounds, [localCompoundNames]]}
-                                    getVariants={[getVariants, [localCompoundNames]]}
-                                    getBlends={[getBlends, [localBlendNames]]}
-                                    getFrequencies={[getFrequencies, [localFrequencyItems]]}
+                <MergedCompoundNamesContext value={initCompoundNames}>
+                    <MergedBlendNamesContext value={initBlendNames}>
+                        <VariantsFetcherContext value={getVariants}>
+                            <MergedFrequencyNamesContext value={initFrequencyNames}>
+                                <CalcBody
+                                    hydratedInitValues={async () => ({cycle: await hydratedInitValues(initValues)})}
+                                    newRow={newRow}
+                                    localData={{
+                                        config: storedConfig,
+                                        compounds: localCompounds,
+                                        blends: localBlends,
+                                        frequencies: localFrequencies,
+                                    }}
+                                    saveToQS={saveFormToQueryString}
                                 />
-                            ))}
-                            <ErrorMessage text={errors?.cycle?.message} />
-                            <EditorCommands
-                                isLoggedIn={false}
-                                appendRow={() => append([calcRequestRowInit()])}
-                                getSelected={() => selecteds}
-                                removeRows={remove}
-                                submitStr="Evaluate"
-                                save2={[saveFormToQueryString, 'Save form to URL']}
-                            />
-                        </form>
-                    </Centered>
-                </FormProvider>
-                <Centered>
-                    {result.data.length > 0 && <Plot data={result.data} layout={result.layout} />}
-                </Centered>
+                            </MergedFrequencyNamesContext>
+                        </VariantsFetcherContext>
+                    </MergedBlendNamesContext>
+                </MergedCompoundNamesContext>
             </Flex>
         </>
     )

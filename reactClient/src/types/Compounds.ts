@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { fetchCompoundDetailsOrNull } from '../util/fetcher'
+import { fetchCompoundDetailsOrNull, memoizedRemoteVariantsOrNull } from '../util/fetcher'
 import { setIf } from '../util/filter-setif'
 import memoize from '../util/memoize'
 import quote from '../util/quote'

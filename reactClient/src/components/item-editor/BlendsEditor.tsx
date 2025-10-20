@@ -18,7 +18,6 @@ import {
     blendRowInit,
     loadBlendDetailsFromRemote,
 } from '../../types/Blends'
-import type { ByCompoundByVariant } from '../../types/Compounds'
 import { reshapeCompoundKeys } from '../../types/Compounds'
 import { getSelectedIndices } from '../../types/Selectable'
 import { fetchCompounds, fetchVariants, memoizedRemoteVariants } from '../../util/fetcher'
@@ -34,8 +33,8 @@ import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput, FormSelectWithOptions, FormTextArea } from '../FormField'
 import { ItemEditor } from './ItemEditorCommands'
+import { getOrElse } from '../../util/filter-setif'
 
-const LocalCompoundsBcbvContext = createContext<ByCompoundByVariant>({})
 const MergedCompoundNamesContext = createContext<string[]>([])
 const VariantsFetcherContext = createContext(memoizedRemoteVariants)
 
@@ -47,25 +46,14 @@ type BlendComponentProps = {
 }
 const BlendComponent = ({ blendIndex, componentIndex, update }: BlendComponentProps) => {
     const {
-        watch,
+        getValues,
         formState: { errors },
     } = useFormContext<BlendEditorDataContainer>()
-    const localBcbv = useContext(LocalCompoundsBcbvContext)
     const compounds = useContext(MergedCompoundNamesContext)
     const component = `blends.${blendIndex}.components.${componentIndex}`
     const variantsFetcher = useContext(VariantsFetcherContext)
-    const watchRow = watch(`blends.${blendIndex}.components.${componentIndex}`)
-    const watchCompound: string = watch(
-        `blends.${blendIndex}.components.${componentIndex}.compound`,
-    )
-    const variants: readonly string[] = useAsyncResult(
-        makeInvoker({
-            func: variantsFetcher,
-            args: [watchCompound],
-            initial: [],
-            auxDeps: [localBcbv],
-        }),
-    )
+    const curRow = getValues(`blends.${blendIndex}.components.${componentIndex}`)
+
     const componentError = errors?.blends?.[blendIndex]?.components?.[componentIndex]
     return (
         <fieldset
@@ -86,9 +74,18 @@ const BlendComponent = ({ blendIndex, componentIndex, update }: BlendComponentPr
                 <FormSelectWithOptions
                     name={`${component}.compound`}
                     optionValues={compounds}
-                    onChange={() => update({ ...watchRow, variant: undefined })}
+                    onChange={async (e) => {
+                        const newCompound = e.currentTarget.value
+                        const vx = await variantsFetcher(newCompound)
+                        update({
+                            ...curRow,
+                            compound: newCompound,
+                            variant: undefined,
+                            vx: vx
+                        })
+                    }}
                 />
-                <FormSelectWithOptions name={`${component}.variant`} optionValues={variants} />
+                <FormSelectWithOptions name={`${component}.variant`} optionValues={getOrElse(curRow, 'vx', [])} />
             </Flex>
         </fieldset>
     )
@@ -136,34 +133,14 @@ const BlendComponents = ({ parentIndex }: BlendComponentsProps) => {
     )
 }
 
-export const BlendsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
-    const [localCompoundsFromStorage] = useLocalCompounds()
-    const localCompoundNames = useMemo(
-        () => reshapeCompoundKeys(localCompoundsFromStorage),
-        [localCompoundsFromStorage],
-    )
-
-    // for useAsyncFetch, auxDeps = [localCompoundNames]
-    const getCompounds = memoize(
-        async () => await fetchCompounds(localCompoundNames),
-        () => '',
-        60000,
-    )
-    // for useAsyncFetch, auxDeps = [localCompoundsFromStorage]
-    const getVariants = memoize(
-        async (c: string) => await fetchVariants(localCompoundNames, c),
-        (s) => s,
-        60000,
-    )
-    const [storage, setStorage] = useLocalBlends()
-
-    const initData = () => {
-        if (Object.keys(storage).length > 0) return blendMapToEditorFields(storage)
-        return [blendRowInit()]
-    }
-
+type BlendsEditorBodyProps = {
+    initData: () => Promise<BlendEditorRow[]>,
+    loginProps: EditorProps,
+    setStorage: ReturnType<typeof useLocalBlends>[1]
+}
+const BlendsEditorBody = ({ initData, loginProps: {isLoggedIn, loginToken}, setStorage} : BlendsEditorBodyProps) => {
     const methods = useForm<BlendEditorDataContainer>({
-        defaultValues: { blends: initData() },
+        defaultValues: async () => ({ blends: await initData() }),
         resolver: zodResolver(BlendEditorDataContainerSchema),
     })
     const { fields, append, remove, update } = useFieldArray({
@@ -173,25 +150,16 @@ export const BlendsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
 
     const [allowCommit, setAllowCommit] = useState(false)
 
-    const compoundNames = useAsyncResult(
-        makeInvoker({
-            func: getCompounds,
-            args: [],
-            initial: [],
-            auxDeps: [localCompoundNames],
-        }),
-    )
-
     const {
-        watch,
+        getValues,
         formState: { errors },
     } = methods
 
-    const selecteds = getSelectedIndices(watch, `blends`)
+    const selecteds = getSelectedIndices(getValues, `blends`)
 
     const doseForRow = (row: number) => {
         const result =
-            watch(`blends.${row}`)
+            getValues(`blends.${row}`)
                 .components
                 .map((e) => e.dose)
                 .reduce((a,x) => a+x, 0.0)
@@ -221,66 +189,116 @@ export const BlendsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
     )
 
     return (
+        <FormProvider {...methods}>
+            <form onSubmit={methods.handleSubmit((e) => doSubmit(e.blends))}>
+                {fields.map((field, index) => (
+                    <fieldset
+                        key={field.id}
+                        className={
+                            `border ${errors?.blends?.[index] && 'invalid'}`
+                        }
+                    >
+                        <Flex dir="row">
+                            <fieldset className="gap-2 p-2">
+                                <FormInput
+                                    type="checkbox"
+                                    name={`blends.${index}.selected`}
+                                />
+                                <FormInput
+                                    name={`blends.${index}.blend`}
+                                    type="text"
+                                    label="name"
+                                    placeholder="name"
+                                />
+                                <FormInput
+                                    name=''
+                                    type="text"
+                                    placeholder=''
+                                    roValue={doseForRow(index).toString()}
+                                    label="total dose (calculated)"
+                                />
+                                <FormTextArea
+                                    name={`blends.${index}.note`}
+                                    label="note"
+                                    placeholder="note"
+                                />
+                            </fieldset>
+                            <BlendComponents parentIndex={index} />
+                        </Flex>
+                    </fieldset>
+                ))}
+                <EditorCommands
+                    isLoggedIn={isLoggedIn}
+                    appendRow={() => append(blendRowInit())}
+                    getSelected={() => selecteds}
+                    removeRows={remove}
+                    loadFromRemote={loadFromRemote}
+                    allowCommit={[allowCommit, setAllowCommit]}
+                />
+            </form>
+        </FormProvider>
+    )
+}
+
+
+export const BlendsEditor = (loginProps: EditorProps) => {
+    const [localCompoundsFromStorage] = useLocalCompounds()
+    const localCompoundNames = useMemo(
+        () => reshapeCompoundKeys(localCompoundsFromStorage),
+        [localCompoundsFromStorage],
+    )
+
+    // for useAsyncFetch, auxDeps = [localCompoundNames]
+    const getCompounds = memoize(
+        async () => await fetchCompounds(localCompoundNames),
+        () => '',
+        60000,
+    )
+    const getVariants = memoize(
+        async (c: string) => await fetchVariants(localCompoundNames, c),
+        (s) => s,
+        60000,
+    )
+
+    const [storage, setStorage] = useLocalBlends()
+
+    const initData = async () => {
+        if (Object.keys(storage).length > 0) {
+            const rows = blendMapToEditorFields(storage)
+            for (const row of rows)
+                for (const c of row.components)
+                    c.vx = await getVariants(c.compound)
+            return rows
+        }
+        return [blendRowInit()]
+    }
+
+
+    const compoundNames = useAsyncResult(
+        makeInvoker({
+            func: getCompounds,
+            args: [],
+            initial: [],
+            auxDeps: [localCompoundNames],
+        }),
+    )
+
+    return (
         <>
             <title>Blends editor</title>
             <Centered>
                 <h1 className="text-2xl">Data editor - blends</h1>
             </Centered>
             {compoundNames.length > 0 ? (
-                <FormProvider {...methods}>
-                    <LocalCompoundsBcbvContext value={localCompoundNames}>
-                        <MergedCompoundNamesContext value={compoundNames}>
-                            <VariantsFetcherContext value={getVariants}>
-                                <form onSubmit={methods.handleSubmit((e) => doSubmit(e.blends))}>
-                                    {fields.map((field, index) => (
-                                        <fieldset
-                                            key={field.id}
-                                            className={
-                                                `border ${errors?.blends?.[index] && 'invalid'}`
-                                            }
-                                        >
-                                            <Flex dir="row">
-                                                <fieldset className="gap-2 p-2">
-                                                    <FormInput
-                                                        type="checkbox"
-                                                        name={`blends.${index}.selected`}
-                                                    />
-                                                    <FormInput
-                                                        name={`blends.${index}.blend`}
-                                                        type="text"
-                                                        label="name"
-                                                        placeholder="name"
-                                                    />
-                                                    <FormInput
-                                                        name=''
-                                                        type="text"
-                                                        placeholder=''
-                                                        roValue={doseForRow(index).toString()}
-                                                        label="total dose (calculated)"
-                                                    />
-                                                    <FormTextArea
-                                                        name={`blends.${index}.note`}
-                                                        label="note"
-                                                        placeholder="note"
-                                                    />
-                                                </fieldset>
-                                                <BlendComponents parentIndex={index} />
-                                            </Flex>
-                                        </fieldset>
-                                    ))}
-                                    <EditorCommands
-                                        isLoggedIn={isLoggedIn}
-                                        appendRow={() => append(blendRowInit())}
-                                        getSelected={() => selecteds}
-                                        removeRows={remove}
-                                        loadFromRemote={loadFromRemote}
-                                        allowCommit={[allowCommit, setAllowCommit]}
-                                    />
-                                </form>
-                            </VariantsFetcherContext>
-                        </MergedCompoundNamesContext>
-                    </LocalCompoundsBcbvContext>
-                </FormProvider>
+                <MergedCompoundNamesContext value={compoundNames}>
+                    <VariantsFetcherContext value={getVariants}>
+                        <BlendsEditorBody
+                            initData={initData}
+                            loginProps={loginProps}
+                            setStorage={setStorage}
+                        />
+                    </VariantsFetcherContext>
+                </MergedCompoundNamesContext>
             ) : (
                 <Centered className="content error-msg text-2xl">
                     <h2>Could not load compounds</h2>

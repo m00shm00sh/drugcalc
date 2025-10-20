@@ -15,3 +15,8 @@ export function zodNonemptyStringArraySchema(
 ): z.ZodReadonly<z.ZodArray<z.ZodString>> {
     return z.readonly(z.array(zodNonemptyStringSchema(strErr)))
 }
+
+const zodStringsCacheSchema = z.readonly(z.array(z.string())).optional()
+export const AvailableCBsCacheSchema = z.object({ 'cb': zodStringsCacheSchema })
+export const AvailableVXsCacheSchema = z.object({ 'vx': zodStringsCacheSchema })
+export const AvailableFNsCacheSchema = z.object({ 'fn': zodStringsCacheSchema })

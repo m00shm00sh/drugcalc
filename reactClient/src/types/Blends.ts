@@ -11,7 +11,7 @@ import {
     unpackCompoundName,
 } from './Compounds'
 import { SelectableSchema } from './Selectable'
-import { zodNonemptyStringSchema } from './string'
+import { AvailableVXsCacheSchema, zodNonemptyStringSchema } from './string'
 import { zodSuperRefinerForUniqueArray } from './uniqueArray'
 import { zodPositiveNumberSchema } from './number'
 
@@ -40,6 +40,7 @@ const BlendEditorComponentRowSchema = z
         dose: zodPositiveNumberSchema('dose'),
     })
     .extend(SelectableSchema.shape)
+    .extend(AvailableVXsCacheSchema.shape)
 
 export type BlendEditorComponentRow = z.infer<typeof BlendEditorComponentRowSchema>
 

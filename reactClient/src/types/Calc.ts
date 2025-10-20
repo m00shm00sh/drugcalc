@@ -9,7 +9,7 @@ import {
     zodDisplayDurationStringSchema,
     zodIsoDurationStringSchema,
 } from './duration'
-import { zodNonemptyStringSchema } from './string'
+import { AvailableCBsCacheSchema, AvailableFNsCacheSchema, AvailableVXsCacheSchema, zodNonemptyStringSchema } from './string'
 import { SelectableSchema } from './Selectable'
 import { getOrElse, stripIf } from '../util/filter-setif'
 import { zodPositiveNumberSchema } from './number'
@@ -25,15 +25,18 @@ const CycleDescriptionSharedSchema = z
         duration: zodDisplayDurationStringSchema,
         freqName: zodNonemptyStringSchema('select a frequency'),
     })
+    .extend(AvailableCBsCacheSchema.shape)
+    .extend(AvailableFNsCacheSchema.shape)
     .extend(SelectableSchema.shape)
 
 export const CycleDescriptionSchema = z.union([
     CycleDescriptionSharedSchema.extend({
         // compound
-        prefix: z.literal('').optional(),
+        prefix: z.literal(''),
         variantOrTransformer: zodNonemptyStringSchema('select a variant or transformer').optional(),
         dose: zodPositiveNumberSchema('dose'),
-    }),
+    })
+        .extend(AvailableVXsCacheSchema.shape),
     CycleDescriptionSharedSchema.extend({
         // blend
         prefix: z.literal('.b'),
@@ -44,14 +47,17 @@ export const CycleDescriptionSchema = z.union([
         prefix: z.literal('.t'),
         compoundOrBlend: zodNonemptyStringSchema('select a compound'),
         variantOrTransformer: zodNonemptyStringSchema('select a transformer'),
-    }),
+    })
+        .extend(AvailableVXsCacheSchema.shape),
 ])
+
+type Prefix = "" | ".b" | ".t"
 
 export type CycleDescription = z.infer<typeof CycleDescriptionSchema>
 
 const extractCompoundsFromCycle = (rows: CycleDescription[]): string[] =>
     rows
-        .filter((e) => e.prefix === undefined)
+        .filter((e) => !e.prefix)
         .map((e) => {
             const c: CompoundName = [e.compoundOrBlend]
             if (!e.prefix && e.variantOrTransformer) c.push(e.variantOrTransformer)
@@ -68,14 +74,36 @@ const extractBlendsFromCycle = (rows: CycleDescription[]): string[] =>
 const extractFrequenciesFromCycle = (rows: CycleDescription[]): string[] =>
     rows.map((e) => e.freqName).filterDistinct()
 
-export const calcRequestPrefixMapping: Record<string, string> = {
-    compound: '', // can't be undefined because of html option constraints
-    blend: '.b',
-    transformer: '.t',
-}
-
 const CalcRequestRowSchema = z.intersection(CycleDescriptionSchema, SelectableSchema)
 export type CalcRequestRow = z.infer<typeof CalcRequestRowSchema>
+
+export const prefixOptions = {
+    compound: '',
+    blend: '.b',
+    transformer: '.t'
+}
+
+export const printCB = (row: CalcRequestRow) => {
+    switch (row.prefix) {
+        case '':
+        case '.t':
+            return "compound"
+        case '.b':
+            return "blend"
+    }
+}
+
+export const printVX = (row: CalcRequestRow) => {
+    switch (row.prefix) {
+        case '':
+            return "variant"
+        case '.t':
+            return "transformer"
+        case '.b':
+            return ""
+    }
+}
+
 
 export const calcRequestRowInit = (): CalcRequestRow =>
     ({
@@ -90,7 +118,7 @@ export const calcRequestRowInit = (): CalcRequestRow =>
 export const cycleFieldsToCycleDescription = (fields: CalcRequestRow[]): CycleDescription[] =>
     fields.map((e) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { selected, ...d } = {
+        const { selected, cb, fn, ...d } = {
             ...e,
             start: displayToIso8601(e.start),
             duration: displayToIso8601(e.duration),
@@ -98,6 +126,7 @@ export const cycleFieldsToCycleDescription = (fields: CalcRequestRow[]): CycleDe
         stripIf(d.prefix === '.t', d, 'dose')
         stripIf(d.prefix === '.b', d, 'variantOrTransformer')
         stripIf(d.prefix === '', d, 'prefix')
+        stripIf('vx' in d, d, 'vx')
         return d
     })
 
@@ -109,7 +138,7 @@ const Q_START = 's'
 const Q_DURATION = 't'
 const Q_FREQ_NAME = 'fn'
 
-const encodeFlag = (fl: '.b' | '.t' | '' | undefined): string => {
+const encodeFlag = (fl: Prefix | undefined): string => {
     switch (fl) {
         case '.b':
             return 'b'
@@ -119,7 +148,7 @@ const encodeFlag = (fl: '.b' | '.t' | '' | undefined): string => {
             return ''
     }
 }
-const decodeFlag = (fl: string) => {
+const decodeFlag = (fl: string): Prefix => {
     switch (fl) {
         case 'b':
             return '.b'
@@ -153,8 +182,9 @@ export const importRowsFromQueryString = (q: URLSearchParams): CalcRequestRow[] 
 
     const rows: CalcRequestRow[] = []
     for (let i = 0; i < qCBlen; ++i) {
+        const fl = decodeFlag(qFL[i])
         rows.push({
-            prefix: decodeFlag(qFL[i] ?? ''),
+            prefix: fl,
             compoundOrBlend: qCB[i],
             variantOrTransformer: qVX[i],
             dose: Number(qD),
