@@ -15,8 +15,8 @@ import {
 import { SelectableSchema, zodOptBool } from './Selectable'
 import { AvailableVXsCacheSchema, zodNonemptyStringSchema } from './string'
 import { zodSuperRefinerForUniqueArray } from './uniqueArray'
-import pLimit from 'p-limit'
 import type { FieldPath, UseFieldArrayReturn, UseFormReturn } from 'react-hook-form'
+import { awaitAllWithBackpressure } from '../util/remote-load-store'
 
 export const CompoundNamesListSchema = z.readonly(z.array(z.string().regex(/^([^=]+)(?:=(.*))?$/)))
 export type CompoundNamesList = z.infer<typeof CompoundNamesListSchema>
@@ -225,16 +225,14 @@ export function expandExpansionItems(
     arrayMethods: UseFieldArrayReturn<CompoundDeleterDataContainer, 'compounds'>,
     concurrencyLimit: number = 2,
 ) : () => Promise<void> {
-    const limiter = pLimit(concurrencyLimit)
 
     const loader = async (data: CompoundDeleterRow[]): Promise<Nullable<readonly string[]>[]> =>
-        Promise.all(
-            data
-                .map((e) => (e.expand
-                    ? (e.vx !== undefined ? e.vx : memoizedRemoteVariantsOrNull(e.compound))
-                    : [])
-                )
-                .map((f) => limiter(() => f)),
+        awaitAllWithBackpressure(
+            data.map((e) => (e.expand
+                ? (e.vx !== undefined ? e.vx : memoizedRemoteVariantsOrNull(e.compound))
+                : [])
+            ),
+            concurrencyLimit
         )
 
     return async () => {

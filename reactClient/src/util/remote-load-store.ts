@@ -1,4 +1,5 @@
-import pLimit from 'p-limit'
+import pLimit, { type LimitFunction } from 'p-limit'
+import type { SetStateAction } from 'react'
 import type {
     ArrayPath,
     FieldArray,
@@ -9,10 +10,9 @@ import type {
     UseFormReturn,
 } from 'react-hook-form'
 import type { Selectable } from '../types/Selectable'
-import { require, type Nullable } from './util'
-import type { SetStateAction } from 'react'
 import { del, NO_RESPONSE, postJson } from './fetcher'
 import type { Invalidatable } from './memoize'
+import { require, type Nullable } from './util'
 
 type RHFKey1<FormContainer> = keyof FormContainer & ArrayPath<FormContainer>
 type RHFKey<FormContainer> = RHFKey1<FormContainer> & Path<FormContainer>
@@ -29,13 +29,11 @@ export function selectedItemsFromRemoteFormLoader<
     updater: UseFieldArrayUpdate<FormContainer, typeof arrayKey>,
     concurrencyLimit: number = 2,
 ): () => Promise<void> {
-    const limiter = pLimit(concurrencyLimit)
 
     const loader = async (data: FormRow[]): Promise<Nullable<FormRow>[]> =>
-        Promise.all(
-            data
-                .map((e) => (e.selected ? fetchDetailsOrUndefined(e) : e))
-                .map((f) => limiter(() => f)),
+        awaitAllWithBackpressure(
+            data.map((e) => (e.selected ? fetchDetailsOrUndefined(e) : e)),
+            concurrencyLimit
         )
 
     const lastComponent = (s: string) => s.substring(s.lastIndexOf('.') + 1)
@@ -113,22 +111,18 @@ export function selectedItemsOnRemoteDeleter<
     auth: Nullable<string>,
     concurrencyLimit: number = 2,
 ): (rows: FormRow[]) => Promise<void> {
-    const limiter = pLimit(concurrencyLimit)
 
     const didDeleteOrUndefined = async (e: FormRow, path: string) =>
         (await del(path, auth ?? '[$invalid$]') ? e : undefined)
 
     const loader = async (data: FormRow[]): Promise<Nullable<FormRow>[]> =>
-        Promise.all(
-            data
-                .map((e) => {
-                    if (!e.selected)
-                        return e
-                    const path = pathEncoder(e)
-                    return didDeleteOrUndefined(e, `${delEndpoint}/${path}`)
-                })
-                .map((f) => limiter(() => f)),
-        )
+        awaitAllWithBackpressure(
+            data.map((e) => {
+                if (!e.selected)
+                    return e
+                const path = pathEncoder(e)
+                return didDeleteOrUndefined(e, `${delEndpoint}/${path}`)
+            }), concurrencyLimit)
 
     return async () => {
         const { getValues, setError, clearErrors } = formMethods
@@ -158,4 +152,15 @@ export function selectedItemsOnRemoteDeleter<
                 (<Invalidatable>invalidatable).invalidateAll()
         }
     }
+}
+
+export const awaitAllWithBackpressure = async <
+    T,
+    TA extends (Promise<T> | T)[] = Promise<T>[]
+> (
+    awaitables: [...TA],
+    concurrencyLimit: number = 2,
+): Promise<T[]> => {
+    const limiter = pLimit(concurrencyLimit)
+    return await Promise.all(awaitables.map((f) => limiter(() => f)))
 }

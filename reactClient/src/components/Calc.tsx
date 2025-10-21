@@ -48,6 +48,8 @@ import { getOrElse, stripIf } from '../util/filter-setif'
 import type { Config } from '../types/Config'
 import type { BlendsMap } from '../types/Blends'
 import { RequireContent } from '../widgets/RequireContent'
+import { awaitAllWithBackpressure } from '../util/remote-load-store'
+import type { Nullable } from '../util/util'
 // either this or a dummy typescript declaration file;
 // use "regular" Plotly from react-plotly.js for development
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -360,24 +362,53 @@ export const Calc = () => {
         }, [newRow, searchParams]
     )
     const hydratedInitValues = async (iv: CalcRequestRow[]) => {
-        const freqs = await getFrequencies()
-        for (const row of iv) {
+        const variantsFetchers = iv.map((row) =>
+            row.prefix === '' ? getVariants(row.compoundOrBlend) : undefined
+        )
+        const [
+            compounds,
+            blends,
+            freqs,
+            transformerNames,
+            transformerFreqs,
+            ...variants
+        ] = await awaitAllWithBackpressure([
+            getCompounds(),
+            getBlends(),
+            getFrequencies(),
+            fetchTransformerNames(),
+            fetchTransformerFrequencies(),
+            ...variantsFetchers
+        ]) as [
+            /* typescript infers the union of T so we need the cast to contextually disambiguate
+             * until we fix the inference signature of awaitAllWithBackpressure
+             */
+            readonly string[],
+            readonly string[],
+            readonly string[],
+            readonly string[],
+            readonly string[],
+            ...Nullable<string[]>[]
+        ]
+        const combinedTransformerFreqs = [...freqs, ...transformerFreqs]
+
+        iv.forEach((row, i) => {
             switch (row.prefix) {
                 case '':
-                    row.cb = await getCompounds()
-                    row.vx = await getVariants(row.compoundOrBlend)
+                    row.cb = compounds
+                    row.vx = variants[i]
                     row.fn = freqs
                     break
                 case '.b':
-                    row.cb = await getBlends()
+                    row.cb = blends
                     row.fn = freqs
                     break
                 case '.t':
-                    row.cb = await getCompounds()
-                    row.vx = await fetchTransformerNames()
-                    row.fn = [...freqs, ...await fetchTransformerFrequencies()]
+                    row.cb = compounds
+                    row.vx = transformerNames
+                    row.fn = combinedTransformerFreqs
             }
-        }
+        })
         return iv
     }
 

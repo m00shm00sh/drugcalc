@@ -24,6 +24,7 @@ import { fetchCompounds, fetchVariants, memoizedRemoteVariants } from '../../uti
 import { getOrElse } from '../../util/filter-setif'
 import memoize from '../../util/memoize'
 import {
+    awaitAllWithBackpressure,
     selectedItemsFromRemoteFormLoader,
     selectedItemsToRemoteSender,
 } from '../../util/remote-load-store'
@@ -275,9 +276,20 @@ export const BlendsEditor = (loginProps: EditorProps) => {
     const initData = async () => {
         if (Object.keys(storage).length > 0) {
             const rows = blendMapToEditorFields(storage)
+            const variantsToFetch = rows
+                .flatMap((b) =>
+                    b.components
+                        .map(c => c.compound)
+                ).filterDistinct()
+            const variantsFetchers = variantsToFetch.map((c) => getVariants(c))
+            const fetchedVariants = await awaitAllWithBackpressure<string[]>(variantsFetchers)
+            const variants = Object.fromEntries(
+                variantsToFetch.map((v, i) => [v, fetchedVariants[i]])
+            )
+
             for (const row of rows)
                 for (const c of row.components)
-                    c.vx = await getVariants(c.compound)
+                    c.vx = variants[c.compound]
             return rows
         }
         return [blendRowInit()]
