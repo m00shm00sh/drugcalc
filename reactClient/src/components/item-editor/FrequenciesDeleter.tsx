@@ -42,8 +42,8 @@ export const FrequenciesDeleter = ({ loginToken }: EditorProps) => {
     )
 
     const {
-        getValues,
         formState: { errors },
+        watch,
     } = methods
 
     const frequencyNames = useAsyncResult(makeInvoker({
@@ -53,7 +53,7 @@ export const FrequenciesDeleter = ({ loginToken }: EditorProps) => {
         auxDeps: []
     }))
 
-    const selecteds = getSelectedIndices(getValues, `frequencies`)
+    const selecteds = getSelectedIndices(watch, `frequencies`)
     return (
         <>
             <title>Frequencies deleter</title>

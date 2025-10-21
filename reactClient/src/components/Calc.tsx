@@ -211,6 +211,7 @@ const CalcBody = ({hydratedInitValues, newRow, localData, saveToQS} : CalcBodyPr
         formState: { errors },
         getValues,
         setError,
+        watch,
     } = methods
     const { append, update, remove, fields } = useFieldArray({
         control,
@@ -245,7 +246,7 @@ const CalcBody = ({hydratedInitValues, newRow, localData, saveToQS} : CalcBodyPr
         }
     }
 
-    const selecteds = getSelectedIndices(getValues, `cycle`)
+    const selecteds = getSelectedIndices(watch, `cycle`)
     return (
         <Centered>
             <FormProvider {...methods}>

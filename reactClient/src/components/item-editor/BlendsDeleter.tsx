@@ -42,8 +42,8 @@ export const BlendsDeleter = ({ loginToken }: EditorProps) => {
     )
 
     const {
-        getValues,
         formState: { errors },
+        watch,
     } = methods
 
     const blendNames = useAsyncResult(makeInvoker({
@@ -53,7 +53,7 @@ export const BlendsDeleter = ({ loginToken }: EditorProps) => {
         auxDeps: []
     }))
 
-    const selecteds = getSelectedIndices(getValues, `blends`)
+    const selecteds = getSelectedIndices(watch, `blends`)
     return <>
         <title>Blends deleter</title>
         <Centered>

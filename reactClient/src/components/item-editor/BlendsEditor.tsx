@@ -162,9 +162,10 @@ const BlendsEditorBody = ({ initData, loginProps: {isLoggedIn, loginToken}, setS
     const {
         getValues,
         formState: { errors },
+        watch,
     } = methods
 
-    const selecteds = getSelectedIndices(getValues, `blends`)
+    const selecteds = getSelectedIndices(watch, `blends`)
 
     const doseForRow = (row: number) => {
         const result =
