@@ -200,6 +200,8 @@ type CalcBodyProps = {
     saveToQS: (r: CalcRequestRow[]) => void
 }
 const CalcBody = ({hydratedInitValues, newRow, localData, saveToQS} : CalcBodyProps) => {
+    const compounds = useContext(MergedCompoundNamesContext)
+
     const methods = useForm<CalcRequestDataContainer>({
         defaultValues: hydratedInitValues,
         resolver: zodResolver(CalcRequestDataContainerSchema),
@@ -257,7 +259,12 @@ const CalcBody = ({hydratedInitValues, newRow, localData, saveToQS} : CalcBodyPr
                     ))}
                     <ErrorMessage text={errors?.cycle?.message} />
                     <EditorCommands
-                        appendRow={() => append([newRow()])}
+                        appendRow={() => {
+                            const r = newRow()
+                            const c = compounds
+                            r.cb = c
+                            append([r])
+                        }}
                         getSelected={() => selecteds}
                         removeRows={remove}
                         submitStr="Evaluate"
