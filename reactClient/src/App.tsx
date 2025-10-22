@@ -10,9 +10,9 @@ import { CompoundsEditor } from './components/item-editor/CompoundsEditor'
 import { ConfigEditor } from './components/item-editor/ConfigEditor'
 import { FrequenciesDeleter } from './components/item-editor/FrequenciesDeleter'
 import { FrequenciesEditor } from './components/item-editor/FrequenciesEditor'
+import { Centered } from './components/widgets/Centered'
+import { Flex } from './components/widgets/RowCol'
 import { useLocalToken } from './hooks/useLocalData'
-import { Centered } from './widgets/Centered'
-import { Flex } from './widgets/RowCol'
 
 const App = () => {
     const loginToken = useLocalToken()[0]

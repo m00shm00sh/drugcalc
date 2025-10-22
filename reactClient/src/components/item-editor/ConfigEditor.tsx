@@ -13,10 +13,10 @@ import {
     isConfigItem,
 } from '../../types/Config'
 import { getSelectedIndices } from '../../types/Selectable'
-import { Centered } from '../../widgets/Centered'
-import { Flex } from '../../widgets/RowCol'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput, FormSelectWithOptions } from '../FormField'
+import { Centered } from '../widgets/Centered'
+import { Flex } from '../widgets/RowCol'
 
 type SetItemProps = {
     index: number

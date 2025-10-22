@@ -13,12 +13,12 @@ import { getSelectedIndices } from '../../types/Selectable'
 import { compoundPath, memoizedRemoteCompounds, memoizedRemoteVariants } from '../../util/fetcher'
 import { selectedItemsOnRemoteDeleter } from '../../util/remote-load-store'
 import type { Nullable } from '../../util/util'
-import { Centered } from '../../widgets/Centered'
-import { RequireContent } from '../../widgets/RequireContent'
-import { Flex } from '../../widgets/RowCol'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput, FormSelectWithOptions } from '../FormField'
+import { Centered } from '../widgets/Centered'
+import { RequireContent } from '../widgets/RequireContent'
+import { Flex } from '../widgets/RowCol'
 
 type SelectVariantProps = {
     compoundName: string

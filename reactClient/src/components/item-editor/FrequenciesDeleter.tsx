@@ -7,12 +7,12 @@ import { FrequencyDeleterDataContainerSchema, frequencyDeleterRowInit } from '..
 import { getSelectedIndices } from '../../types/Selectable'
 import { fetchFrequencies, memoizedRemoteFrequenciesWithWeights } from '../../util/fetcher'
 import { selectedItemsOnRemoteDeleter } from '../../util/remote-load-store'
-import { Centered } from '../../widgets/Centered'
-import { Flex } from '../../widgets/RowCol'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput, FormSelectWithOptions } from '../FormField'
-import { RequireContent } from '../../widgets/RequireContent'
+import { Centered } from '../widgets/Centered'
+import { RequireContent } from '../widgets/RequireContent'
+import { Flex } from '../widgets/RowCol'
 
 export const FrequenciesDeleter = ({ loginToken }: EditorProps) => {
     if (!loginToken)

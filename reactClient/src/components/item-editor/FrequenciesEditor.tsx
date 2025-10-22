@@ -18,12 +18,12 @@ import {
     selectedItemsFromRemoteFormLoader,
     selectedItemsToRemoteSender,
 } from '../../util/remote-load-store'
-import { Centered } from '../../widgets/Centered'
-import { ErrorMessage } from '../../widgets/ErrorMessage'
-import { Flex } from '../../widgets/RowCol'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput } from '../FormField'
+import { Centered } from '../widgets/Centered'
+import { ErrorMessage } from '../widgets/ErrorMessage'
+import { Flex } from '../widgets/RowCol'
 import { ItemEditor } from './ItemEditorCommands'
 
 type FrequencyComponentProps = {

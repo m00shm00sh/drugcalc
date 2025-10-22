@@ -2,10 +2,10 @@ import classNames from 'classnames'
 import type { ReactElement, SyntheticEvent } from 'react'
 import type { FieldError, FieldPath, FieldValues } from 'react-hook-form'
 import { useFormContext } from 'react-hook-form'
-import type { Nullable } from '../util/util'
-import { ErrorMessage } from '../widgets/ErrorMessage'
-import { Flex } from '../widgets/RowCol'
 import { fieldsFilterer } from '../util/filter-setif'
+import type { Nullable } from '../util/util'
+import { ErrorMessage } from './widgets/ErrorMessage'
+import { Flex } from './widgets/RowCol'
 
 export type FieldProps<T extends FieldValues, E extends Element> = {
     type?: string

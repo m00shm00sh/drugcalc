@@ -5,10 +5,10 @@ import { useLocalToken } from '../hooks/useLocalData'
 import type { LoginRequest } from '../types/Login'
 import { LoginRequestSchema, LoginResponseSchema } from '../types/Login'
 import { postJson } from '../util/fetcher'
-import { Button } from '../widgets/Button'
-import { Centered } from '../widgets/Centered'
-import { Flex } from '../widgets/RowCol'
 import { FormInput } from './FormField'
+import { Button } from './widgets/Button'
+import { Centered } from './widgets/Centered'
+import { Flex } from './widgets/RowCol'
 
 export const Login = () => {
     const [, setToken] = useLocalToken()

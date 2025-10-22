@@ -7,8 +7,8 @@ import type { CompoundEditorDataContainer, CompoundEditorRow } from '../../types
 import {
     CompoundEditorDataContainerSchema,
     compoundEditorFieldsToMap,
-    compoundMapToEditorFields,
     compoundEditorRowInit,
+    compoundMapToEditorFields,
     loadCompoundDetailsFromRemote,
 } from '../../types/Compounds'
 import { getSelectedIndices } from '../../types/Selectable'
@@ -16,11 +16,11 @@ import {
     selectedItemsFromRemoteFormLoader,
     selectedItemsToRemoteSender,
 } from '../../util/remote-load-store'
-import { Centered } from '../../widgets/Centered'
-import { Flex } from '../../widgets/RowCol'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput, FormTextArea } from '../FormField'
+import { Centered } from '../widgets/Centered'
+import { Flex } from '../widgets/RowCol'
 
 export const CompoundsEditor = ({ isLoggedIn, loginToken }: EditorProps) => {
     const [storage, setStorage] = useLocalCompounds()

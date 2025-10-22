@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import classNames from 'classnames'
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { FormProvider, useFieldArray, useForm, useFormContext } from 'react-hook-form'
 import createPlotlyComponent from 'react-plotly.js/factory'
@@ -9,6 +10,8 @@ import {
     useLocalConfig,
     useLocalFrequencies,
 } from '../hooks/useLocalData'
+import { useQueryString } from '../hooks/useQueryString'
+import type { BlendsMap } from '../types/Blends'
 import type { CalcRequestDataContainer, CalcRequestRow, PlotlyInvocation } from '../types/Calc'
 import {
     calcRequestContainerToRequest,
@@ -24,6 +27,7 @@ import {
     resultToPlotly,
 } from '../types/Calc'
 import { reshapeCompoundKeys, type CompoundsMap } from '../types/Compounds'
+import type { Config } from '../types/Config'
 import { sortedFrequenciesWithWeights, type FrequenciesMap } from '../types/Frequencies'
 import { getSelectedIndices } from '../types/Selectable'
 import {
@@ -36,20 +40,16 @@ import {
     memoizedRemoteVariants,
     postJson,
 } from '../util/fetcher'
-import memoize from '../util/memoize'
-import { Centered } from '../widgets/Centered'
-import { ErrorMessage } from '../widgets/ErrorMessage'
-import { Flex, Grid } from '../widgets/RowCol'
-import { EditorCommands } from './EditorCommands'
-import { FormInput, FormSelectWithOptions } from './FormField'
-import classNames from 'classnames'
-import { useQueryString } from '../hooks/useQueryString'
 import { getOrElse, stripIf } from '../util/filter-setif'
-import type { Config } from '../types/Config'
-import type { BlendsMap } from '../types/Blends'
-import { RequireContent } from '../widgets/RequireContent'
+import memoize from '../util/memoize'
 import { awaitAllWithBackpressure } from '../util/remote-load-store'
 import type { Nullable } from '../util/util'
+import { EditorCommands } from './EditorCommands'
+import { FormInput, FormSelectWithOptions } from './FormField'
+import { Centered } from './widgets/Centered'
+import { ErrorMessage } from './widgets/ErrorMessage'
+import { RequireContent } from './widgets/RequireContent'
+import { Flex, Grid } from './widgets/RowCol'
 // either this or a dummy typescript declaration file;
 // use "regular" Plotly from react-plotly.js for development
 // eslint-disable-next-line @typescript-eslint/no-require-imports
