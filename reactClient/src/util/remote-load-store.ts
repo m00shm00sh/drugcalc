@@ -81,7 +81,7 @@ export function selectedItemsToRemoteSender<
         const { setError } = formMethods
         const selectedRows = rows
             .map((e, i) => [e, i] as [Row, number])
-            .filter((e) => e[0].selected)
+            .filter((e) => (!toRemote || e[0].selected))
         const map = mapEncoder(selectedRows.map(e => e[0]))
         if (toRemote) {
             require(!!auth, 'specify auth token')
