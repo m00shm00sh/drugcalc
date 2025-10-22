@@ -1,4 +1,4 @@
-import pLimit, { type LimitFunction } from 'p-limit'
+import pLimit from 'p-limit'
 import type { SetStateAction } from 'react'
 import type {
     ArrayPath,
@@ -12,7 +12,7 @@ import type {
 import type { Selectable } from '../types/Selectable'
 import { del, NO_RESPONSE, postJson } from './fetcher'
 import type { Invalidatable } from './memoize'
-import { require, type Nullable } from './util'
+import { type Nullable, require } from './util'
 
 type RHFKey1<FormContainer> = keyof FormContainer & ArrayPath<FormContainer>
 type RHFKey<FormContainer> = RHFKey1<FormContainer> & Path<FormContainer>
