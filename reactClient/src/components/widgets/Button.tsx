@@ -5,9 +5,9 @@ const ColorClass = {
     'add-item': 'bg-blue-500',
     'remove-item': 'bg-yellow-500',
     'remove-all-items': 'bg-red-500',
-    'save-local': 'bg-blue-500',
+    'save-local': 'bg-green-500',
     'pull-selected-items': 'bg-blue-500',
-    'push-selected-items': 'bg-green-500',
+    'push-selected-items': 'bg-blue-500',
     'toggle-commit': 'bg-red-500',
 }
 
