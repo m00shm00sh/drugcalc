@@ -20,7 +20,7 @@ import {
 } from '../../types/Blends'
 import { reshapeCompoundKeys } from '../../types/Compounds'
 import { getSelectedIndices } from '../../types/Selectable'
-import { fetchCompounds, fetchVariants, memoizedRemoteVariants } from '../../util/fetcher'
+import { fetchCompounds, fetchVariants, memoizedRemoteVariants } from '../../util/data-fetcher'
 import { getOrElse } from '../../util/filter-setif'
 import memoize from '../../util/memoize'
 import {

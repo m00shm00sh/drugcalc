@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { fetchBlendDetailsOrNull } from '../util/fetcher'
+import { fetchBlendDetailsOrNull } from '../util/data-fetcher'
 import { setIf } from '../util/filter-setif'
 import memoize from '../util/memoize'
 import { fieldsToMap, mapToFields } from '../util/reshaper'

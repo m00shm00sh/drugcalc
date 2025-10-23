@@ -6,7 +6,7 @@ import {
     zodDisplayDurationStringSchema,
     zodIsoDurationStringSchema,
 } from './duration'
-import { fetchFrequencyDetailsOrNull } from '../util/fetcher'
+import { fetchFrequencyDetailsOrNull } from '../util/data-fetcher'
 import memoize from '../util/memoize'
 import { fieldsToMap, mapToFields } from '../util/reshaper'
 import type { Nullable } from '../util/util'

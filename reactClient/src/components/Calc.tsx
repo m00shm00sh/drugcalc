@@ -38,8 +38,7 @@ import {
     fetchTransformerNames,
     fetchVariants,
     memoizedRemoteVariants,
-    postJson,
-} from '../util/fetcher'
+} from '../util/data-fetcher'
 import { getOrElse, stripIf } from '../util/filter-setif'
 import memoize from '../util/memoize'
 import { awaitAllWithBackpressure } from '../util/remote-load-store'
@@ -50,6 +49,7 @@ import { Centered } from './widgets/Centered'
 import { ErrorMessage } from './widgets/ErrorMessage'
 import { RequireContent } from './widgets/RequireContent'
 import { Flex, Grid } from './widgets/RowCol'
+import { postJson } from '../util/fetcher'
 // either this or a dummy typescript declaration file;
 // use "regular" Plotly from react-plotly.js for development
 // eslint-disable-next-line @typescript-eslint/no-require-imports
