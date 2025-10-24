@@ -6,7 +6,7 @@ import type { FrequencyDeleterDataContainer, FrequencyDeleterRow } from '../../t
 import { FrequencyDeleterDataContainerSchema, frequencyDeleterRowInit } from '../../types/Frequencies'
 import { getSelectedIndices } from '../../types/Selectable'
 import { fetchFrequencies, memoizedRemoteFrequenciesWithWeights } from '../../util/data-fetcher'
-import { selectedItemsOnRemoteDeleter } from '../../util/remote-load-store'
+import { selectedItemsOnRemoteDeleter } from './util/remote-load-store'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput, FormSelectWithOptions } from '../FormField'

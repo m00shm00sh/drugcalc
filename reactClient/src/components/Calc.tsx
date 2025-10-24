@@ -41,7 +41,7 @@ import {
 } from '../util/data-fetcher'
 import { getOrElse, stripIf } from '../util/filter-setif'
 import memoize from '../util/memoize'
-import { awaitAllWithBackpressure } from '../util/remote-load-store'
+import { awaitAllWithBackpressure } from '../util/awaitAllWithBackpressure'
 import type { Nullable } from '../util/util'
 import { EditorCommands } from './EditorCommands'
 import { FormInput, FormSelectWithOptions } from './FormField'

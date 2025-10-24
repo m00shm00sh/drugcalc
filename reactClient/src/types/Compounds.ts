@@ -16,7 +16,7 @@ import { SelectableSchema, zodOptBool } from './Selectable'
 import { AvailableVXsCacheSchema, zodNonemptyStringSchema } from './string'
 import { zodSuperRefinerForUniqueArray } from './uniqueArray'
 import type { FieldPath, UseFieldArrayReturn, UseFormReturn } from 'react-hook-form'
-import { awaitAllWithBackpressure } from '../util/remote-load-store'
+import { awaitAllWithBackpressure } from '../util/awaitAllWithBackpressure'
 
 export const CompoundNamesListSchema = z.readonly(z.array(z.string().regex(/^([^=]+)(?:=(.*))?$/)))
 export type CompoundNamesList = z.infer<typeof CompoundNamesListSchema>

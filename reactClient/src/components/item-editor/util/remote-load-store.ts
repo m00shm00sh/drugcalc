@@ -1,4 +1,3 @@
-import pLimit from 'p-limit'
 import type { SetStateAction } from 'react'
 import type {
     ArrayPath,
@@ -9,10 +8,11 @@ import type {
     UseFieldArrayUpdate,
     UseFormReturn,
 } from 'react-hook-form'
-import type { Selectable } from '../types/Selectable'
-import { del, NO_RESPONSE, postJson } from './fetcher'
-import type { Invalidatable } from './memoize'
-import { type Nullable, require } from './util'
+import type { Selectable } from '../../../types/Selectable'
+import { del, NO_RESPONSE, postJson } from '../../../util/fetcher'
+import type { Invalidatable } from '../../../util/memoize'
+import { type Nullable, require } from '../../../util/util'
+import { awaitAllWithBackpressure } from '../../../util/awaitAllWithBackpressure'
 
 type RHFKey1<FormContainer> = keyof FormContainer & ArrayPath<FormContainer>
 type RHFKey<FormContainer> = RHFKey1<FormContainer> & Path<FormContainer>
@@ -152,15 +152,4 @@ export function selectedItemsOnRemoteDeleter<
                 (<Invalidatable>invalidatable).invalidateAll()
         }
     }
-}
-
-export const awaitAllWithBackpressure = async <
-    T,
-    TA extends (Promise<T> | T)[] = Promise<T>[]
-> (
-    awaitables: [...TA],
-    concurrencyLimit: number = 2,
-): Promise<T[]> => {
-    const limiter = pLimit(concurrencyLimit)
-    return await Promise.all(awaitables.map((f) => limiter(() => f)))
 }

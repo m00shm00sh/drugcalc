@@ -17,7 +17,7 @@ import { getSelectedIndices } from '../../types/Selectable'
 import {
     selectedItemsFromRemoteFormLoader,
     selectedItemsToRemoteSender,
-} from '../../util/remote-load-store'
+} from './util/remote-load-store'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput } from '../FormField'

@@ -11,7 +11,7 @@ import {
 } from '../../types/Compounds'
 import { getSelectedIndices } from '../../types/Selectable'
 import { compoundPath, memoizedRemoteCompounds, memoizedRemoteVariants } from '../../util/data-fetcher'
-import { selectedItemsOnRemoteDeleter } from '../../util/remote-load-store'
+import { selectedItemsOnRemoteDeleter } from './util/remote-load-store'
 import type { Nullable } from '../../util/util'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'

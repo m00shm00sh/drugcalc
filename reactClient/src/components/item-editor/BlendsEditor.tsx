@@ -24,10 +24,10 @@ import { fetchCompounds, fetchVariants, memoizedRemoteVariants } from '../../uti
 import { getOrElse } from '../../util/filter-setif'
 import memoize from '../../util/memoize'
 import {
-    awaitAllWithBackpressure,
     selectedItemsFromRemoteFormLoader,
     selectedItemsToRemoteSender,
-} from '../../util/remote-load-store'
+} from './util/remote-load-store'
+import { awaitAllWithBackpressure } from '../../util/awaitAllWithBackpressure'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput, FormSelectWithOptions, FormTextArea } from '../FormField'
