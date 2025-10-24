@@ -11,10 +11,13 @@
         "module": "ESNext",
         "moduleDetection": "force",
         "moduleResolution": "bundler",
-        "verbatimModuleSyntax": true,
+        "verbatimModuleSyntax": false,
         "resolveJsonModule": true,
         "allowImportingTsExtensions": true,
         "noUncheckedSideEffectImports": true,
+
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
 
         /* type checking */
         "strict": true,
