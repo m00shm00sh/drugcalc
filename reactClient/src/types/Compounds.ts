@@ -2,7 +2,6 @@ import { z } from 'zod'
 import { fetchCompoundDetailsOrNull, memoizedRemoteVariantsOrNull } from '../util/data-fetcher'
 import { setIf } from '../util/filter-setif'
 import memoize from '../util/memoize'
-import quote from '../util/quote'
 import { fieldsToMap, mapToFields } from '../util/reshaper'
 import type { Nullable } from '../util/util'
 import { requireNotNull } from '../util/util'
@@ -51,17 +50,6 @@ export const packCompoundName = (cn: CompoundName): string => {
     const [b, v] = cn
     let s: string = b
     if (v ?? '') s += `=${v}`
-    return s
-}
-
-export const quoteCompoundName = (cn: CompoundName): string => {
-    // eslint-disable-next-line prefer-const
-    let [b, v] = cn.map(quote)
-    v ??= ''
-    if (v.indexOf(' ') !== -1) v = `"${v.replace('"', '\\"')}"`
-    let s = `[${b}`
-    if (v) s += `,${v}`
-    s += ']'
     return s
 }
 
