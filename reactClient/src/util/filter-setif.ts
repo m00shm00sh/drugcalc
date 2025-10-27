@@ -1,10 +1,9 @@
-export function filterOutIndices<T>(items: T[], indices: number[]): T[] {
-    return items.filter((_, i) => !indices.includes(i))
-}
-
 declare global {
+    // TODO: can we constrain these extends to <T extends string | number | boolean | undefined>?
     interface Array<T> {
+        /** Filter out duplicates. Caution is necessary when using non-primitive types. */
         filterDistinct(): T[]
+        /** Extract intersection of values. Caution is necessary when using non-primitive types. */
         filterIntersecting(other: readonly T[]): T[]
     }
 }
@@ -20,7 +19,7 @@ Array.prototype.filterIntersecting = filterIntersecting
 export const fieldsFilterer = (keys: readonly string[]) =>
     <T extends object>(obj: Partial<T>) => filterFields(obj, keys)
 
-export const filterFields = <T extends object>(obj: Partial<T>, keys: readonly string[]) =>
+const filterFields = <T extends object>(obj: Partial<T>, keys: readonly string[]) =>
     Object.fromEntries(
         Object.entries(obj)
             .filter(([k,]) => keys.indexOf(k) >= 0)
@@ -29,11 +28,14 @@ export const filterFields = <T extends object>(obj: Partial<T>, keys: readonly s
 export type ValueOrSupplier<T> = T extends (...args: unknown[]) => unknown ? never : T | (() => T)
 
 // set obj.key if value is truthy; this avoids having to tell apart missing key from key with undefined value
-export function setIf<T, K extends keyof T, V extends T[K]>(obj: T, key: K, value: V | (() => V)) {
+export function setIf<T extends object, K extends keyof T, V extends T[K]>(
+    obj: T,
+    key: K,
+    value: V
+) {
     if (value) {
         const o_ = obj as Record<keyof T, V>
-        if (typeof value === 'function') o_[key] = (value as () => V)()
-        else o_[key] = value
+        o_[key] = value
     }
 }
 
