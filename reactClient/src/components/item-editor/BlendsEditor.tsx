@@ -22,7 +22,7 @@ import { reshapeCompoundKeys } from '../../types/Compounds'
 import { getSelectedIndices } from '../../types/Selectable'
 import { fetchCompounds, fetchVariants, memoizedRemoteVariants } from '../../util/data-fetcher'
 import { getOrElse } from '../../util/filter-setif'
-import memoize from '../../util/memoize'
+import cache from '../../util/cache'
 import {
     selectedItemsFromRemoteFormLoader,
     selectedItemsToRemoteSender,
@@ -261,12 +261,12 @@ export const BlendsEditor = (loginProps: EditorProps) => {
     )
 
     // for useAsyncFetch, auxDeps = [localCompoundNames]
-    const getCompounds = memoize(
+    const getCompounds = cache(
         async () => await fetchCompounds(localCompoundNames),
         () => '',
         60000,
     )
-    const getVariants = memoize(
+    const getVariants = cache(
         async (c: string) => await fetchVariants(localCompoundNames, c),
         (s) => s,
         60000,

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { fetchBlendDetailsOrNull } from '../util/data-fetcher'
 import { setIf } from '../util/filter-setif'
-import memoize from '../util/memoize'
+import cache from '../util/cache'
 import { fieldsToMap, mapToFields } from '../util/reshaper'
 import type { Nullable } from '../util/util'
 import {
@@ -130,7 +130,7 @@ export const blendMapToEditorFields = (map: BlendsMap): BlendEditorRow[] =>
         },
     )
 
-const fetchDetails = memoize(
+const fetchDetails = cache(
     async (b: string) => await fetchBlendDetailsOrNull(b),
     (s) => s,
     60000,

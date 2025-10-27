@@ -40,7 +40,7 @@ import {
     memoizedRemoteVariants,
 } from '../util/data-fetcher'
 import { getOrElse, stripIf } from '../util/filter-setif'
-import memoize from '../util/memoize'
+import cache from '../util/cache'
 import { awaitAllWithBackpressure } from '../util/awaitAllWithBackpressure'
 import type { Nullable } from '../util/util'
 import { EditorCommands } from './EditorCommands'
@@ -293,14 +293,14 @@ export const Calc = () => {
     )
 
     // for useAsyncFetch, auxDeps = [localCompoundNames]
-    const getCompounds = memoize(
+    const getCompounds = cache(
         async () => await fetchCompounds(localCompoundNames),
         () => '',
         60000,
     )
 
     // for useAsyncFetch, auxDeps = [localCompoundNames]
-    const getVariants = memoize(
+    const getVariants = cache(
         async (c: string) => await fetchVariants(localCompoundNames, c),
         (s) => s,
         60000,
@@ -313,7 +313,7 @@ export const Calc = () => {
         [localBlendsFromStorage],
     )
     // for useAsyncFetch, auxDeps = [localBlendNames]
-    const getBlends = memoize(
+    const getBlends = cache(
         async () => await fetchBlends(localBlendNames),
         () => '',
         60000,
@@ -325,7 +325,7 @@ export const Calc = () => {
         [localFrequenciesFromStorage],
     )
     // for useAsyncFetch, auxDeps = [localFrequencyItems]
-    const getFrequencies = memoize(
+    const getFrequencies = cache(
         async () => await fetchFrequencies(localFrequencyItems),
         () => '',
     )

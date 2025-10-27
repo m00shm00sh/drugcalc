@@ -7,7 +7,7 @@ import {
     zodIsoDurationStringSchema,
 } from './duration'
 import { fetchFrequencyDetailsOrNull } from '../util/data-fetcher'
-import memoize from '../util/memoize'
+import cache from '../util/cache'
 import { fieldsToMap, mapToFields } from '../util/reshaper'
 import type { Nullable } from '../util/util'
 import { zodNonemptyStringSchema } from './string'
@@ -87,7 +87,7 @@ export const frequencyMapToEditorFields = (map: FrequenciesMap): FrequencyEditor
         },
     )
 
-const fetchDetails = memoize(
+const fetchDetails = cache(
     async (f: string) => await fetchFrequencyDetailsOrNull(f),
     (s) => s,
     60000,

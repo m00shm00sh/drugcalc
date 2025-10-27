@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { fetchCompoundDetailsOrNull, memoizedRemoteVariantsOrNull } from '../util/data-fetcher'
 import { setIf } from '../util/filter-setif'
-import memoize from '../util/memoize'
+import cache from '../util/cache'
 import { fieldsToMap, mapToFields } from '../util/reshaper'
 import type { Nullable } from '../util/util'
 import { requireNotNull } from '../util/util'
@@ -144,16 +144,16 @@ export const compoundMapToEditorFields = (map: CompoundsMap): CompoundEditorRow[
         },
         (v, o) => {
             o.halfLife = iso8601ToDisplay(v.halfLife)
-            setIf(o, 'pctActive', () => {
+            setIf(o, 'pctActive', (() => {
                 const p = v.pctActive
                 return p ? p / 100 : undefined
-            })
+            })())
             setIf(o, 'note', v.note)
             return o as CompoundEditorRow
         },
     )
 
-const fetchDetails = memoize(fetchCompoundDetailsOrNull, packCompoundName, 60000)
+const fetchDetails = cache(fetchCompoundDetailsOrNull, packCompoundName, 60000)
 
 export const loadCompoundDetailsFromRemote = async (
     row: CompoundEditorRow,

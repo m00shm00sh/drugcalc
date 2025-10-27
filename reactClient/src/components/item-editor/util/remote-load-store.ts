@@ -10,7 +10,7 @@ import type {
 } from 'react-hook-form'
 import type { Selectable } from '../../../types/Selectable'
 import { del, NO_RESPONSE, postJson } from '../../../util/fetcher'
-import type { Invalidatable } from '../../../util/memoize'
+import type { Invalidatable } from '../../../util/cache'
 import { type Nullable, require } from '../../../util/util'
 import { awaitAllWithBackpressure } from '../../../util/awaitAllWithBackpressure'
 

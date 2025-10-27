@@ -15,7 +15,7 @@ import {
     type FrequencyEntry,
 } from '../types/Frequencies'
 import { zodNonemptyStringArraySchema } from '../types/string'
-import memoize from './memoize'
+import cache from './cache'
 import { require, type Nullable } from './util'
 
 import { fetchJson } from './fetcher'
@@ -26,7 +26,7 @@ function merge<T>(remote: readonly T[], local: readonly T[], sortBy?: (a: T, b: 
     return data.filterDistinct()
 }
 
-export const memoizedRemoteCompounds = memoize(
+export const memoizedRemoteCompounds = cache(
     async () => await fetchJson('/api/data/compounds', CompoundNamesListSchema, []),
     () => '',
     60000,
@@ -35,7 +35,7 @@ export const fetchCompounds = async (bcbv: ByCompoundByVariant): Promise<string[
     merge(await memoizedRemoteCompounds(), Object.keys(bcbv ?? {}))
 
 // exported for components/BlendsEditor/VariantsFetcherContext
-export const memoizedRemoteVariants = memoize(
+export const memoizedRemoteVariants = cache(
     async (cName: string) => {
         require(!!cName, 'unexpected empty cName')
         const b = encodeURIComponent(cName).replace('%20', '+')
@@ -46,7 +46,7 @@ export const memoizedRemoteVariants = memoize(
 )
 
 // we need to tell valid empty list and no such compound apart for CompoundsDeleter
-export const memoizedRemoteVariantsOrNull = memoize(
+export const memoizedRemoteVariantsOrNull = cache(
     async (cName: string) => {
         require(!!cName, 'unexpected empty cName')
         const b = encodeURIComponent(cName).replace('%20', '+')
@@ -85,7 +85,7 @@ export async function fetchCompoundDetailsOrNull(
     return response
 }
 
-export const memoizedRemoteBlends = memoize(
+export const memoizedRemoteBlends = cache(
     async () => await fetchJson('/api/data/blends', BlendNamesListSchema, []),
     () => '',
     60000,
@@ -101,7 +101,7 @@ export async function fetchBlendDetailsOrNull(bName: string): Promise<Nullable<B
     return response
 }
 
-export const memoizedRemoteFrequenciesWithWeights = memoize(
+export const memoizedRemoteFrequenciesWithWeights = cache(
     async () => {
         const remote = await fetchJson(
             '/api/data/frequencies.w',
@@ -133,7 +133,7 @@ export async function fetchFrequencyDetailsOrNull(
     return response
 }
 
-export const fetchTransformerNames = memoize(
+export const fetchTransformerNames = cache(
     async () =>
         await fetchJson(
             '/api/data/transformers/names',
@@ -143,7 +143,7 @@ export const fetchTransformerNames = memoize(
     () => '',
 )
 
-export const fetchTransformerFrequencies = memoize(
+export const fetchTransformerFrequencies = cache(
     async () =>
         await fetchJson(
             '/api/data/transformers/frequencies',
