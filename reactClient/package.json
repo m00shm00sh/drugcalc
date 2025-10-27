@@ -18,7 +18,7 @@
         "@types/react-plotly.js": "^2.6.3",
         "@uidotdev/usehooks": "^2.4.1",
         "classnames": "^2.5.1",
-        "p-limit": "^7.1.1",
+        "p-map": "^7.0.3",
         "plotly.js": "^3.1.1",
         "plotly.js-gl2d-dist-min": "^3.1.1",
         "pnpm": "^10.16.1",

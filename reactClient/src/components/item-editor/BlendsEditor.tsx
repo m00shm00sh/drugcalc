@@ -283,7 +283,7 @@ export const BlendsEditor = (loginProps: EditorProps) => {
                         .map(c => c.compound)
                 ).filterDistinct()
             const variantsFetchers = variantsToFetch.map((c) => getVariants(c))
-            const fetchedVariants = await awaitAllWithBackpressure<string[]>(variantsFetchers)
+            const fetchedVariants = await awaitAllWithBackpressure(variantsFetchers)
             const variants = Object.fromEntries(
                 variantsToFetch.map((v, i) => [v, fetchedVariants[i]])
             )

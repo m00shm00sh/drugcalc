@@ -41,7 +41,7 @@ import {
 } from '../util/data-fetcher'
 import { getOrElse, stripIf } from '../util/filter-setif'
 import cache from '../util/cache'
-import { awaitAllWithBackpressure } from '../util/awaitAllWithBackpressure'
+import { awaitAllWithBackpressure, toAwaitable } from '../util/awaitAllWithBackpressure'
 import type { Nullable } from '../util/util'
 import { EditorCommands } from './EditorCommands'
 import { FormInput, FormSelectWithOptions } from './FormField'
@@ -371,7 +371,7 @@ export const Calc = () => {
     )
     const hydratedInitValues = async (iv: CalcRequestRow[]) => {
         const variantsFetchers = iv.map((row) =>
-            row.prefix === '' ? getVariants(row.compoundOrBlend) : undefined
+            row.prefix === '' ? getVariants(row.compoundOrBlend) : toAwaitable(undefined)
         )
         const [
             compounds,
@@ -387,17 +387,7 @@ export const Calc = () => {
             fetchTransformerNames(),
             fetchTransformerFrequencies(),
             ...variantsFetchers
-        ]) as [
-            /* typescript infers the union of T so we need the cast to contextually disambiguate
-             * until we fix the inference signature of awaitAllWithBackpressure
-             */
-            readonly string[],
-            readonly string[],
-            readonly string[],
-            readonly string[],
-            readonly string[],
-            ...Nullable<string[]>[]
-        ]
+        ])
         const combinedTransformerFreqs = [...freqs, ...transformerFreqs]
 
         iv.forEach((row, i) => {

@@ -12,7 +12,7 @@ import type { Selectable } from '../../../types/Selectable'
 import { del, NO_RESPONSE, postJson } from '../../../util/fetcher'
 import type { Invalidatable } from '../../../util/cache'
 import { type Nullable, requireTrue } from '../../../util/util'
-import { awaitAllWithBackpressure } from '../../../util/awaitAllWithBackpressure'
+import { awaitAllWithBackpressure, toAwaitable } from '../../../util/awaitAllWithBackpressure'
 
 type RHFKey1<FormContainer> = keyof FormContainer & ArrayPath<FormContainer>
 type RHFKey<FormContainer> = RHFKey1<FormContainer> & Path<FormContainer>
@@ -30,9 +30,9 @@ export function selectedItemsFromRemoteFormLoader<
     concurrencyLimit: number = 2,
 ): () => Promise<void> {
 
-    const loader = async (data: FormRow[]): Promise<Nullable<FormRow>[]> =>
+    const loader = async (data: FormRow[]): Promise<readonly Nullable<FormRow>[]> =>
         awaitAllWithBackpressure(
-            data.map((e) => (e.selected ? fetchDetailsOrUndefined(e) : e)),
+            data.map((e) => (e.selected ? fetchDetailsOrUndefined(e) : toAwaitable(e))),
             concurrencyLimit
         )
 
@@ -115,11 +115,11 @@ export function selectedItemsOnRemoteDeleter<
     const didDeleteOrUndefined = async (e: FormRow, path: string) =>
         (await del(path, auth ?? '[$invalid$]') ? e : undefined)
 
-    const loader = async (data: FormRow[]): Promise<Nullable<FormRow>[]> =>
+    const loader = async (data: FormRow[]): Promise<readonly Nullable<FormRow>[]> =>
         awaitAllWithBackpressure(
             data.map((e) => {
                 if (!e.selected)
-                    return e
+                    return toAwaitable(e)
                 const path = pathEncoder(e)
                 return didDeleteOrUndefined(e, `${delEndpoint}/${path}`)
             }), concurrencyLimit)

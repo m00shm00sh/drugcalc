@@ -1,12 +1,13 @@
-import pLimit from 'p-limit'
+import pMap from 'p-map'
+
+export const toAwaitable = <T>(o: T): Promise<T> => (async () => await o)()
 
 export const awaitAllWithBackpressure = async <
-    T,
-    TA extends (Promise<T> | T)[] = Promise<T>[]
+    TA extends ReadonlyArray<Promise<unknown>>,
+    R = {[K in keyof TA]: Awaited<TA[K]>}
 >(
-    awaitables: [...TA],
+    awaitables: readonly [...TA],
     concurrencyLimit: number = 2
-): Promise<T[]> => {
-    const limiter = pLimit(concurrencyLimit)
-    return await Promise.all(awaitables.map((f) => limiter(() => f)))
+): Promise<R> => {
+    return await pMap(awaitables, e => e, { concurrency: concurrencyLimit}) as R
 }
