@@ -11,7 +11,7 @@ import type {
 import type { Selectable } from '../../../types/Selectable'
 import { del, NO_RESPONSE, postJson } from '../../../util/fetcher'
 import type { Invalidatable } from '../../../util/cache'
-import { type Nullable, require } from '../../../util/util'
+import { type Nullable, requireTrue } from '../../../util/util'
 import { awaitAllWithBackpressure } from '../../../util/awaitAllWithBackpressure'
 
 type RHFKey1<FormContainer> = keyof FormContainer & ArrayPath<FormContainer>
@@ -84,7 +84,7 @@ export function selectedItemsToRemoteSender<
             .filter((e) => (!toRemote || e[0].selected))
         const map = mapEncoder(selectedRows.map(e => e[0]))
         if (toRemote) {
-            require(!!auth, 'specify auth token')
+            requireTrue(!!auth, 'specify auth token')
             try {
                 await postJson(postEndpoint, NO_RESPONSE, map, {
                     Authorization: `Bearer ${auth}`,

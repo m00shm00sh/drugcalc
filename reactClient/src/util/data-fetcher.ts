@@ -16,7 +16,7 @@ import {
 } from '../types/Frequencies'
 import { zodNonemptyStringArraySchema } from '../types/string'
 import cache from './cache'
-import { require, type Nullable } from './util'
+import { requireTrue, type Nullable } from './util'
 
 import { fetchJson } from './fetcher'
 
@@ -37,7 +37,7 @@ export const fetchCompounds = async (bcbv: ByCompoundByVariant): Promise<string[
 // exported for components/BlendsEditor/VariantsFetcherContext
 export const memoizedRemoteVariants = cache(
     async (cName: string) => {
-        require(!!cName, 'unexpected empty cName')
+        requireTrue(!!cName, 'unexpected empty cName')
         const b = encodeURIComponent(cName).replace('%20', '+')
         return await fetchJson(`/api/data/compounds/${b}`, VariantNamesListSchema, [])
     },
@@ -48,7 +48,7 @@ export const memoizedRemoteVariants = cache(
 // we need to tell valid empty list and no such compound apart for CompoundsDeleter
 export const memoizedRemoteVariantsOrNull = cache(
     async (cName: string) => {
-        require(!!cName, 'unexpected empty cName')
+        requireTrue(!!cName, 'unexpected empty cName')
         const b = encodeURIComponent(cName).replace('%20', '+')
         return await fetchJson(`/api/data/compounds/${b}`, VariantNamesListSchema)
     },
@@ -64,7 +64,7 @@ function uriEncode(s: string): string {
 }
 
 export const compoundPath = (cName: CompoundName, del: boolean = false) => {
-    require(!!cName[0], 'invalid compound name')
+    requireTrue(!!cName[0], 'invalid compound name')
     // eslint-disable-next-line prefer-const
     let [b, v] = cName.map(uriEncode)
     if (!v) v = '-'
@@ -76,7 +76,7 @@ export const compoundPath = (cName: CompoundName, del: boolean = false) => {
 export async function fetchCompoundDetailsOrNull(
     cName: CompoundName,
 ): Promise<Nullable<CompoundInfo>> {
-    require(!!cName[0], 'invalid compound name')
+    requireTrue(!!cName[0], 'invalid compound name')
     const path = compoundPath(cName)
     const response = await fetchJson(`/api/data/compounds/${path}`, CompoundInfoSchema)
     if (response) {
@@ -95,7 +95,7 @@ export const fetchBlends = async (local: string[]): Promise<string[]> =>
     merge(await memoizedRemoteBlends(), local)
 
 export async function fetchBlendDetailsOrNull(bName: string): Promise<Nullable<BlendEntry>> {
-    require(!!bName, 'invalid blend name')
+    requireTrue(!!bName, 'invalid blend name')
     const b = uriEncode(bName)
     const response = await fetchJson(`/api/data/blends/${b}`, BlendEntrySchema)
     return response
@@ -127,7 +127,7 @@ export const fetchFrequencies = async (local: Record<string, number>): Promise<s
 export async function fetchFrequencyDetailsOrNull(
     fName: string,
 ): Promise<Nullable<FrequencyEntry>> {
-    require(!!fName, 'invalid frequency name')
+    requireTrue(!!fName, 'invalid frequency name')
     const f = uriEncode(fName)
     const response = await fetchJson(`/api/data/frequencies/${f}`, FrequencyEntrySchema)
     return response

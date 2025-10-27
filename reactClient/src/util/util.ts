@@ -1,13 +1,16 @@
-export function doThrow(message: string): never {
+function doThrow(message: string): never {
     throw Error(message)
 }
 
-export function requireNotNull<T>(arg: T | null | undefined, message: string = ''): T {
-    return arg ?? doThrow(message ?? 'null check failed')
+export function requireNotNull<T>(
+    arg: T | null | undefined,
+    message: string = 'null check failed'
+): T {
+    return arg ?? doThrow(message)
 }
 
 // console.assert() is only useful for logging not throwing so we have this
-export function require(expr: boolean, message: string = ''): void {
+export function requireTrue(expr: boolean, message: string = 'requirement failed'): void {
     if (!expr) doThrow(message)
 }
 
