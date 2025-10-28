@@ -1,6 +1,7 @@
 
 export type Invalidatable = {
     invalidateAll: () => undefined
+    readonly writeExpireAfterMsec: number
 }
 type InvalidatableAsyncFunction<R, T extends unknown[]> =
     Invalidatable & ((...args: [...T]) => Promise<R>)
@@ -8,7 +9,7 @@ type InvalidatableAsyncFunction<R, T extends unknown[]> =
 export default function cache<R, T extends unknown[]>(
     func: (...args: [...T]) => Promise<R>,
     keyHasher: (...args: [...T]) => string,
-    timeoutMsec: number = Number.MAX_VALUE,
+    writeExpireAfterMsec: number = Number.MAX_VALUE,
 ): InvalidatableAsyncFunction<R, T> {
     type CacheEntry = {
         inserted: number
@@ -17,11 +18,11 @@ export default function cache<R, T extends unknown[]>(
     }
     const resultCache = new Map<string, CacheEntry>()
 
-    const callable: InvalidatableAsyncFunction<R, T> = async (...args: [...T]): Promise<R> => {
+    const callable = async (...args: [...T]): Promise<R> => {
         const hashedK = keyHasher(...args)
         const e = resultCache.get(hashedK)
         const now = Date.now()
-        if (e === undefined || now - e.inserted > timeoutMsec) {
+        if (e === undefined || now - e.inserted > writeExpireAfterMsec) {
             const fut = func(...args)
             resultCache.set(hashedK, {
                 future: fut,
@@ -30,10 +31,10 @@ export default function cache<R, T extends unknown[]>(
                     (k: string) => {
                         const now = Date.now()
                         const e = resultCache.get(k)
-                        if (e === undefined || now - e.inserted < timeoutMsec) return
+                        if (e === undefined || now - e.inserted < writeExpireAfterMsec) return
                         resultCache.delete(hashedK)
                     },
-                    timeoutMsec,
+                    writeExpireAfterMsec,
                     hashedK,
                 )
             })
@@ -49,5 +50,6 @@ export default function cache<R, T extends unknown[]>(
         })
         resultCache.clear()
     }
-    return callable
+    callable.writeExpireAfterMsec = writeExpireAfterMsec
+    return callable as InvalidatableAsyncFunction<R, T>
 }
