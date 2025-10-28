@@ -5,7 +5,7 @@ import { makeInvoker, useAsyncResult } from '../../hooks/useAsyncFetch'
 import type { FrequencyDeleterDataContainer, FrequencyDeleterRow } from '../../types/Frequencies'
 import { FrequencyDeleterDataContainerSchema, frequencyDeleterRowInit } from '../../types/Frequencies'
 import { getSelectedIndices } from '../../types/Selectable'
-import { fetchFrequencies, memoizedRemoteFrequenciesWithWeights } from '../../util/data-fetcher'
+import { fetchFrequencies, cachedRemoteFrequenciesWithWeights } from '../../util/data-fetcher'
 import { selectedItemsOnRemoteDeleter } from './util/remote-load-store'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
@@ -37,7 +37,7 @@ export const FrequenciesDeleter = ({ loginToken }: EditorProps) => {
         (i: number) => [`frequencies.${i}`],
         '/api/data/frequencies',
         (r: FrequencyDeleterRow) => encodeURIComponent(r.frequency),
-        [memoizedRemoteFrequenciesWithWeights],
+        [cachedRemoteFrequenciesWithWeights],
         loginToken,
     )
 

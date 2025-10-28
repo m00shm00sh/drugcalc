@@ -26,16 +26,16 @@ function merge<T>(remote: readonly T[], local: readonly T[], sortBy?: (a: T, b: 
     return data.filterDistinct()
 }
 
-export const memoizedRemoteCompounds = cache(
+export const cachedRemoteCompounds = cache(
     async () => await fetchJson('/api/data/compounds', CompoundNamesListSchema, []),
     () => '',
     60000,
 )
 export const fetchCompounds = async (bcbv: ByCompoundByVariant): Promise<string[]> =>
-    merge(await memoizedRemoteCompounds(), Object.keys(bcbv ?? {}))
+    merge(await cachedRemoteCompounds(), Object.keys(bcbv))
 
 // exported for components/BlendsEditor/VariantsFetcherContext
-export const memoizedRemoteVariants = cache(
+export const cachedRemoteVariants = cache(
     async (cName: string) => {
         requireTrue(!!cName, 'unexpected empty cName')
         const b = encodeURIComponent(cName).replace('%20', '+')
@@ -46,7 +46,7 @@ export const memoizedRemoteVariants = cache(
 )
 
 // we need to tell valid empty list and no such compound apart for CompoundsDeleter
-export const memoizedRemoteVariantsOrNull = cache(
+export const cachedRemoteVariantsOrNull = cache(
     async (cName: string) => {
         requireTrue(!!cName, 'unexpected empty cName')
         const b = encodeURIComponent(cName).replace('%20', '+')
@@ -57,7 +57,7 @@ export const memoizedRemoteVariantsOrNull = cache(
 )
 
 export const fetchVariants = async (bcbv: ByCompoundByVariant, cName: string): Promise<string[]> =>
-    cName ? merge(await memoizedRemoteVariants(cName), bcbv[cName] ?? []) : []
+    cName ? merge(await cachedRemoteVariants(cName), bcbv[cName] ?? []) : []
 
 function uriEncode(s: string): string {
     return encodeURIComponent(s).replaceAll('%20', '+')
@@ -85,14 +85,14 @@ export async function fetchCompoundDetailsOrNull(
     return response
 }
 
-export const memoizedRemoteBlends = cache(
+export const cachedRemoteBlends = cache(
     async () => await fetchJson('/api/data/blends', BlendNamesListSchema, []),
     () => '',
     60000,
 )
 
 export const fetchBlends = async (local: string[]): Promise<string[]> =>
-    merge(await memoizedRemoteBlends(), local)
+    merge(await cachedRemoteBlends(), local)
 
 export async function fetchBlendDetailsOrNull(bName: string): Promise<Nullable<BlendEntry>> {
     requireTrue(!!bName, 'invalid blend name')
@@ -101,7 +101,7 @@ export async function fetchBlendDetailsOrNull(bName: string): Promise<Nullable<B
     return response
 }
 
-export const memoizedRemoteFrequenciesWithWeights = cache(
+export const cachedRemoteFrequenciesWithWeights = cache(
     async () => {
         const remote = await fetchJson(
             '/api/data/frequencies.w',
@@ -118,7 +118,7 @@ export const memoizedRemoteFrequenciesWithWeights = cache(
 export const fetchFrequencies = async (local: Record<string, number>): Promise<string[]> => {
     // splice uniquely and sort
     const data = Object.entries({
-        ...(await memoizedRemoteFrequenciesWithWeights()),
+        ...(await cachedRemoteFrequenciesWithWeights()),
         ...local,
     })
     return data.sort((a, b) => a[1] - b[1]).map((e) => e[0])
@@ -133,7 +133,7 @@ export async function fetchFrequencyDetailsOrNull(
     return response
 }
 
-export const fetchTransformerNames = cache(
+export const cachedTransformerNames = cache(
     async () =>
         await fetchJson(
             '/api/data/transformers/names',
@@ -143,7 +143,7 @@ export const fetchTransformerNames = cache(
     () => '',
 )
 
-export const fetchTransformerFrequencies = cache(
+export const cachedTransformerFrequencies = cache(
     async () =>
         await fetchJson(
             '/api/data/transformers/frequencies',

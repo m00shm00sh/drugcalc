@@ -10,7 +10,7 @@ import {
     expandExpansionItems,
 } from '../../types/Compounds'
 import { getSelectedIndices } from '../../types/Selectable'
-import { compoundPath, memoizedRemoteCompounds, memoizedRemoteVariants } from '../../util/data-fetcher'
+import { compoundPath, cachedRemoteCompounds, cachedRemoteVariants } from '../../util/data-fetcher'
 import { selectedItemsOnRemoteDeleter } from './util/remote-load-store'
 import type { Nullable } from '../../util/util'
 import type { EditorProps } from '../EditorCommands'
@@ -33,7 +33,7 @@ const SelectVariant = ({
     index,
 }: SelectVariantProps) => {
     const variantNames = useAsyncResult(makeInvoker({
-        func: memoizedRemoteVariants,
+        func: cachedRemoteVariants,
         args: [compoundName],
         initial: [],
         auxDeps: []
@@ -75,7 +75,7 @@ export const CompoundsDeleter = ({ loginToken }: EditorProps) => {
         (i: number) => [`compounds.${i}`],
         '/api/data/compounds',
         (r: CompoundDeleterRow) => compoundPath(compoundNameOf(r), r.expand),
-        [memoizedRemoteCompounds, memoizedRemoteVariants],
+        [cachedRemoteCompounds, cachedRemoteVariants],
         loginToken,
     )
 
@@ -86,7 +86,7 @@ export const CompoundsDeleter = ({ loginToken }: EditorProps) => {
     } = methods
 
     const compoundNames = useAsyncResult(makeInvoker({
-        func: memoizedRemoteCompounds,
+        func: cachedRemoteCompounds,
         args: [],
         initial: [],
         auxDeps: []
@@ -124,7 +124,7 @@ export const CompoundsDeleter = ({ loginToken }: EditorProps) => {
                                         const newCompound = e.currentTarget.value
                                         const row = getValues(`compounds.${index}`)
                                         if (!row.expand)
-                                            row.vx = await memoizedRemoteVariants(newCompound)
+                                            row.vx = await cachedRemoteVariants(newCompound)
                                         update(index, {...row})
                                     }}
                                 />

@@ -20,7 +20,7 @@ import {
 } from '../../types/Blends'
 import { reshapeCompoundKeys } from '../../types/Compounds'
 import { getSelectedIndices } from '../../types/Selectable'
-import { fetchCompounds, fetchVariants, memoizedRemoteVariants } from '../../util/data-fetcher'
+import { fetchCompounds, fetchVariants, cachedRemoteVariants } from '../../util/data-fetcher'
 import { getOrElse } from '../../util/filter-setif'
 import cache from '../../util/cache'
 import {
@@ -38,7 +38,7 @@ import { Flex } from '../widgets/RowCol'
 import { ItemEditor } from './ItemEditorCommands'
 
 const MergedCompoundNamesContext = createContext<string[]>([])
-const VariantsFetcherContext = createContext(memoizedRemoteVariants)
+const VariantsFetcherContext = createContext(cachedRemoteVariants)
 
 type BlendComponentProps = {
     remove: UseFieldArrayRemove

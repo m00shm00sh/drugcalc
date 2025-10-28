@@ -34,10 +34,10 @@ import {
     fetchBlends,
     fetchCompounds,
     fetchFrequencies,
-    fetchTransformerFrequencies,
-    fetchTransformerNames,
+    cachedTransformerFrequencies,
+    cachedTransformerNames,
     fetchVariants,
-    memoizedRemoteVariants,
+    cachedRemoteVariants,
 } from '../util/data-fetcher'
 import { getOrElse, stripIf } from '../util/filter-setif'
 import cache from '../util/cache'
@@ -64,7 +64,7 @@ type CycleDescriptionEditorRowProps = {
 const MergedCompoundNamesContext = createContext<readonly string[]>([])
 const MergedBlendNamesContext = createContext<readonly string[]>([])
 const MergedFrequencyNamesContext = createContext<readonly string[]>([])
-const VariantsFetcherContext = createContext(memoizedRemoteVariants)
+const VariantsFetcherContext = createContext(cachedRemoteVariants)
 
 const CycleDescriptionEditorRow = ({
     index,
@@ -129,8 +129,8 @@ const CycleDescriptionEditorRow = ({
                                 curRow.cb = compounds
                                 // this check is silly and redundant but welcome to typescript
                                 if (curRow.prefix === '.t')
-                                    curRow.vx = await fetchTransformerNames()
-                                curRow.fn = [...curRow.fn, ...await fetchTransformerFrequencies()]
+                                    curRow.vx = await cachedTransformerNames()
+                                curRow.fn = [...curRow.fn, ...await cachedTransformerFrequencies()]
                                 break
                         }
                         update(curRow)
@@ -384,8 +384,8 @@ export const Calc = () => {
             getCompounds(),
             getBlends(),
             getFrequencies(),
-            fetchTransformerNames(),
-            fetchTransformerFrequencies(),
+            cachedTransformerNames(),
+            cachedTransformerFrequencies(),
             ...variantsFetchers
         ])
         const combinedTransformerFreqs = [...freqs, ...transformerFreqs]

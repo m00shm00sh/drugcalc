@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { fetchCompoundDetailsOrNull, memoizedRemoteVariantsOrNull } from '../util/data-fetcher'
+import { fetchCompoundDetailsOrNull, cachedRemoteVariantsOrNull } from '../util/data-fetcher'
 import { setIf } from '../util/filter-setif'
 import cache from '../util/cache'
 import { fieldsToMap, mapToFields } from '../util/reshaper'
@@ -219,7 +219,7 @@ export function expandExpansionItems(
             data.map((e) => (e.expand
                 ? (e.vx !== undefined
                     ? toAwaitable(e.vx)
-                    : memoizedRemoteVariantsOrNull(e.compound))
+                    : cachedRemoteVariantsOrNull(e.compound))
                 : toAwaitable([]))
             ),
             concurrencyLimit

@@ -5,7 +5,7 @@ import { makeInvoker, useAsyncResult } from '../../hooks/useAsyncFetch'
 import type { BlendDeleterDataContainer, BlendDeleterRow } from '../../types/Blends'
 import { BlendDeleterDataContainerSchema, blendDeleterRowInit } from '../../types/Blends'
 import { getSelectedIndices } from '../../types/Selectable'
-import { memoizedRemoteBlends } from '../../util/data-fetcher'
+import { cachedRemoteBlends } from '../../util/data-fetcher'
 import { selectedItemsOnRemoteDeleter } from './util/remote-load-store'
 import type { EditorProps } from '../EditorCommands'
 import { EditorCommands } from '../EditorCommands'
@@ -37,7 +37,7 @@ export const BlendsDeleter = ({ loginToken }: EditorProps) => {
         (i: number) => [`blends.${i}`],
         '/api/data/blends',
         (r: BlendDeleterRow) => encodeURIComponent(r.blend),
-        [memoizedRemoteBlends],
+        [cachedRemoteBlends],
         loginToken,
     )
 
@@ -47,7 +47,7 @@ export const BlendsDeleter = ({ loginToken }: EditorProps) => {
     } = methods
 
     const blendNames = useAsyncResult(makeInvoker({
-        func: memoizedRemoteBlends,
+        func: cachedRemoteBlends,
         args: [],
         initial: [],
         auxDeps: []
