@@ -17,4 +17,5 @@ export default {
     ],
   automock: false,
   setupFiles: ["./src/setupTests.js"],
+  testRegex: "__tests__/.*\\.test\\.ts$",
 };
