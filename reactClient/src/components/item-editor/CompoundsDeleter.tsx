@@ -9,7 +9,7 @@ import {
     compoundNameOf,
     expandExpansionItems,
 } from '../../types/Compounds'
-import { getSelectedIndices } from '../../types/Selectable'
+import { getSelectedIndices } from './util/Selectable'
 import { compoundPath, cachedRemoteCompounds, cachedRemoteVariants } from '../../util/data-fetcher'
 import { selectedItemsOnRemoteDeleter } from './util/remote-load-store'
 import type { Nullable } from '../../util/util'

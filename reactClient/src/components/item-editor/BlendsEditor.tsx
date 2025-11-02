@@ -19,7 +19,7 @@ import {
     loadBlendDetailsFromRemote,
 } from '../../types/Blends'
 import { reshapeCompoundKeys } from '../../types/Compounds'
-import { getSelectedIndices } from '../../types/Selectable'
+import { getSelectedIndices } from './util/Selectable'
 import { fetchCompounds, fetchVariants, cachedRemoteVariants } from '../../util/data-fetcher'
 import { getOrElse } from '../../util/filter-setif'
 import cache from '../../util/cache'

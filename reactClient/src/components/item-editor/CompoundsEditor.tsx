@@ -11,7 +11,7 @@ import {
     compoundMapToEditorFields,
     loadCompoundDetailsFromRemote,
 } from '../../types/Compounds'
-import { getSelectedIndices } from '../../types/Selectable'
+import { getSelectedIndices } from './util/Selectable'
 import {
     selectedItemsFromRemoteFormLoader,
     selectedItemsToRemoteSender,

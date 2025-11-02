@@ -12,7 +12,7 @@ import {
     configToEditorFields,
     isConfigItem,
 } from '../../types/Config'
-import { getSelectedIndices } from '../../types/Selectable'
+import { getSelectedIndices } from './util/Selectable'
 import { EditorCommands } from '../EditorCommands'
 import { FormInput, FormSelectWithOptions } from '../FormField'
 import { Centered } from '../widgets/Centered'

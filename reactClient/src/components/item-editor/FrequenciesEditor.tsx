@@ -13,7 +13,7 @@ import {
     frequencyMapToEditorFields,
     loadFrequencyDetailsFromRemote,
 } from '../../types/Frequencies'
-import { getSelectedIndices } from '../../types/Selectable'
+import { getSelectedIndices } from './util/Selectable'
 import {
     selectedItemsFromRemoteFormLoader,
     selectedItemsToRemoteSender,

@@ -29,7 +29,7 @@ import {
 import { reshapeCompoundKeys, type CompoundsMap } from '../types/Compounds'
 import type { Config } from '../types/Config'
 import { sortedFrequenciesWithWeights, type FrequenciesMap } from '../types/Frequencies'
-import { getSelectedIndices } from '../types/Selectable'
+import { getSelectedIndices } from './item-editor/util/Selectable'
 import {
     fetchBlends,
     fetchCompounds,
