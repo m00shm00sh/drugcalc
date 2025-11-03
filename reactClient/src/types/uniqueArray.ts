@@ -3,7 +3,7 @@ import type { z } from 'zod'
 export const zodSuperRefinerForUniqueArray =
     <K extends object, NK>(
         getName: (item: K) => NK,
-        createError: (item: K) => [string, string][],
+        createError: (item: K) => [path: string, message: string][],
         post: (names: readonly NK[]) => string = () => '',
         hasMatch: (seen: readonly NK[], cur: NK) => boolean = (s, n) => s.includes(n)
     ) =>
