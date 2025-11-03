@@ -116,10 +116,8 @@ export const sortedFrequenciesWithWeights = (m: FrequenciesMap) =>
         Object.entries(m)
             .map(
                 ([k, v]) =>
-                    [k, v.values.map((e) => displayToNumber(e)).reduce((a, x) => a + x)] as [
-                        string,
-                        number,
-                    ],
+                    [k, v.values.map((e) => displayToNumber(e)).reduce((a, x) => a + x)] as
+                    [ string, number, ],
             )
             .sort((a, b) => a[1] - b[1]),
     )
