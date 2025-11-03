@@ -39,6 +39,9 @@ export function setIf<T extends object, K extends keyof T, V extends T[K]>(
     }
 }
 
+/* key is a string here because we tend to outsmart typescript's inference
+ * so keyof constraint would be more hindrance than helpful
+ */
 export function stripIf<T extends object>(pred: boolean, obj: T, key: string) {
     if (pred && key in obj) {
         delete (obj as Record<string, unknown>)[key]

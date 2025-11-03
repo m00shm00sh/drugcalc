@@ -1,4 +1,3 @@
-import { z } from 'zod'
 import { BlendEntrySchema, BlendNamesListSchema, type BlendEntry } from '../types/Blends'
 import {
     CompoundInfoSchema,
@@ -56,6 +55,7 @@ export const cachedRemoteVariantsOrNull = cache(
     60000,
 )
 
+// we can't error here on empty cName because it breaks components/Calc's loader
 export const fetchVariants = async (bcbv: ByCompoundByVariant, cName: string): Promise<string[]> =>
     cName ? merge(await cachedRemoteVariants(cName), bcbv[cName] ?? []) : []
 
@@ -73,6 +73,7 @@ export const compoundPath = (cName: CompoundName, del: boolean = false) => {
     return `${b}/${v}`
 }
 
+// caching is done in types/Compounds
 export async function fetchCompoundDetailsOrNull(
     cName: CompoundName,
 ): Promise<Nullable<CompoundInfo>> {
@@ -94,6 +95,7 @@ export const cachedRemoteBlends = cache(
 export const fetchBlends = async (local: string[]): Promise<string[]> =>
     merge(await cachedRemoteBlends(), local)
 
+// caching is done in types/Blends
 export async function fetchBlendDetailsOrNull(bName: string): Promise<Nullable<BlendEntry>> {
     requireTrue(!!bName, 'invalid blend name')
     const b = uriEncode(bName)
@@ -124,6 +126,7 @@ export const fetchFrequencies = async (local: Record<string, number>): Promise<s
     return data.sort((a, b) => a[1] - b[1]).map((e) => e[0])
 }
 
+// caching is done in types/Frequencies
 export async function fetchFrequencyDetailsOrNull(
     fName: string,
 ): Promise<Nullable<FrequencyEntry>> {
