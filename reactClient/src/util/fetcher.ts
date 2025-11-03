@@ -24,8 +24,9 @@ export async function fetchJson<T extends object, ZT extends z.ZodType<T> = z.Zo
             Accept: 'application/json',
         },
     })
-    if (!response.ok && response.status !== 404)
+    if (!response.ok && response.status !== 404) {
         throw Error(`couldn't fetch ${relativeLink}: ${response.status}`)
+    }
     if (response.status === 404) {
         if (on404 === undefined) return undefined
         if (typeof on404 === 'function') return on404()
@@ -53,8 +54,7 @@ export async function postJson<R, T extends object, ZT extends z.ZodType<R> = z.
         body: JSON.stringify(body),
     })
     if (!response.ok) {
-        const text = await response.text()
-        throw Error(`couldn't post ${relativeLink}: ${text}`)
+        throw Error(`couldn't post ${relativeLink}: ${response.status}`)
     }
     if (<unknown>responseSchema === NO_RESPONSE) {
         await response.text()
@@ -69,6 +69,8 @@ export async function del(
     relativeLink: string,
     bearer: string,
 ): Promise<boolean> {
+    if (!bearer)
+        throw Error(`missing bearer`)
     const response = await fetch(`${BACKEND}${relativeLink}`, {
         method: 'DELETE',
         headers: {
@@ -78,8 +80,7 @@ export async function del(
     if (!response.ok) {
         if (response.status === 404)
             return false
-        const text = await response.text()
-        throw Error(`couldn't delete ${relativeLink}: ${text}`)
+        throw Error(`couldn't delete ${relativeLink}: ${response.status}`)
     }
     await response.text()
     return true
