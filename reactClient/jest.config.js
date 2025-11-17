@@ -16,6 +16,6 @@ export default {
       "node_modules/(?!p-map)"
     ],
   automock: false,
-  setupFiles: ["./src/setupTests.js"],
-  testRegex: "__tests__/.*\\.test\\.ts$",
+  setupFiles: ["./__tests__/setupTests.js"],
+  testRegex: "__tests__/.*\\.test\\.tsx?$",
 };
