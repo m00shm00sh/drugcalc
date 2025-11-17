@@ -85,7 +85,6 @@ export const CompoundEditorRowSchema = CompoundNameEntrySchema.extend({
         .number('NaN')
         .gt(0, 'invalid percent')
         .lte(100, 'invalid percent')
-        .optional()
         .or(z.nan()),
     note: z.string().optional(),
 }).extend(SelectableSchema.shape)
@@ -96,6 +95,7 @@ export const compoundEditorRowInit = () =>
     ({
         compound: '',
         halfLife: '',
+        pctActive: 100
     }) as CompoundEditorRow
 
 export const uniqueCompoundNamesRefiner = (post: (names: readonly string[]) => string = () => '') =>
@@ -126,7 +126,8 @@ export const compoundEditorFieldsToMap = (fields: CompoundEditorRow[]): Compound
         (r) => {
             const v: CompoundInfo = { halfLife: displayToIso8601(r.halfLife) }
             // react-hook-form coerces undefined to Nan when valueAsNumber is active on an input
-            if (r.pctActive && !Number.isNaN(r.pctActive)) v.pctActive = r.pctActive / 100
+            if (r.pctActive && !Number.isNaN(r.pctActive) && r.pctActive < 100)
+                v.pctActive = r.pctActive / 100
             setIf(v, 'note', r.note)
             return v
         },
@@ -144,10 +145,7 @@ export const compoundMapToEditorFields = (map: CompoundsMap): CompoundEditorRow[
         },
         (v, o) => {
             o.halfLife = iso8601ToDisplay(v.halfLife)
-            setIf(o, 'pctActive', (() => {
-                const p = v.pctActive
-                return p ? p / 100 : undefined
-            })())
+            o.pctActive = (v.pctActive ?? 1) * 100
             setIf(o, 'note', v.note)
             return o as CompoundEditorRow
         },
@@ -162,7 +160,9 @@ export const loadCompoundDetailsFromRemote = async (
         if (!i) return undefined
         const o: CompoundEditorRow = { ...row, ...i }
         o.halfLife = iso8601ToDisplay(o.halfLife)
-        if (o.pctActive) o.pctActive *= 100
+        if (o.pctActive === undefined)
+            throw Error('unexpected: fetchCompoundDetailsOrNull should\'ve set {}.pctActive')
+        o.pctActive *= 100
         return o
     })
 
