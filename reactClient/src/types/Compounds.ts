@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { fetchCompoundDetailsOrNull, cachedRemoteVariantsOrNull } from '../util/data-fetcher'
+import { fetchCompoundDetailsOrNull } from '../util/data-fetcher'
 import { setIf } from '../util/filter-setif'
 import cache from '../util/cache'
 import { fieldsToMap, mapToFields } from '../util/reshaper'
@@ -14,8 +14,6 @@ import {
 import { SelectableSchema, zodOptBool } from './Selectable'
 import { AvailableVXsCacheSchema, zodNonemptyStringSchema } from './string'
 import { zodSuperRefinerForUniqueArray } from './uniqueArray'
-import type { FieldPath, UseFieldArrayReturn, UseFormReturn } from 'react-hook-form'
-import { awaitAllWithBackpressure, toAwaitable } from '../util/awaitAllWithBackpressure'
 
 export const CompoundNamesListSchema = z.readonly(z.array(z.string().regex(/^([^=]+)(?:=(.*))?$/)))
 export type CompoundNamesList = z.infer<typeof CompoundNamesListSchema>
@@ -207,49 +205,3 @@ export const CompoundDeleterDataContainerSchema = z.object({
 })
 
 export type CompoundDeleterDataContainer = z.infer<typeof CompoundDeleterDataContainerSchema>
-
-export function expandExpansionItems(
-    formMethods: UseFormReturn<CompoundDeleterDataContainer>,
-    arrayMethods: UseFieldArrayReturn<CompoundDeleterDataContainer, 'compounds'>,
-    concurrencyLimit: number = 2,
-) : () => Promise<void> {
-
-    const loader = async (data: CompoundDeleterRow[]): Promise<Nullable<string[]>[]> =>
-        awaitAllWithBackpressure(
-            data.map((e) => (e.expand
-                ? (e.vx !== undefined
-                    ? toAwaitable(e.vx)
-                    : cachedRemoteVariantsOrNull(e.compound))
-                : toAwaitable([]))
-            ),
-            concurrencyLimit
-        )
-
-    return async () => {
-        const { getValues, setError, clearErrors } = formMethods
-        const { update, insert } = arrayMethods
-        const data = getValues('compounds')
-        const newData = await loader(data)
-        // use reverse order so we don't have to recompute indices
-        for (const [i, d] of newData.reverse().entries()) {
-            if (!data[i]?.expand) continue
-            if (d === undefined) {
-                setError(`compounds.${i}.compound`, {
-                    message: `couldn't fetch variants`,
-                })
-                continue
-            }
-            const [v0, ...vRest] = d
-            update(i, { compound: data[i].compound, selected: true, ...(v0 && { variant: v0 })})
-            if (vRest.length > 0) {
-                const add = vRest.map((v) => ({ compound: data[i].compound, variant: v, selected: true }))
-                insert(i + 1, add)
-            }
-            const toClear = Array(d.length)
-                .fill('')
-                .map((_, ai) => `compounds.${i + ai}` as FieldPath<CompoundDeleterDataContainer>)
-            clearErrors(toClear)
-
-        }
-    }
-}

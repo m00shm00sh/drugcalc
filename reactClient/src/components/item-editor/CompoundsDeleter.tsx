@@ -7,8 +7,8 @@ import {
     CompoundDeleterDataContainerSchema,
     compoundDeleterRowInit,
     compoundNameOf,
-    expandExpansionItems,
 } from '../../types/Compounds'
+import { expandExpansionItems } from './util/compound-deleter-expander'
 import { getSelectedIndices } from './util/Selectable'
 import { compoundPath, cachedRemoteCompounds, cachedRemoteVariants } from '../../util/data-fetcher'
 import { selectedItemsOnRemoteDeleter } from './util/remote-load-store'
