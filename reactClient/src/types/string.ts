@@ -20,3 +20,5 @@ const zodStringsCacheSchema = z.readonly(z.array(z.string())).optional()
 export const AvailableCBsCacheSchema = z.object({ 'cb': zodStringsCacheSchema })
 export const AvailableVXsCacheSchema = z.object({ 'vx': zodStringsCacheSchema })
 export const AvailableFNsCacheSchema = z.object({ 'fn': zodStringsCacheSchema })
+
+export const zodStringBool = z.literal(['true', 'false'])

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import '../util/filter-setif'
 import {
     displayToIso8601,
     iso8601ToDisplay,
@@ -7,6 +8,7 @@ import {
 } from './duration'
 import { zodPositiveNumberSchema } from './number'
 import { SelectableSchema } from './Selectable'
+import { zodStringBool } from './string'
 
 export const ConfigSchema = z.object({
     tickDuration: zodIsoDurationStringSchema.optional(),
@@ -20,8 +22,8 @@ const zConfigItem = (name: string, value: z.core.SomeType) =>
 
 export const ConfigEditorSchema = z.discriminatedUnion('type', [
     zConfigItem('tickDuration', zodDisplayDurationStringSchema),
-    zConfigItem('cutoffMilligrams', z.number().gt(0)),
-    zConfigItem('doLambdaDoseCorrection', z.literal(['true', 'false'])),
+    zConfigItem('cutoffMilligrams', zodPositiveNumberSchema('cutoff')),
+    zConfigItem('doLambdaDoseCorrection', zodStringBool),
 ])
 export type ConfigEditorRow = z.infer<typeof ConfigEditorSchema> & {
     type: keyof Config
@@ -89,7 +91,7 @@ export const configEditorFields: Record<keyof Config, ConfigEditorField> = {
         valType: 'number',
         min: 0.0001,
         step: 0.0001,
-        default: 0,
+        default: 0.01,
     },
     doLambdaDoseCorrection: {
         type: 'select',
