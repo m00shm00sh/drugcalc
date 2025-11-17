@@ -37,7 +37,7 @@ export const BlendsMapSchema = z.record(
 )
 export type BlendsMap = z.infer<typeof BlendsMapSchema>
 
-const BlendEditorComponentRowSchema = z
+export const BlendEditorComponentRowSchema = z
     .object({
         compound: z.string().nonempty('select a compound'),
         variant: z.string().optional(),
@@ -54,7 +54,7 @@ export const blendComponentRowInit = () =>
         dose: undefined, // use undef to force placeholder value
     }) as Partial<BlendEditorComponentRow> as BlendEditorComponentRow
 
-const BlendEditorRowSchema = z
+export const BlendEditorRowSchema = z
     .object({
         blend: zodNonemptyStringSchema('invalid blend name'),
         note: z.string().optional(),

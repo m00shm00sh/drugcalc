@@ -25,7 +25,7 @@ export const FrequenciesMapSchema = z.record(
 )
 export type FrequenciesMap = z.infer<typeof FrequenciesMapSchema>
 
-const FrequencyEditorComponentItemSchema = z
+export const FrequencyEditorComponentItemSchema = z
     .object({
         value: zodDisplayDurationStringSchema,
     })

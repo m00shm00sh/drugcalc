@@ -78,7 +78,7 @@ const CompoundNameEntrySchema = z.object({
 
 type CompoundNameEntry = z.infer<typeof CompoundNameEntrySchema>
 
-const CompoundEditorRowSchema = CompoundNameEntrySchema.extend({
+export const CompoundEditorRowSchema = CompoundNameEntrySchema.extend({
     halfLife: zodDisplayDurationStringSchema,
     // react-hook-form coerces undefined to Nan when valueAsNumber is active on an input
     pctActive: z
