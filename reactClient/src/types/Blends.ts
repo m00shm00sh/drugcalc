@@ -19,6 +19,10 @@ export const BlendNamesListSchema = z.readonly(z.array(z.string()))
 export type BlendNamesList = z.infer<typeof BlendNamesListSchema>
 
 const BlendComponentsMapSchema = z.record(z.string(), z.number().gt(0))
+    .superRefine((data, ctx) => {
+        if (Object.keys(data).length < 2)
+            ctx.addIssue('not enough components')
+    })
 type BlendComponentsMap = z.infer<typeof BlendComponentsMapSchema>
 
 export const BlendEntrySchema = z.object({
