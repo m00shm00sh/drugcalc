@@ -14,5 +14,13 @@ Object.defineProperty(window, 'localStorage', {
   value: createMockStorage(),
 });
 
+
 import mockFetch from 'jest-fetch-mock'
 mockFetch.enableMocks()
+
+// TODO: remove this once we implement logging of errors inside useAsyncResult
+process.on("unhandledRejection",
+    () => {
+
+    }
+)
