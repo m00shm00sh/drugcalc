@@ -1,6 +1,6 @@
+import { ItemEditor } from './item-editor/ItemEditorCommands'
 import { Button } from './widgets/Button'
 import { Flex } from './widgets/RowCol'
-import { ItemEditor } from './item-editor/ItemEditorCommands'
 
 export type EditorProps = {
     isLoggedIn?: boolean

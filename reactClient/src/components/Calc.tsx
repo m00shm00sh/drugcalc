@@ -42,7 +42,6 @@ import {
 import { getOrElse, stripIf } from '../util/filter-setif'
 import cache from '../util/cache'
 import { awaitAllWithBackpressure, toAwaitable } from '../util/awaitAllWithBackpressure'
-import type { Nullable } from '../util/util'
 import { EditorCommands } from './EditorCommands'
 import { FormInput, FormSelectWithOptions } from './FormField'
 import { Centered } from './widgets/Centered'

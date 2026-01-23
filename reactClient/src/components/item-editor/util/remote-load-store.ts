@@ -8,7 +8,7 @@ import type {
     UseFieldArrayUpdate,
     UseFormReturn,
 } from 'react-hook-form'
-import type { Selectable } from './Selectable'
+import type { Selectable } from '../../../types/Selectable'
 import { del, NO_RESPONSE, postJson } from '../../../util/fetcher'
 import type { Invalidatable } from '../../../util/cache'
 import { type Nullable, requireTrue } from '../../../util/util'
