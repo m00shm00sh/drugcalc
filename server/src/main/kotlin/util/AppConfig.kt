@@ -25,10 +25,6 @@ internal object AppConfig {
         val timeout: Duration = 1.toDuration(DurationUnit.HOURS)
     )
 
-    data class Cors(
-        val frontends: List<String> = emptyList()
-    )
-
     data class Http(
         val limits: Limits = Limits(),
         val bind: List<Bind> = emptyList(),
@@ -73,7 +69,6 @@ internal object AppConfig {
         val datacontroller: DataController.Config = DataController.Config(),
         val http: Http,
         val jwt: Jwt,
-        val cors: Cors,// = Cors(),
     )
 
     fun config(args: Array<String>) =
