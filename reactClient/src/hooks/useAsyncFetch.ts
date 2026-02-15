@@ -4,7 +4,10 @@ type InvokerArgs<R, T extends unknown[], U extends unknown[]> = {
     func: (...args: readonly [...T]) => Promise<R>
     args: readonly [...T]
     initial: R
-    auxDeps?: [...U]
+    /* make auxDeps required so that a typescript error will encourage writing the unit test to cover
+     * the function being in the dependencies instead of auxdeps
+     */
+    auxDeps: [...U]
 }
 
 type _Invokable<R> = {
@@ -39,7 +42,7 @@ export function useAsyncResult<R>(invocation: _Invokable<R>): R {
     const [result, setResult] = useState<R>(invocation.initial)
     const deps = [
         ...invocation.args,
-        ...(invocation.auxDeps !== undefined ? invocation.auxDeps : [invocation.func]),
+        ...invocation.auxDeps,
     ]
     // biome-ignore lint/correctness/useExhaustiveDependencies: see three lines above
     useEffect(() => {

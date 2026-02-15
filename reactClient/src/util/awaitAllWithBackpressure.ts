@@ -9,5 +9,5 @@ export const awaitAllWithBackpressure = async <
     awaitables: readonly [...TA],
     concurrencyLimit: number = 2
 ): Promise<R> => {
-    return await pMap(awaitables, e => e, { concurrency: concurrencyLimit}) as R
+    return await pMap(awaitables, e => e, { concurrency: concurrencyLimit }) as R
 }

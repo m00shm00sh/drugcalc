@@ -17,20 +17,29 @@ export async function fetchJson<T extends object, ZT extends z.ZodType<T> = z.Zo
 export async function fetchJson<T extends object, ZT extends z.ZodType<T> = z.ZodType<T>>(
     relativeLink: string,
     schema: ZT,
-    on404?: ValueOrSupplier<z.infer<typeof schema>>,
+    on404OrHardFail?: ValueOrSupplier<z.infer<typeof schema>>,
 ): Promise<Nullable<z.infer<typeof schema>>> {
-    const response = await fetch(`${BACKEND}${relativeLink}`, {
-        headers: {
-            Accept: 'application/json',
-        },
-    })
+    let response: Response | undefined
+    try {
+        response = await fetch(`${BACKEND}${relativeLink}`, {
+            headers: {
+                Accept: 'application/json',
+            },
+        })
+    } catch (e) {
+        console.log(`fetch error(GET ${relativeLink}): ${e}`)
+        if (on404OrHardFail === undefined) return undefined
+        if (typeof on404OrHardFail === 'function') return on404OrHardFail()
+        return on404OrHardFail as z.infer<typeof schema>
+    }
+
     if (!response.ok && response.status !== 404) {
         throw Error(`couldn't fetch ${relativeLink}: ${response.status}`)
     }
     if (response.status === 404) {
-        if (on404 === undefined) return undefined
-        if (typeof on404 === 'function') return on404()
-        return on404 as z.infer<typeof schema>
+        if (on404OrHardFail === undefined) return undefined
+        if (typeof on404OrHardFail === 'function') return on404OrHardFail()
+        return on404OrHardFail as z.infer<typeof schema>
     }
     const data = await response.json()
     return schema.parse(data)
@@ -71,12 +80,18 @@ export async function del(
 ): Promise<boolean> {
     if (!bearer)
         throw Error(`missing bearer`)
-    const response = await fetch(`${BACKEND}${relativeLink}`, {
-        method: 'DELETE',
-        headers: {
-            'Authorization': `Bearer ${bearer}`
-        },
-    })
+    let response: Response | null
+    try {
+        response = await fetch(`${BACKEND}${relativeLink}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${bearer}`
+            },
+        })
+    } catch (e) {
+        console.log(`fetch error(DELETE ${relativeLink}): ${e}`)
+        return false
+    }
     if (!response.ok) {
         if (response.status === 404)
             return false

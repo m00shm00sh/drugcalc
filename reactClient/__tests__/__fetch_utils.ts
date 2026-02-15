@@ -10,6 +10,11 @@ export const mockNextFetch = (o?: object) => {
     fetchMock.mockOnce(JSON.stringify(o))
 }
 
+// mock fetch failing with error instead of soft fail with non-200 response
+export const mockNextFetchHardFail = (message: string) => {
+    fetchMock.mockReject(new Error(message))
+}
+
 export const mockNextFetchFail = (status: number) => {
     fetchMock.mockOnce(async () => ({ status }))
 }
@@ -71,6 +76,7 @@ export const mockCacheableFetch = async <T extends object, R>(
     return await mockUncachedFetch(invoke, o)
 }
 
+// XXX: jest reports this is as dead code
 export const mockCacheableFetch404 = async <T>(
     cache: Invalidatable,
     invoke: () => Promise<Nullable<T>>,

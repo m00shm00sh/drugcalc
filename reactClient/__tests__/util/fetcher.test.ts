@@ -3,6 +3,7 @@ import { z } from 'zod'
 import {
     mockNextFetchFail,
     mockNextFetch404,
+    mockNextFetchHardFail,
     mockNextFetch,
     checkHeaders,
     checkParams,
@@ -31,6 +32,11 @@ describe('fetchJson', () => {
         mockNextFetch404()
         const o = await fetchJson('', zStoN, () => ({'a': 2}))
         expect(o).toEqual({'a': 2})
+    })
+    it('should return object on server fail', async () => {
+        mockNextFetchHardFail('a')
+        const o = await fetchJson('', zStoN, {'a': 1})
+        expect(o).toEqual({'a': 1})
     })
     it('should reject invalid object', async () => {
         mockNextFetch([])

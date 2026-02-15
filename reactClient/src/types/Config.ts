@@ -41,6 +41,7 @@ export const ConfigEditorContainerSchema = z.object({
     config: z.array(ConfigEditorSchema).superRefine((data, ctx) => {
         const seen: (keyof Config)[] = []
         for (const [i, { type }] of data.entries()) {
+            // XXX: jest coverage shows this line is dead code
             if (!isConfigItem(type)) throw Error('failed test for config key')
             const inter = seen.filterIntersecting([type])
             if (inter.length > 0) {
