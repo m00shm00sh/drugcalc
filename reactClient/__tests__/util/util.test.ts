@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals'
 
-import { requireNotNull, requireTrue } from '../../src/util/util'
+import { requireNotNull, requireTrue, assertNotNull } from '../../src/util/util'
 
 describe('requireNotNull', () => {
     it('should throw on null', () => {
@@ -20,6 +20,14 @@ describe('requireNotNull', () => {
     })
     it('should not throw on truthy', () => {
         expect(() => requireNotNull('a')).not.toThrow()
+    })
+})
+
+describe('assertNotNull', () => {
+    it('should return the value unchanged', () => {
+        expect(assertNotNull('a')).toBe('a')
+        expect(assertNotNull(0)).toBe(0)
+        expect(assertNotNull(null as any)).toBeNull()
     })
 })
 

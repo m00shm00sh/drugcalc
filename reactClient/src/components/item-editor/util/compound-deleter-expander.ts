@@ -27,8 +27,9 @@ export function expandExpansionItems(
         const { update, insert } = arrayMethods
         const data = getValues('compounds')
         const newData = await loader(data)
-        // use reverse order so we don't have to recompute indices
-        for (const [i, d] of newData.reverse().entries()) {
+        // use reverse order so we don't have to recompute indices when inserting
+        for (let i = newData.length - 1; i >= 0; i--) {
+            const d = newData[i]
             if (!data[i]?.expand) continue
             if (d === undefined) {
                 setError(`compounds.${i}.compound`, {

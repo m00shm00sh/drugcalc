@@ -18,13 +18,6 @@ import {
 } from '../../src/util/data-fetcher'
 import { mockNextFetch, resetMock } from '../__fetch_utils'
 
-/* useAsyncResult hooks fire in declaration order:
- *   1. initFrequencyNames  -> /api/data/frequencies.w
- *   2. initCompoundNames   -> /api/data/compounds
- *   3. initBlendNames      -> /api/data/blends
- *   4. cachedTransformerNames -> /api/data/transformers/names
- *   5. cachedTransformerFrequencies -> /api/data/transformers/frequencies
- */
 const mockAllCalcEndpoints = () => {
     mockNextFetch({'f1': 'PT1H'})        // /api/data/frequencies.w
     mockNextFetch(['c1', 'c2'])          // /api/data/compounds

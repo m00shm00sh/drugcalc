@@ -123,4 +123,14 @@ describe('uniqueArray', () => {
             expect(eNode2?.errors?.[0]).toContain('... $')
         })
     })
+    describe('returns undefined when no errors', () => {
+        it('for valid simple-key data', () => {
+            const e = parseError(skaNodups, zSimpleKeyedArray)
+            expect(e).toBeUndefined()
+        })
+        it('for valid compound-key data', () => {
+            const e = parseError(ckaNodups, zCompoundKeyedArray)
+            expect(e).toBeUndefined()
+        })
+    })
 })

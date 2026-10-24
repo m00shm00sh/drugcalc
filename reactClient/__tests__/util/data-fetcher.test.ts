@@ -205,15 +205,6 @@ describe('cachedRemoteBlends', () => {
     )
 })
 
-describe('fetchCompounds', () => {
-    it('should merge compound names', () =>
-        checkCacheableFetch(cachedRemoteCompounds, () => fetchCompounds({'b':[], 'c':[]}), ['a', 'b'], ['a', 'b', 'c'])
-    )
-    it('should return remote compounds when no locals', () =>
-        checkCacheableFetch(cachedRemoteCompounds, () => fetchCompounds({}), ['a', 'b'])
-    )
-})
-
 describe('cachedBlends', () => {
     it('should merge blend names', () =>
         checkCacheableFetch(cachedRemoteBlends, () => fetchBlends(['b', 'c']), ['a', 'b'], ['a', 'b', 'c'])

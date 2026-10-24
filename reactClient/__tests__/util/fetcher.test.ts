@@ -33,6 +33,16 @@ describe('fetchJson', () => {
         const o = await fetchJson('', zStoN, () => ({'a': 2}))
         expect(o).toEqual({'a': 2})
     })
+    it('should return function result on hard fail', async () => {
+        mockNextFetchHardFail('network down')
+        const o = await fetchJson('', zStoN, () => ({'a': 3}))
+        expect(o).toEqual({'a': 3})
+    })
+    it('should return undefined on hard fail with no fallback', async () => {
+        mockNextFetchHardFail('network down')
+        const o = await fetchJson('', zStoN)
+        expect(o).toBeUndefined()
+    })
     it('should return object on server fail', async () => {
         mockNextFetchHardFail('a')
         const o = await fetchJson('', zStoN, {'a': 1})

@@ -52,7 +52,7 @@ import { Flex, Grid } from './widgets/RowCol'
 import { postJson } from '../util/fetcher'
 // either this or a dummy typescript declaration file;
 // use "regular" Plotly from react-plotly.js for development
-const PlotlyModule = await import('plotly.js-gl2d-dist-min/')
+import * as PlotlyModule from 'plotly.js-gl2d-dist-min/'
 const Plotly = PlotlyModule.default ?? PlotlyModule
 // Under ts-jest ESM, CJS modules from node_modules are not unwrapped, so
 // `import * as createPlotlyComponent` yields `{ default: { default: factory } }`

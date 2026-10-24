@@ -15,7 +15,7 @@ import {
     cachedTransformerFrequencies,
     cachedTransformerNames,
 } from '../../src/util/data-fetcher'
-import { mockNextFetch, mockNextFetch404, resetMock } from '../__fetch_utils'
+import { mockNextFetch, mockNextFetch404, mockNextFetchHardFail, resetMock } from '../__fetch_utils'
 
 /* useAsyncResult hooks fire in declaration order:
  *   1. initFrequencyNames  -> /api/data/frequencies.w
@@ -155,5 +155,217 @@ describe('Calc', () => {
             }],
             decode: 'PT24H',
         })
+    })
+
+    it('switches prefix to blend (.b)', async () => {
+        mockAllCalcEndpoints()
+        mockNextFetch(['v1']) // variants for 'c1' when compound changes
+        const {findByText, findByRole, container} = render(<Calc />)
+        await findByText('Cycle')
+        await findByRole('button', {name: 'Evaluate'})
+
+        // Set compoundOrBlend to 'c1'
+        const compoundSelect = container.querySelector('select[name="cycle.0.compoundOrBlend"]') as HTMLSelectElement
+        await act(async () => {
+            fireEvent.change(compoundSelect, {target: {value: 'c1'}})
+        })
+        await waitFor(() => {
+            expect(container.querySelector('select[name="cycle.0.variantOrTransformer"] option[value="v1"]')).not.toBeNull()
+        })
+
+        // Change prefix to '.b' (blend)
+        const prefixSelect = container.querySelector('select[name="cycle.0.prefix"]') as HTMLSelectElement
+        await act(async () => {
+            fireEvent.change(prefixSelect, {target: {value: '.b'}})
+        })
+
+        // The dose field should still be present (not stripped for .b)
+        expect(container.querySelector('input[name="cycle.0.dose"]')).not.toBeNull()
+    })
+
+    it('switches prefix to transformer (.t)', async () => {
+        mockAllCalcEndpoints()
+        mockNextFetch(['v1']) // variants for 'c1' when compound changes
+        const {findByText, findByRole, container} = render(<Calc />)
+        await findByText('Cycle')
+        await findByRole('button', {name: 'Evaluate'})
+
+        // Set compoundOrBlend to 'c1'
+        const compoundSelect = container.querySelector('select[name="cycle.0.compoundOrBlend"]') as HTMLSelectElement
+        await act(async () => {
+            fireEvent.change(compoundSelect, {target: {value: 'c1'}})
+        })
+        await waitFor(() => {
+            expect(container.querySelector('select[name="cycle.0.variantOrTransformer"] option[value="v1"]')).not.toBeNull()
+        })
+
+        // Change prefix to '.t' (transformer)
+        const prefixSelect = container.querySelector('select[name="cycle.0.prefix"]') as HTMLSelectElement
+        await act(async () => {
+            fireEvent.change(prefixSelect, {target: {value: '.t'}})
+        })
+
+        // The dose field should NOT be present for .t prefix
+        expect(container.querySelector('input[name="cycle.0.dose"]')).toBeNull()
+    })
+
+    it('shows error when postJson fails', async () => {
+        mockNextFetch({'f1': 'PT1H'})        // 1. frequencies.w
+        mockNextFetch(['c1', 'c2'])          // 2. compounds
+        mockNextFetch([])                    // 3. blends
+        mockNextFetch(['t1'])                // 4. transformer names
+        mockNextFetch(['tf1'])               // 5. transformer frequencies
+        mockNextFetch(['v1'])                // 6. variants for 'c1'
+        mockNextFetchHardFail('calc failed') // 7. /api/calc throws
+
+        const {findByText, findByRole, container} = render(<Calc />)
+        await findByText('Cycle')
+        await findByRole('button', {name: 'Evaluate'})
+
+        // Set compoundOrBlend to 'c1'
+        const compoundSelect = container.querySelector('select[name="cycle.0.compoundOrBlend"]') as HTMLSelectElement
+        await act(async () => {
+            fireEvent.change(compoundSelect, {target: {value: 'c1'}})
+        })
+        await waitFor(() => {
+            expect(container.querySelector('select[name="cycle.0.variantOrTransformer"] option[value="v1"]')).not.toBeNull()
+        })
+
+        // Set dose
+        const doseInput = container.querySelector('input[name="cycle.0.dose"]') as HTMLInputElement
+        fireEvent.change(doseInput, {target: {value: '10'}})
+
+        // Set start
+        const startInput = container.querySelector('input[name="cycle.0.start"]') as HTMLInputElement
+        fireEvent.change(startInput, {target: {value: '1d'}})
+
+        // Set duration
+        const durationInput = container.querySelector('input[name="cycle.0.duration"]') as HTMLInputElement
+        fireEvent.change(durationInput, {target: {value: '2h'}})
+
+        // Set freqName
+        const freqSelect = container.querySelector('select[name="cycle.0.freqName"]') as HTMLSelectElement
+        fireEvent.change(freqSelect, {target: {value: 'f1'}})
+
+        // Click Evaluate
+        const btn = (await findByRole('button', {name: 'Evaluate'})) as HTMLButtonElement
+        await act(async () => {
+            fireEvent.click(btn)
+        })
+
+        // Error should be displayed
+        await findByText('calc failed')
+    })
+
+    it('saves form to URL via Save button', async () => {
+        mockAllCalcEndpoints()
+        mockNextFetch(['v1']) // variants for 'c1' when compound changes
+        const {findByText, findByRole, container} = render(<Calc />)
+        await findByText('Cycle')
+        await findByRole('button', {name: 'Evaluate'})
+
+        // Set compoundOrBlend to 'c1'
+        const compoundSelect = container.querySelector('select[name="cycle.0.compoundOrBlend"]') as HTMLSelectElement
+        await act(async () => {
+            fireEvent.change(compoundSelect, {target: {value: 'c1'}})
+        })
+        await waitFor(() => {
+            expect(container.querySelector('select[name="cycle.0.variantOrTransformer"] option[value="v1"]')).not.toBeNull()
+        })
+
+        // Click Save form to URL
+        const saveBtn = (await findByRole('button', {name: 'Save form to URL'})) as HTMLButtonElement
+        await act(async () => {
+            fireEvent.click(saveBtn)
+        })
+
+        // URL should have been updated with query params
+        expect(window.location.search).toContain('cb=c1')
+    })
+
+    it('handles malformed query string import', async () => {
+        // qFL.length=2, qCBlen=1 → length mismatch → throws in importRowsFromQueryString
+        window.history.pushState({}, '', '?fl=b&fl=c&cb=bad&d=1&s=1d&t=&fn=')
+        mockAllCalcEndpoints()
+        mockNextFetch(['v1']) // variants for 'c1' when compound changes
+        const {findByText, findByRole} = render(<Calc />)
+        await findByText('Cycle')
+        // Should not crash; falls back to newRow()
+        await findByRole('button', {name: 'Evaluate'})
+    })
+
+    it('switches prefix back to compound from blend', async () => {
+        mockAllCalcEndpoints()
+        mockNextFetch(['v1']) // variants for 'c1' when compound changes
+        mockNextFetch(['v1']) // variants for 'c1' when prefix changes back to ''
+        const {findByText, findByRole, container} = render(<Calc />)
+        await findByText('Cycle')
+        await findByRole('button', {name: 'Evaluate'})
+
+        // Set compoundOrBlend to 'c1'
+        const compoundSelect = container.querySelector('select[name="cycle.0.compoundOrBlend"]') as HTMLSelectElement
+        await act(async () => {
+            fireEvent.change(compoundSelect, {target: {value: 'c1'}})
+        })
+        await waitFor(() => {
+            expect(container.querySelector('select[name="cycle.0.variantOrTransformer"] option[value="v1"]')).not.toBeNull()
+        })
+
+        // Change prefix to '.b' first
+        const prefixSelect = container.querySelector('select[name="cycle.0.prefix"]') as HTMLSelectElement
+        await act(async () => {
+            fireEvent.change(prefixSelect, {target: {value: '.b'}})
+        })
+
+        // Change prefix back to '' (compound)
+        await act(async () => {
+            fireEvent.change(prefixSelect, {target: {value: ''}})
+        })
+
+        // The dose field should be present again for '' prefix
+        expect(container.querySelector('input[name="cycle.0.dose"]')).not.toBeNull()
+        // Variant select should show options (variants fetched)
+        await waitFor(() => {
+            expect(container.querySelector('select[name="cycle.0.variantOrTransformer"] option[value="v1"]')).not.toBeNull()
+        })
+    })
+
+    it('clicks Add item to append a row', async () => {
+        mockAllCalcEndpoints()
+        const {findByText, findByRole} = render(<Calc />)
+        await findByText('Cycle')
+        await findByRole('button', {name: 'Evaluate'})
+
+        // Click Add item to append a new row
+        const addBtn = (await findByRole('button', {name: 'Add item'})) as HTMLButtonElement
+        await act(async () => {
+            fireEvent.click(addBtn)
+        })
+
+        // Should now have 2 rows (the variant fetch happens for the new row too)
+        // Just verify it doesn't crash
+        await findByRole('button', {name: 'Evaluate'})
+    })
+
+    it('imports query string with blend prefix', async () => {
+        // Query string with prefix '.b' (encoded as 'b')
+        window.history.pushState({}, '', '?fl=b&cb=c1&d=10&s=1d&t=2h&fn=f1')
+        mockAllCalcEndpoints()
+        mockNextFetch([]) // blends for .b prefix (no variants needed)
+        const {findByText, findByRole} = render(<Calc />)
+        await findByText('Cycle')
+        // Should not crash and should render with blend prefix data
+        await findByRole('button', {name: 'Evaluate'})
+    })
+
+    it('imports query string with transformer prefix', async () => {
+        // Query string with prefix '.t' (encoded as 't')
+        window.history.pushState({}, '', '?fl=t&cb=c1&d=10&s=1d&t=2h&fn=f1')
+        mockAllCalcEndpoints()
+        // transformers are already mocked by mockAllCalcEndpoints
+        const {findByText, findByRole} = render(<Calc />)
+        await findByText('Cycle')
+        // Should not crash and should render with transformer prefix data
+        await findByRole('button', {name: 'Evaluate'})
     })
 })
