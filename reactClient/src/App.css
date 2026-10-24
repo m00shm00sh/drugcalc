@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+body {
+    color: #fff;
+    font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+    background-image: linear-gradient(to bottom, #707070, #202020);
+    background-attachment: fixed;
+}
+
+form {
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px; /* Space between form elements */
+}
+
+.nav {
+    display: flex;
+    justify-self: center;
+    gap: 10px;
+}
+
+.gap {
+    gap: 10px;
+}
+
+button {
+    margin: 10px;
+}
+
+input:invalid {
+    outline: 2px solid red;
+}
+
+fieldset {
+    margin: 2px;
+    padding: 2px;
+}
+
+fieldset.invalid {
+    border-color: red;
+}
