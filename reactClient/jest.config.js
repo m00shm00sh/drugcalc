@@ -11,11 +11,14 @@ export default {
     ...tsJestTransformCfg,
     '^.+\\.jsx?$': 'babel-jest',
   },
-  "extensionsToTreatAsEsm": [".ts"],
+  "extensionsToTreatAsEsm": [".ts", ".tsx"],
   "transformIgnorePatterns": [
       "node_modules/(?!p-map)"
     ],
   automock: false,
+  moduleNameMapper: {
+    '\\.css$': '<rootDir>/__mocks__/css-stub.js',
+  },
   setupFiles: ["./__tests__/setupTests.js"],
   testRegex: "__tests__/.*\\.test\\.tsx?$",
 };

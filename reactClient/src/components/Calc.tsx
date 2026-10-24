@@ -1,8 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import classNames from 'classnames'
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { ComponentType, createContext, useCallback, useContext, useMemo, useState } from 'react'
+import type { PlotParams } from 'react-plotly.js'
 import { FormProvider, useFieldArray, useForm, useFormContext } from 'react-hook-form'
-import createPlotlyComponent from 'react-plotly.js/factory'
+import * as createPlotlyComponent from 'react-plotly.js/factory'
 import { makeInvoker, useAsyncResult } from '../hooks/useAsyncFetch'
 import {
     useLocalBlends,
@@ -51,9 +52,18 @@ import { Flex, Grid } from './widgets/RowCol'
 import { postJson } from '../util/fetcher'
 // either this or a dummy typescript declaration file;
 // use "regular" Plotly from react-plotly.js for development
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const Plotly = require('plotly.js-gl2d-dist-min/')
-const Plot = createPlotlyComponent(Plotly)
+const PlotlyModule = await import('plotly.js-gl2d-dist-min/')
+const Plotly = PlotlyModule.default ?? PlotlyModule
+// Under ts-jest ESM, CJS modules from node_modules are not unwrapped, so
+// `import * as createPlotlyComponent` yields `{ default: { default: factory } }`
+// (double-wrapped), whereas bundlers unwrap to the factory function directly.
+// Normalize both shapes.
+const factory = (createPlotlyComponent.default as unknown) as
+    | ((plotly: object) => ComponentType<PlotParams>)
+    | { default: (plotly: object) => ComponentType<PlotParams> }
+const plotComponentFactory =
+    typeof factory === 'function' ? factory : factory.default
+const Plot: ComponentType<PlotParams> = plotComponentFactory(Plotly)
 
 type CycleDescriptionEditorRowProps = {
     index: number
