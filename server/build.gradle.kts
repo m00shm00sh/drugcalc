@@ -31,6 +31,7 @@ dependencies {
     testImplementation(project(":sharedTestLogic"))
     testImplementation(project(":dbTestLogic"))
     testImplementation(project(":calcTestLogic"))
+    testImplementation("io.ktor:ktor-server-test-host-jvm:3.2.0")
 }
 
 tasks.shadowJar {
