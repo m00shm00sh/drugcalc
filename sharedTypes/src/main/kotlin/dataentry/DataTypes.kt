@@ -123,6 +123,10 @@ value class CompoundBase(val value: String) : Comparable<CompoundBase> {
         require(!value.contains("=")) {
             "compound contains '='"
         }
+        // reserved for group
+        require(!value.contains(":")) {
+            "compound contains ':'"
+        }
     }
 
     override fun compareTo(other: CompoundBase): Int = value.compareTo(other.value)
