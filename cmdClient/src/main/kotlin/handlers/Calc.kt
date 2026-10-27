@@ -103,7 +103,7 @@ internal fun AppState.configureCalc(): Repl.EntryBuilder.() -> Unit = {
             }
         }
         this["add"] {
-            usage = "$name {flags=.b|.t}? cb=compound {vx=var|xfrm}? {d=dose}? s=time t=time fn=freqname"
+            usage = "$name {flags=.b|.t}? cb=compound {vx=var|xfrm}? {d=dose}? s=time t=time fn=freqname {gr=group}"
             help = "add cycle to list"
             handler = { (_, kw, _, out) ->
                 val data = parseCycleDescription(kw, null)
@@ -392,6 +392,8 @@ private val descriptionRemap = mapOf(
     id(name(CycleDescription::freqName)),
     aliasName("fn", CycleDescription::freqName),
     aliasName("freq", CycleDescription::freqName),
+    aliasName("g", CycleDescription::group),
+    aliasName("gr", CycleDescription::group)
 )
 
 private val renderVarRemap = mapOf(
