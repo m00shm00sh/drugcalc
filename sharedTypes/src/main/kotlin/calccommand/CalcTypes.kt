@@ -99,6 +99,7 @@ object DecodeSpecSerializer : KSerializer<DecodeSpec> {
  * @property start start time
  * @property duration duration
  * @property freqName frequency name; must exist in {frequencies}
+ * @property group group number; must be nonnegative; defaults to 0
  *
  * @throws IllegalArgumentException if values are invalid
  */
@@ -112,7 +113,8 @@ data class CycleDescription(
     val start: Duration,
     @Contextual
     val duration: Duration,
-    val freqName: FrequencyName
+    val freqName: FrequencyName,
+    val group: Int = 0,
 ) {
     init {
         when (prefix) {
@@ -145,6 +147,9 @@ data class CycleDescription(
         }
         require(duration.isPositive()) {
             "nonpositive duration"
+        }
+        require(group >= 0) {
+            "negative group"
         }
     }
 

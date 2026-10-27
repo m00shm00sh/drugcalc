@@ -76,7 +76,7 @@ internal class CalcTypesTest {
         }
     }
 
-    @Test
+   @Test
     fun `CycleDescription accepts valid blend`() {
         assertDoesNotThrow {
             CycleDescription(
@@ -244,5 +244,32 @@ internal class CalcTypesTest {
             )
         }
         assertEquals("nonpositive duration", ex.message)
+    }
+
+    @Test
+    fun `CycleDescription rejects negative group`() {
+        val ex = assertThrows<IllegalArgumentException> {
+            CycleDescription(
+                compoundOrBlend = "x",
+                dose = 1.0,
+                start = Duration.ZERO,
+                duration = 1.0.toDuration(DurationUnit.DAYS),
+                freqName = FrequencyName("every day"),
+                group = -1
+            )
+        }
+        assertEquals("negative group", ex.message)
+    }
+
+    @Test
+    fun `CycleDescription group defaults to zero`() {
+        val cycle = CycleDescription(
+            compoundOrBlend = "testosterone",
+            dose = 100.0,
+            start = Duration.ZERO,
+            duration = 7.0.toDuration(DurationUnit.DAYS),
+            freqName = FrequencyName("every day")
+        )
+        assertEquals(0, cycle.group)
     }
 }
