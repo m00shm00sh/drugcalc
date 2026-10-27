@@ -6,6 +6,7 @@ import com.moshy.drugcalc.commontest.CheckArg
 import com.moshy.drugcalc.types.calccommand.*
 import com.moshy.drugcalc.types.dataentry.*
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.*
 import kotlin.time.*
@@ -79,13 +80,90 @@ internal class DecoderTest {
         transformerAuxF: Map<FrequencyName, FrequencyValue> = emptyMap()
     ): CycleCalculation {
         val decoder = Decoder(config, data, transformerAuxF)
-        return decoder.decode(cycle)
+        return decoder.decode(cycle)[0] ?: throw NoSuchElementException("group: 0")
+    }
+
+    private fun doDecodeGroups(
+        cycle: List<CycleDescription>,
+        config: Config,
+        data: Data,
+        groups: Set<Int>? = null,
+        transformerAuxF: Map<FrequencyName, FrequencyValue> = emptyMap()
+    ): Map<Int, CycleCalculation> {
+        val decoder = Decoder(config, data, transformerAuxF)
+        val grouped = decoder.decode(cycle)
+        if (groups == null)
+            return grouped
+        return grouped.filterKeys { it in groups }
     }
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("testArgsForDecodeCyclesValidation")
     fun testDecoder(name: String, a: CheckArg<CycleCalculation, DecoderP>) =
         a.invoke { doDecode(cycle, config, data, transformerAuxF) }
+
+    @Test
+    fun `testDecoder splits identical entries by group`() {
+        val tick = C.CONFIG.tickDuration
+        val result = doDecodeGroups(
+            listOf(
+                // compound group 0
+                CycleDescription(
+                    compoundOrBlend = "foo", variantOrTransformer = "bar", dose = 50.0,
+                    start = C.ZERO_DUR, duration = C.ONE_WEEK,
+                    freqName = FrequencyName("f2"), group = 0
+                ),
+                // compound group 1 - identical except group
+                CycleDescription(
+                    compoundOrBlend = "foo", variantOrTransformer = "bar", dose = 50.0,
+                    start = C.ZERO_DUR, duration = C.ONE_WEEK,
+                    freqName = FrequencyName("f2"), group = 1
+                ),
+                // transformer group 0
+                CycleDescription(
+                    CycleDescription.PREFIX_TRANSFORMER,
+                    "foo", "median",
+                    start = C.ONE_DAY, duration = C.ONE_WEEK - C.ONE_DAY,
+                    freqName = FrequencyName("f1"), group = 0
+                ),
+                // transformer group 1 - identical except group
+                CycleDescription(
+                    CycleDescription.PREFIX_TRANSFORMER,
+                    "foo", "median",
+                    start = C.ONE_DAY, duration = C.ONE_WEEK - C.ONE_DAY,
+                    freqName = FrequencyName("f1"), group = 1
+                )
+            ),
+            C.CONFIG, C.DATA
+        )
+
+        assertEquals(setOf(0, 1), result.keys)
+
+        val expectedCompound = DecodedCycle(
+            "foo",
+            50 * C.C1_PCT_ACTIVE,
+            durationToTicksF(C.COMPOUND_1.second.halfLife, tick),
+            0,
+            durationToTicks(C.ONE_WEEK, tick),
+            C.F2_IN_TICKS
+        )
+
+        val expectedTransformer = DecodedCycle(
+            "foo",
+            start = durationToTicks(C.ONE_DAY, tick),
+            duration = durationToTicks(C.ONE_WEEK - C.ONE_DAY, tick),
+            freqs = C.F1_IN_TICKS,
+            transformer = "median"
+        )
+
+        val expectedCalc = CycleCalculation(
+            compounds = listOf(expectedCompound),
+            transformers = listOf(expectedTransformer)
+        )
+
+        assertEquals(expectedCalc, result[0])
+        assertEquals(expectedCalc, result[1])
+    }
 
     data class DecoderP(
         val cycle: List<CycleDescription>,

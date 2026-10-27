@@ -24,10 +24,20 @@ class Decoder(
     private val transformerFreqs = generateTransformerFreqs(config) +
             transformerFreqs.mapKeys { (k, _) -> k.clean() }
 
-    /** Decode [cycle].
+    /** Decode [cycle] into a map of group id to [CycleCalculation].
+     * Each [CycleDescription] is routed to the list for its [CycleDescription.group] value
+     * (defaulting to 0) and decoded independently.
      * @throw IllegalStateException on name resulution because invalid [names] was supplied
      */
-    fun decode(cycle: List<CycleDescription>): CycleCalculation {
+    fun decode(cycle: List<CycleDescription>): Map<Int, CycleCalculation> {
+        return cycle
+            .groupBy { it.group }
+            .mapValues { (_, groupCycles) ->
+                decodeGroup(groupCycles)
+            }
+    }
+
+    private fun decodeGroup(cycle: List<CycleDescription>): CycleCalculation {
         val transformerCycles: MutableList<CycleDescription> = mutableListOf()
 
         // pass 1: expand blends and resolve names

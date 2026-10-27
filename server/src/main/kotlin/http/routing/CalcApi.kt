@@ -26,7 +26,9 @@ internal fun Route.configureCalcRoutes(
         val decoder = Decoder(config, resolved)
         val toCalc = decoder.decode(req.cycle)
 
-        val result = evaluator.evaluateCycle(toCalc, config)
+        val result = toCalc[0]
+            ?.let { evaluator.evaluateCycle(it, config) }
+            ?: CycleResult(emptyMap<String, XYList.OfRaw>())
 
         @Suppress("UNCHECKED_CAST") // upcast to force polymorphic-base serialization
         req.decode.decodeGivenConfig(result, config) as CycleResult<XYList>
