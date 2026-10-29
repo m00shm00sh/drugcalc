@@ -1,14 +1,14 @@
 import { useState, type ChangeEvent } from 'react'
 import { useLocalStorage } from 'usehooks-ts'
-import { Button } from '../widgets/Button'
-import { COMPOUND_BASE_PATTERN, DURATION_PATTERN } from '../util/constants'
-import { fetchCompoundDetailsOrNull } from '../util/fetcher'
+import { Button } from './widgets/Button'
+import { COMPOUND_BASE_PATTERN, DURATION_PATTERN } from '../types/Compounds'
+import { fetchCompoundDetailsOrNull } from '../util/data-fetcher'
 import {
   packCompoundName, quoteCompoundName, unpackCompoundName,
   type CompoundInfo, type CompoundName, type CompoundsMap
-} from '../util/types'
-import { require, type Nullable } from '../util/util'
-import { memoizer } from '../util/memoize'
+} from '../types/Compounds'
+import { requireTrue as require, type Nullable } from '../util/util'
+import cache from '../util/cache'
 
 // we need this all to be strings because they hold form data; convert appropriate fields to number during form save
 type CompoundEditorRowItem = { 
@@ -144,9 +144,10 @@ export const CompoundsEditor = ({ isLoggedIn } : CompoundsEditorProps) => {
   const [allowCommit, setAllowCommit] = useState(false)
   const [allowSave, setAllowSave] = useState(false)
 
-  const fetcher = memoizer(60000)(
+  const fetcher = cache(
     async (cn: CompoundName | undefined) => await fetchCompoundDetailsOrNull(cn as CompoundName),
-    (cn: CompoundName): string => packCompoundName(cn)
+    (cn: CompoundName): string => packCompoundName(cn),
+    60000
   ) as (_: CompoundName) => Promise<CompoundInfo>
 
   const setAllow = (commit: Nullable<boolean>, save: Nullable<boolean>): void => {
@@ -242,7 +243,6 @@ export const CompoundsEditor = ({ isLoggedIn } : CompoundsEditorProps) => {
     // FIXME: implement
     alert('unimplemented')
     throw Error('unimplemented')
-    const map = fieldsToCompoundsMap(fields, []) as CompoundsMap
     // POST map /api/compounds { auth: bearer: jwt; content-type: json; body: map }
   }
 

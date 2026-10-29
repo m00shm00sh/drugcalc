@@ -51,6 +51,8 @@ export const packCompoundName = (cn: CompoundName): string => {
     return s
 }
 
+export const quoteCompoundName = (cn: CompoundName): string => `"${packCompoundName(cn)}"`
+
 export type ByCompoundByVariant = Record<string, string[]>
 
 export const reshapeCompoundKeys = (m: CompoundsMap): ByCompoundByVariant => {
@@ -68,6 +70,7 @@ export const reshapeCompoundKeys = (m: CompoundsMap): ByCompoundByVariant => {
 }
 
 export const COMPOUND_BASE_PATTERN = '[^.](?!.*=).*'
+export const DURATION_PATTERN = '((?=\\d)((\\d+d)?(\\d+h)?(\\d+m)?(\\d+s)?)??)+'
 
 const CompoundNameEntrySchema = z.object({
     compound: z.string().regex(RegExp(`^${COMPOUND_BASE_PATTERN}$`), 'invalid compound name'),
