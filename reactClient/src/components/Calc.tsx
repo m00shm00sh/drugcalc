@@ -67,6 +67,7 @@ const Plot: ComponentType<PlotParams> = plotComponentFactory(Plotly)
 
 type CycleDescriptionEditorRowProps = {
     index: number
+    numRows: number
     update: (row: CalcRequestRow) => void
 }
 
@@ -78,6 +79,7 @@ const VariantsFetcherContext = createContext(cachedRemoteVariants)
 const CycleDescriptionEditorRow = ({
     index,
     update,
+    numRows,
 }: CycleDescriptionEditorRowProps) => {
     const {
         getValues,
@@ -93,6 +95,8 @@ const CycleDescriptionEditorRow = ({
     const curRow = getValues(`cycle.${index}`)
     const selectPrefix = prefixOptions
 
+    const groupOptVals = Array.from({ length: numRows }, (_, k) => `${k}`)
+
     const rowError = errors?.cycle?.[index]
     return (
         <fieldset
@@ -101,7 +105,7 @@ const CycleDescriptionEditorRow = ({
                 rowError && 'invalid'
             )}
         >
-            <Grid colSpec="nc-4" auxClasses={['gap-2', 'justify-items-center']}>
+            <Grid colSpec="nc-5" auxClasses={['gap-2', 'justify-items-center']}>
                 <FormInput
                     type="checkbox"
                     label=" "
@@ -160,6 +164,12 @@ const CycleDescriptionEditorRow = ({
                     label={printVX(curRow)}
                     name={`${row}.variantOrTransformer`}
                     optionValues={getOrElse(curRow, 'vx', [])}
+                />
+                <FormSelectWithOptions
+                    blockClasses={['col-start-5']}
+                    label="group"
+                    name={`${row}.group`}
+                    optionValues={groupOptVals}
                 />
                 {curRow.prefix !== '.t' && (
                     <FormInput
@@ -265,6 +275,7 @@ const CalcBody = ({hydratedInitValues, newRow, localData, saveToQS} : CalcBodyPr
                             key={field.id}
                             index={index}
                             update={(e) => update(index, e)}
+                            numRows={fields.length}
                         />
                     ))}
                     <ErrorMessage text={errors?.cycle?.message} />

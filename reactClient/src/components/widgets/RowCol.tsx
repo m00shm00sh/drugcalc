@@ -6,6 +6,7 @@ const ColSpec = {
     'nc-2': 'grid-cols-2',
     'nc-3': 'grid-cols-3',
     'nc-4': 'grid-cols-4',
+    'nc-5': 'grid-cols-5',
 }
 
 const FlexDir = {
