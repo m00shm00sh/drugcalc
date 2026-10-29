@@ -152,6 +152,7 @@ describe('Calc', () => {
                 start: 'PT24H',
                 duration: 'PT2H',
                 freqName: 'f1',
+                group: 0,
             }],
             decode: 'PT24H',
         })

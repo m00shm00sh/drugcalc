@@ -9,10 +9,17 @@ import {
     zodDisplayDurationStringSchema,
     zodIsoDurationStringSchema,
 } from './duration'
-import { AvailableCBsCacheSchema, AvailableFNsCacheSchema, AvailableVXsCacheSchema, zodNonemptyStringSchema } from './string'
+import {
+	AvailableCBsCacheSchema,
+	AvailableFNsCacheSchema,
+	AvailableVXsCacheSchema,
+	zodNonemptyStringSchema,
+	zodNumberString
+} from './string'
 import { SelectableSchema } from './Selectable'
 import { getOrElse, stripIf } from '../util/filter-setif'
 import { zodPositiveNumberSchema } from './number'
+import { zodSuperRefinerForGroupIds } from './constrainGroupIds'
 
 /* even though this is strictly an outgoing type, i'm still making a zod schema because
  * prettier's typescript handling butchers indentation of union types
@@ -24,6 +31,7 @@ const CycleDescriptionSharedSchema = z
         start: zodDisplayDurationStringSchema,
         duration: zodDisplayDurationStringSchema,
         freqName: zodNonemptyStringSchema('select a frequency'),
+        group: zodNumberString
     })
     .extend(AvailableCBsCacheSchema.shape)
     .extend(AvailableFNsCacheSchema.shape)
@@ -113,6 +121,7 @@ export const calcRequestRowInit = (): CalcRequestRow =>
         start: '',
         duration: '',
         freqName: '',
+        group: '0',
     }) as Partial<CalcRequestRow> as CalcRequestRow
 
 export const cycleFieldsToCycleDescription = (fields: CalcRequestRow[]): CycleDescription[] =>
@@ -122,12 +131,13 @@ export const cycleFieldsToCycleDescription = (fields: CalcRequestRow[]): CycleDe
             ...e,
             start: displayToIso8601(e.start),
             duration: displayToIso8601(e.duration),
+            group: Number(e.group)
         }
         stripIf(d.prefix === '.t', d, 'dose')
         stripIf(d.prefix === '.b', d, 'variantOrTransformer')
         stripIf(d.prefix === '', d, 'prefix')
         stripIf('vx' in d, d, 'vx')
-        return d
+        return d as unknown as CycleDescription
     })
 
 const Q_FLAGS = 'fl'
@@ -137,6 +147,7 @@ const Q_DOSE = 'd'
 const Q_START = 's'
 const Q_DURATION = 't'
 const Q_FREQ_NAME = 'fn'
+const Q_GROUP_ID = 'g'
 
 const encodeFlag = (fl: Prefix | undefined): string => {
     switch (fl) {
@@ -167,6 +178,7 @@ export const importRowsFromQueryString = (q: URLSearchParams): CalcRequestRow[] 
     const qS = q.getAll(Q_START)
     const qT = q.getAll(Q_DURATION)
     const qFN = q.getAll(Q_FREQ_NAME)
+    const qG = q.getAll(Q_GROUP_ID)
 
     const qCBlen = qCB.length
     const checkLen = (qTok: string[], qNam: string) => {
@@ -179,6 +191,7 @@ export const importRowsFromQueryString = (q: URLSearchParams): CalcRequestRow[] 
     checkLen(qS, Q_START)
     checkLen(qT, Q_DURATION)
     checkLen(qFN, Q_FREQ_NAME)
+    if (qG.length > 0) checkLen(qG, Q_GROUP_ID)
 
     const rows: CalcRequestRow[] = []
     for (let i = 0; i < qCBlen; ++i) {
@@ -191,6 +204,7 @@ export const importRowsFromQueryString = (q: URLSearchParams): CalcRequestRow[] 
             start: qS[i],
             duration: qT[i],
             freqName: qFN[i],
+            group: qG[i] ?? '0'
         })
     }
     // components/Calc's form validator will validate these values
@@ -210,6 +224,7 @@ export const exportRowsToQueryString = (rows: readonly CalcRequestRow[]): URLSea
         q.append(Q_START, r.start)
         q.append(Q_DURATION, r.duration)
         q.append(Q_FREQ_NAME, r.freqName)
+        q.append(Q_GROUP_ID, r.group)
     }
     return q
 }
@@ -221,7 +236,15 @@ export type AuxData = {
 }
 
 export const CalcRequestDataContainerSchema = z.object({
-    cycle: z.array(CalcRequestRowSchema).min(1),
+    cycle: z
+        .array(CalcRequestRowSchema)
+        .min(1)
+        .superRefine(
+            zodSuperRefinerForGroupIds<CalcRequestRow>(
+                (row) => row.group,
+                (row) => [['group', `group id ${row.group} out of range`]],
+            ),
+        ),
 })
 
 export type CalcRequestDataContainer = z.infer<typeof CalcRequestDataContainerSchema>
