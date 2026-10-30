@@ -99,8 +99,14 @@ export const compoundEditorRowInit = () =>
         pctActive: 100
     }) as CompoundEditorRow
 
-export const uniqueCompoundNamesRefiner = (post: (names: readonly string[]) => string = () => '') =>
-    zodSuperRefinerForUniqueArray(
+// Function declaration rather than a const so this binding is initialized before
+// module evaluation. Blends.ts uses it while building its schema, and the
+// Blends <-> data-fetcher <-> Compounds import cycle would otherwise hit the
+// const in its temporal dead zone.
+export function uniqueCompoundNamesRefiner(
+    post: (names: readonly string[]) => string = () => '',
+) {
+    return zodSuperRefinerForUniqueArray(
         (e: CompoundNameEntry) => packCompoundName([e.compound, e.variant] as CompoundName),
         (e: CompoundNameEntry) => {
             const a: [string, string][] = []
@@ -110,6 +116,7 @@ export const uniqueCompoundNamesRefiner = (post: (names: readonly string[]) => s
         },
         post,
     )
+}
 
 export const CompoundEditorDataContainerSchema = z.object({
     compounds: z.array(CompoundEditorRowSchema).superRefine(uniqueCompoundNamesRefiner()),
