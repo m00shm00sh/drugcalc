@@ -120,6 +120,10 @@ internal class DataTypesTest {
             "contains '='").invoke {
             CompoundBase("a=b")
         }
+        CheckArg.throws<IllegalArgumentException, _>(Unit,
+            "contains ':'").invoke {
+            CompoundBase("a:b")
+        }
         assertDoesNotThrow {
             CompoundBase("hello, it crowd?")
         }

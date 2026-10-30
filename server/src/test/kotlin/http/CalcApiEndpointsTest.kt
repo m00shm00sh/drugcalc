@@ -66,6 +66,53 @@ internal class CalcApiEndpointsTest {
                         assertTrue(vm.plotType == XYList.PlotType.BAR)
                     }
                 ))
+                add(Arguments.of("compound+transformer split by group",
+                    CheckArg.nothrow<CycleResult<XYList>, _>(CycleRequest(
+                                config = ProxyMap<Config>("tickDuration" to tick),
+                                cycle = listOf(
+                                    // compound group 0
+                                    CycleDescription(
+                                        compoundOrBlend = "anavar", dose = 100.0,
+                                        start = 0 * DAY, duration = 7 * DAY,
+                                        freqName = FrequencyName("every day"), group = 0
+                                    ),
+                                    // compound group 1 - identical except group
+                                    CycleDescription(
+                                        compoundOrBlend = "anavar", dose = 100.0,
+                                        start = 0 * DAY, duration = 7 * DAY,
+                                        freqName = FrequencyName("every day"), group = 1
+                                    ),
+                                    // transformer group 0
+                                    CycleDescription(
+                                        prefix = CycleDescription.PREFIX_TRANSFORMER,
+                                        compoundOrBlend = "anavar", variantOrTransformer = "median",
+                                        start = DAY, duration = DAY * 6,
+                                        freqName = FrequencyName("every other day"), group = 0
+                                    ),
+                                    // transformer group 1 - identical except group
+                                    CycleDescription(
+                                        prefix = CycleDescription.PREFIX_TRANSFORMER,
+                                        compoundOrBlend = "anavar", variantOrTransformer = "median",
+                                        start = DAY, duration = DAY * 6,
+                                        freqName = FrequencyName("every other day"), group = 1
+                                    )
+                                )
+                            )
+                    ) { xyl ->
+                        val it = requireNotNull(xyl.refineOrNull<XYList.OfDuration>()) {
+                            "unexpected XYList type"
+                        }
+                        assertSetsAreEqual(setOf("anavar", "1:anavar", "anavar:median", "1:anavar:median"), it.keys)
+                        val v0 = it["anavar"]!!
+                        assertTrue(v0.x.asSequence().zipWithNext { a, b -> (b - a) == tick }.all { it })
+                        val v1 = it["1:anavar"]!!
+                        assertTrue(v1.x.asSequence().zipWithNext { a, b -> (b - a) == tick }.all { it })
+                        val vm0 = it["anavar:median"]!!
+                        assertTrue(vm0.x.asSequence().zipWithNext { a, b -> (b - a) == 2 * DAY }.all { it })
+                        val vm1 = it["1:anavar:median"]!!
+                        assertTrue(vm1.x.asSequence().zipWithNext { a, b -> (b - a) == 2 * DAY }.all { it })
+                    }
+                ))
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.moshy.drugcalc.calc.calc
 
 import com.moshy.drugcalc.types.calccommand.*
+import com.moshy.drugcalc.types.calccommand.Config as CalcConfig
 import com.moshy.drugcalc.types.dataentry.CompoundBase
 import com.moshy.containers.circularIterator
 import kotlin.math.*
@@ -15,7 +16,7 @@ import kotlin.time.toDuration
  * @see Config
  * @throws IllegalArgumentException if a transformer is invalid
  */
-fun evaluateDecodedCycle(cycle: CycleCalculation, config: Config): CycleResult<XYList.OfRaw> {
+fun evaluateDecodedCycle(cycle: CycleCalculation, config: CalcConfig): CycleResult<XYList.OfRaw> {
     val (expandedCycles, lateHandling) = cycle
 
     val reducedCycles: Map<CompoundBase, List<Double>> =
@@ -43,7 +44,7 @@ fun evaluateDecodedCycle(cycle: CycleCalculation, config: Config): CycleResult<X
  * m: Map<String, List<Double>>, where the key is the active compound name and the value is a list where each index is
  * time past zero and the value at that index is the total dose at that time.
  */
-internal fun evaluateAndReduceCompoundCycles(cycles: List<DecodedCycle>, config: Config)
+internal fun evaluateAndReduceCompoundCycles(cycles: List<DecodedCycle>, config: CalcConfig)
 : Map<CompoundBase, List<Double>> {
     val allCycles: Map<CompoundBase, MutableList<OffsetList<Double>>> =
         buildMap {

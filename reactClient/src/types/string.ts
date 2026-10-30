@@ -22,3 +22,5 @@ export const AvailableVXsCacheSchema = z.object({ 'vx': zodStringsCacheSchema })
 export const AvailableFNsCacheSchema = z.object({ 'fn': zodStringsCacheSchema })
 
 export const zodStringBool = z.literal(['true', 'false'])
+
+export const zodNumberString = z.string().min(1).regex(/^(0|([1-9][0-9]*))$/, 'invalid number')

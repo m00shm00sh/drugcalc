@@ -152,6 +152,7 @@ describe('Calc', () => {
                 start: 'PT24H',
                 duration: 'PT2H',
                 freqName: 'f1',
+                group: 0,
             }],
             decode: 'PT24H',
         })
@@ -367,5 +368,194 @@ describe('Calc', () => {
         await findByText('Cycle')
         // Should not crash and should render with transformer prefix data
         await findByRole('button', {name: 'Evaluate'})
+    })
+
+    describe('group field', () => {
+        const groupOptions = (container: HTMLElement, row: number): string[] =>
+            Array.from(
+                container.querySelectorAll<HTMLOptionElement>(
+                    `select[name="cycle.${row}.group"] option`,
+                ),
+            ).map((o) => o.value)
+
+        const addRow = async (findByRole: (role: string, opts: object) => Promise<HTMLElement>) => {
+            const addBtn = (await findByRole('button', {name: 'Add item'})) as HTMLButtonElement
+            await act(async () => {
+                fireEvent.click(addBtn)
+            })
+        }
+
+        const changeField = (
+            container: HTMLElement,
+            row: number,
+            name: string,
+            value: string,
+        ) => {
+            const el = container.querySelector(
+                `[name="cycle.${row}.${name}"]`,
+            ) as HTMLInputElement | HTMLSelectElement
+            fireEvent.change(el, {target: {value}})
+        }
+
+        it('offers one group id per row and updates when a row is added', async () => {
+            window.history.pushState({}, '', '/')
+            mockAllCalcEndpoints()
+            const {findByText, findByRole, container} = render(<Calc />)
+            await findByText('Cycle')
+            await findByRole('button', {name: 'Evaluate'})
+
+            expect(groupOptions(container, 0)).toEqual(['0'])
+
+            await addRow(findByRole)
+
+            await waitFor(() => {
+                expect(groupOptions(container, 0)).toEqual(['0', '1'])
+            })
+            expect(groupOptions(container, 1)).toEqual(['0', '1'])
+        })
+
+        it('submits the selected group id for each row', async () => {
+            window.history.pushState({}, '', '/')
+            mockNextFetch({'f1': 'PT1H'})        // frequencies.w
+            mockNextFetch(['c1', 'c2'])          // compounds
+            mockNextFetch([])                    // blends
+            mockNextFetch(['t1'])                // transformer names
+            mockNextFetch(['tf1'])               // transformer frequencies
+            mockNextFetch(['v1'])                // variants for 'c1' (row 0)
+            mockNextFetch(['v2'])                // variants for 'c2' (row 1)
+            mockNextFetch({})                    // /api/calc response
+
+            const {findByText, findByRole, container} = render(<Calc />)
+            await findByText('Cycle')
+            await findByRole('button', {name: 'Evaluate'})
+
+            await addRow(findByRole)
+
+            await act(async () => {
+                changeField(container, 0, 'compoundOrBlend', 'c1')
+            })
+            await waitFor(() => {
+                expect(
+                    container.querySelector(
+                        'select[name="cycle.0.variantOrTransformer"] option[value="v1"]',
+                    ),
+                ).not.toBeNull()
+            })
+            fireEvent.change(
+                container.querySelector(
+                    'select[name="cycle.0.variantOrTransformer"]',
+                ) as HTMLSelectElement,
+                {target: {value: 'v1'}},
+            )
+
+            await act(async () => {
+                changeField(container, 1, 'compoundOrBlend', 'c2')
+            })
+            await waitFor(() => {
+                expect(
+                    container.querySelector(
+                        'select[name="cycle.1.variantOrTransformer"] option[value="v2"]',
+                    ),
+                ).not.toBeNull()
+            })
+            fireEvent.change(
+                container.querySelector(
+                    'select[name="cycle.1.variantOrTransformer"]',
+                ) as HTMLSelectElement,
+                {target: {value: 'v2'}},
+            )
+
+            // Put the first row in group 1; the second row stays in group 0.
+            fireEvent.change(
+                container.querySelector(
+                    'select[name="cycle.0.group"]',
+                ) as HTMLSelectElement,
+                {target: {value: '1'}},
+            )
+
+            for (const [row, dose] of [['0', '10'], ['1', '20']] as const) {
+                changeField(container, Number(row), 'dose', dose)
+                changeField(container, Number(row), 'start', '1d')
+                changeField(container, Number(row), 'duration', '2h')
+                changeField(container, Number(row), 'freqName', 'f1')
+            }
+
+            const btn = (await findByRole('button', {name: 'Evaluate'})) as HTMLButtonElement
+            await act(async () => {
+                fireEvent.click(btn)
+            })
+
+            const lastCall = fetchMock.mock.lastCall
+            expect(lastCall).not.toBeUndefined()
+            const body = JSON.parse((lastCall![1] as RequestInit).body as string)
+            expect(body.cycle).toEqual([
+                {
+                    compoundOrBlend: 'c1',
+                    variantOrTransformer: 'v1',
+                    dose: 10,
+                    start: 'PT24H',
+                    duration: 'PT2H',
+                    freqName: 'f1',
+                    group: 1,
+                },
+                {
+                    compoundOrBlend: 'c2',
+                    variantOrTransformer: 'v2',
+                    dose: 20,
+                    start: 'PT24H',
+                    duration: 'PT2H',
+                    freqName: 'f1',
+                    group: 0,
+                },
+            ])
+        })
+
+        it('writes group ids to the URL when the form is saved', async () => {
+            window.history.pushState({}, '', '/')
+            mockAllCalcEndpoints()
+            const {findByText, findByRole, container} = render(<Calc />)
+            await findByText('Cycle')
+            await findByRole('button', {name: 'Evaluate'})
+
+            await addRow(findByRole)
+            await waitFor(() => {
+                expect(groupOptions(container, 0)).toEqual(['0', '1'])
+            })
+
+            fireEvent.change(
+                container.querySelector(
+                    'select[name="cycle.0.group"]',
+                ) as HTMLSelectElement,
+                {target: {value: '1'}},
+            )
+
+            const saveBtn = (await findByRole('button', {name: 'Save form to URL'})) as HTMLButtonElement
+            await act(async () => {
+                fireEvent.click(saveBtn)
+            })
+
+            const params = new URLSearchParams(window.location.search)
+            expect(params.getAll('g')).toEqual(['1', '0'])
+        })
+
+        it('imports group ids from the query string', async () => {
+            window.history.pushState({}, '', '?cb=c1&cb=c2&d=10&d=20&s=1d&s=2d&t=2h&t=3h&fn=f1&fn=f1&g=0&g=1')
+            mockAllCalcEndpoints()
+            mockNextFetch(['v1']) // variants for 'c1'
+            mockNextFetch(['v2']) // variants for 'c2'
+            const {findByText, findByRole, container} = render(<Calc />)
+            await findByText('Cycle')
+            await findByRole('button', {name: 'Evaluate'})
+
+            const group0 = container.querySelector(
+                'select[name="cycle.0.group"]',
+            ) as HTMLSelectElement
+            const group1 = container.querySelector(
+                'select[name="cycle.1.group"]',
+            ) as HTMLSelectElement
+            expect(groupOptions(container, 0)).toEqual(['0', '1'])
+            expect(group0.value).toBe('0')
+            expect(group1.value).toBe('1')
+        })
     })
 })
