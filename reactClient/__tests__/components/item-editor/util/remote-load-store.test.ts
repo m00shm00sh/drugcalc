@@ -1,24 +1,24 @@
 import { describe, expect, it, jest } from '@jest/globals'
 
-import {
-    selectedItemsFromRemoteFormLoader,
-    selectedItemsToRemoteSender,
-    selectedItemsOnRemoteDeleter,
-} from '../../../../src/components/item-editor/util/remote-load-store'
-import { del, postJson } from '../../../../src/util/fetcher'
-import { awaitAllWithBackpressure } from '../../../../src/util/awaitAllWithBackpressure'
-
-jest.mock('../../../../src/util/fetcher', () => ({
+jest.unstable_mockModule('../../../../src/util/fetcher', () => ({
     del: jest.fn(),
     postJson: jest.fn(),
     NO_RESPONSE: Symbol('NO_RESPONSE'),
 }))
-jest.mock('../../../../src/util/awaitAllWithBackpressure', () => ({
+jest.unstable_mockModule('../../../../src/util/awaitAllWithBackpressure', () => ({
     awaitAllWithBackpressure: jest.fn(async (awaitables: readonly Promise<unknown>[]) =>
         Promise.all(awaitables)
     ),
     toAwaitable: jest.fn((o: any) => Promise.resolve(o)),
 }))
+
+const {
+    selectedItemsFromRemoteFormLoader,
+    selectedItemsToRemoteSender,
+    selectedItemsOnRemoteDeleter,
+} = await import('../../../../src/components/item-editor/util/remote-load-store')
+const { del, postJson } = await import('../../../../src/util/fetcher')
+const { awaitAllWithBackpressure } = await import('../../../../src/util/awaitAllWithBackpressure')
 
 const mockDel = del as any
 const mockPostJson = postJson as any

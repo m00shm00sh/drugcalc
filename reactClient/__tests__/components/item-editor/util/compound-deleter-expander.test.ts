@@ -1,16 +1,16 @@
 import { describe, expect, it, jest } from '@jest/globals'
 
-import { expandExpansionItems } from '../../../../src/components/item-editor/util/compound-deleter-expander'
-import { awaitAllWithBackpressure } from '../../../../src/util/awaitAllWithBackpressure'
-import { cachedRemoteVariantsOrNull } from '../../../../src/util/data-fetcher'
-
-jest.mock('../../../../src/util/awaitAllWithBackpressure', () => ({
+jest.unstable_mockModule('../../../../src/util/awaitAllWithBackpressure', () => ({
     awaitAllWithBackpressure: jest.fn(),
     toAwaitable: jest.fn(),
 }))
-jest.mock('../../../../src/util/data-fetcher', () => ({
+jest.unstable_mockModule('../../../../src/util/data-fetcher', () => ({
     cachedRemoteVariantsOrNull: jest.fn(),
 }))
+
+const { expandExpansionItems } = await import('../../../../src/components/item-editor/util/compound-deleter-expander')
+const { awaitAllWithBackpressure } = await import('../../../../src/util/awaitAllWithBackpressure')
+const { cachedRemoteVariantsOrNull } = await import('../../../../src/util/data-fetcher')
 
 const mockAwaitAll = awaitAllWithBackpressure as any
 const mockCachedRemoteVariantsOrNull = cachedRemoteVariantsOrNull as any
