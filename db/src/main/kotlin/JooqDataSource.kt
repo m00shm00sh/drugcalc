@@ -26,7 +26,7 @@ import org.jooq.impl.*
  *  ```
  */
 internal class JooqDataSource(
-    dataSource: HikariDataSource
+    private val dataSource: HikariDataSource
 ) : DataSourceDelegate {
     private val aJooq =
         PreferredIODispatcher().let { ioDisp ->
@@ -172,6 +172,10 @@ internal class JooqDataSource(
             )
                 { (f) -> FrequencyName(f) }
         }
+
+    override fun close() {
+        dataSource.close()
+    }
 }
 
 private fun inferDialectFromJdbcUrl(hikariConfig: HikariConfig) =
@@ -179,11 +183,8 @@ private fun inferDialectFromJdbcUrl(hikariConfig: HikariConfig) =
         when {
             /* Other DB engines are supported by Jooq but may require changing the DDL in the migration scripts, which
              * is undesirable.
-             * We will only concern ourselves with the immediate one and a possible successor should scaling to
-             * concurrent writes (i.e. multiple users) become necessary.
              * It is not a design priority to support R2DBC.
              */
-            startsWith("jdbc:sqlite:") -> SQLDialect.SQLITE
             startsWith("jdbc:postgres") -> SQLDialect.POSTGRES
             else -> throw IllegalArgumentException("unexpected jdbc url $this")
         }

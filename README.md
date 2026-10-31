@@ -11,8 +11,9 @@ This is a drug math calculator written in Kotlin that is spread among multiple m
   - caching is handled with [aedile]
 - db
   - database access layer; the current implementation uses [Jooq] for SQL queries,
-    [Flyway] for SQL migrations, [HikariCP] for SQL connection pooling, and
-    [SQLite] as the SQL engine
+    [HikariCP] for SQL connection pooling, and [PostgreSQL] as the SQL engine.
+    The migration files are stored in a [Flyway]-compatible manner and db/scripts/flyway.sh can launch Flyway for migrations.
+    The server reads `DB_URL` (host portion, e.g. `//localhost:5432/drugcalc`), `DB_USER`, and `DB_PASSWORD` from the environment.
 - server
   - HTTP server providing a REST interface to the calculator; the current implementation uses [Ktor] with plugins:
     - [ktor-routing] for route building
@@ -60,7 +61,7 @@ If the server starts successfully, you'll see the following output:
 [Jooq]: https://www.jooq.org/
 [Flyway]: https://www.red-gate.com/products/flyway/community/
 [HikariCP]: https://github.com/brettwooldridge/HikariCP
-[SQLite]: https://www.sqlite.org/
+[PostgreSQL]: https://www.postgresql.org/
 [aedile]: https://github.com/sksamuel/aedile
 [Ktor]: https://ktor.io/docs/home.html
 [ktor-routing]: https://start.ktor.io/p/routing

@@ -38,6 +38,9 @@ tasks.withType<Test>().configureEach {
     // Configure all test Gradle tasks to use JUnitPlatform.
     useJUnitPlatform()
 
+    // Pick up the Testcontainers database cleanup extension registered via ServiceLoader.
+    systemProperty("junit.jupiter.extensions.autodetection.enabled", "true")
+
     // Log information about all test results, not only the failed ones.
     testLogging {
         events(
