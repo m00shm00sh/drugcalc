@@ -7,7 +7,6 @@ import org.jetbrains.annotations.Blocking
 import org.jooq.*
 import org.jooq.exception.*
 import org.jooq.kotlin.coroutines.transactionCoroutine
-import org.sqlite.SQLiteException
 import java.sql.BatchUpdateException
 import java.sql.SQLException
 
@@ -138,10 +137,9 @@ private fun translateJooqException(t: DataAccessException): Throwable {
         return IllegalArgumentException("Database exception: ${t.message}", t.cause)
     val cause = t.cause
     if (cause is BatchUpdateException) {
-        val cause2 = checkNotNull(cause.cause as? SQLException)
-        // for sqlite, figure out if the bulk operation failed due to table constraint
-        // FIXME: adapt to postgres
-        if (cause2 is SQLiteException && cause2.errorCode == 19)
+        val cause2 = cause.cause as? SQLException
+        // SQLState class 23 = integrity constraint violation (standard SQL; PostgreSQL uses 23xxx)
+        if (cause2?.sqlState?.startsWith("23") == true)
             return IllegalArgumentException("Database exception during bulk op: ${t.message}", t.cause)
     }
     return IllegalStateException("Database exception: ${t.message}", t.cause)

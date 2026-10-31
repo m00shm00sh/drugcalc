@@ -6,9 +6,9 @@ group = "com.moshy.drugcalc.dbtest"
 version = "0.0.1"
 
 dependencies {
-    implementation(libs.flyway.core)
     api(libs.bundles.db.deps)
-    runtimeOnly(libs.sqlite)
+    implementation(libs.testcontainers.postgresql)
+    implementation(libs.junit.jupiter.api)
     implementation(project(":sharedLogic"))
     implementation(project(":sharedTypes"))
     implementation(project(":db"))
