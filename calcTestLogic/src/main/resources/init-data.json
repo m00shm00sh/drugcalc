@@ -1,0 +1,141 @@
+{
+  "compounds": {
+    "anavar": {
+      "halfLife": "10h"
+    },
+    "arimidex": {
+      "halfLife": "1.95d"
+    },
+    "halotestin": {
+      "halfLife": "7h"
+    },
+    "masteron=enanthate": {
+      "halfLife": "4.5d",
+      "pctActive": 0.7
+    },
+    "masteron=propionate": {
+      "halfLife": "0.8d",
+      "pctActive": 0.8
+    },
+    "testosterone=cypionate": {
+      "halfLife": "5d",
+      "pctActive": 0.69
+    },
+    "testosterone=decanoate": {
+      "halfLife": "7.5d",
+      "pctActive": 0.62
+    },
+    "testosterone=enanthate": {
+      "halfLife": "4.5d",
+      "pctActive": 0.7
+    },
+    "testosterone=isocaproate": {
+      "halfLife": "5.0d",
+      "pctActive": 0.72
+    },
+    "testosterone=phenylpropionate": {
+      "halfLife": "1.5d",
+      "pctActive": 0.66
+    },
+    "testosterone=propionate": {
+      "halfLife": "0.8d",
+      "pctActive": 0.8
+    },
+    "testosterone=suspension": {
+      "halfLife": "0.5d"
+    },
+    "testosterone=undecanoate": {
+      "halfLife": "20.9d",
+      "pctActive": 0.61
+    }
+  },
+  "blends": {
+    "sustanon 250": {
+      "components": {
+        "testosterone=propionate": 30.0,
+        "testosterone=phenylpropionate": 60.0,
+        "testosterone=isocaproate": 60.0,
+        "testosterone=decanoate": 100.0
+      }
+    }
+  },
+  "frequencies": {
+    "twice a day": {
+      "values": [
+        "0.5d"
+      ]
+    },
+    "every day": {
+      "values": [
+        "1d"
+      ]
+    },
+    "every other day": {
+      "values": [
+        "2d"
+      ]
+    },
+    "every 3 days": {
+      "values": [
+        "3d"
+      ]
+    },
+    "every 4 days": {
+      "values": [
+        "4d"
+      ]
+    },
+    "every 5 days": {
+      "values": [
+        "5d"
+      ]
+    },
+    "every 6 days": {
+      "values": [
+        "6d"
+      ]
+    },
+    "every 7 days": {
+      "values": [
+        "7d"
+      ]
+    },
+    "twice a week": {
+      "values": [
+        "3.5d"
+      ]
+    },
+    "monday-wednesday-friday": {
+      "values": [
+        "2d",
+        "2d",
+        "3d"
+      ]
+    },
+    "every week": {
+      "values": [
+        "7d"
+      ]
+    },
+    "every other week": {
+      "values": [
+        "14d"
+      ]
+    },
+    "every 3 weeks": {
+      "values": [
+        "21d"
+      ]
+    },
+    "every 4 weeks": {
+      "values": [
+        "28d"
+      ]
+    },
+    "every 5 weeks": {
+      "values": [
+        "35d"
+      ]
+    }
+  }
+}
