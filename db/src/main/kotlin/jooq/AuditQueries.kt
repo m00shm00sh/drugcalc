@@ -21,5 +21,6 @@ internal suspend inline fun <reified T : Comparable<T>, R : Record> AsyncJooq.ge
     return getNames(table, condition, nameColumns, ctor)
 }
 
-// jooq generates java.time.LocalDateTime for TIMESTAMP fields; for SQLite, it's known that's UTC
+// jOOQ generates java.time.LocalDateTime for TIMESTAMP fields. The connection is initialised with
+// `SET TIME ZONE 'UTC'`, so these values are UTC.
 private fun Instant.toJLocalDateTime() = toLocalDateTime(TimeZone.UTC).toJavaLocalDateTime()

@@ -8,8 +8,8 @@ import java.util.concurrent.Executor
 fun BoundThreadpoolDispatcher(nThreads: Int) =
     Dispatchers.Default.limitedParallelism(nThreads, "Exec-Threadpool")
 
-/* This wouldn't be too helpful for SQLite since the blocking happens in native code, which ties up a physical thread,
- * but if it becomes an actual issue, we've scaled past the point of using SQLite in the first place.
+/* This wouldn't be too helpful for JDBC calls since the blocking happens in native code, which ties up a physical
+ * thread, but if it becomes an actual issue, we've scaled past the point of using JDBC in the first place.
  */
 internal object VirtualThreadDispatcher : ExecutorCoroutineDispatcher() {
     override fun dispatch(context: CoroutineContext, block: Runnable) =

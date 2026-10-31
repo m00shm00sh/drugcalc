@@ -195,6 +195,9 @@ interface DataSourceDelegate {
     /** Get frequency names that were created or updated after some [timestamp]. */
     suspend fun getFrequencyNamesCreatedOrUpdatedAfterTimestamp(timestamp: Instant): ListAsSortedSet<FrequencyName>
 
+    /** Release any resources held by this delegate (for example, a connection pool). */
+    fun close() {}
+
     fun DataSourceDelegate.uoe(): Nothing = throw UnsupportedOperationException()
 
     @Suppress("JavaDefaultMethodsNotOverriddenByDelegation", "ClassName")

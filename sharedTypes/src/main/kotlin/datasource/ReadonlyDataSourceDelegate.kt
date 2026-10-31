@@ -18,6 +18,8 @@ import com.moshy.drugcalc.types.dataentry.FrequencyValue
 class ReadonlyDataSourceDelegate(
     private val delegate: DataSourceDelegate
 ) : DataSourceDelegate by delegate {
+    override fun close() = delegate.close()
+
     override suspend fun updateCompound(name: CompoundName, map: ProxyMap<CompoundInfo>): Boolean = uoe()
     override suspend fun updateCompounds(compounds: Map<CompoundName, ProxyMap<CompoundInfo>>): Boolean = uoe()
 

@@ -18,7 +18,8 @@ aedile-version = "2.1.2"
 flyway-version = "11.9.1"
 jooq-version = "3.20.5"
 hikaricp-version = "6.3.0"
-sqlite-version = "3.50.1.0"
+postgresql-version = "42.7.4"
+testcontainers-version = "1.21.4"
 
 r2-pem-keystore-version = "0.3"
 
@@ -70,7 +71,11 @@ flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway-versi
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp-version" }
 jooq = { module = "org.jooq:jooq", version.ref = "jooq-version" }
 jooq-kotlin-coroutines = { module = "org.jooq:jooq-kotlin-coroutines", version.ref = "jooq-version" }
-sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-version" }
+jooq-meta-extensions = { module = "org.jooq:jooq-meta-extensions", version.ref = "jooq-version" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql-version" }
+flyway-database-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway-version" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers-version" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit-version" }
 
 pem-keystore = { module = "io.r2:simple-pem-keystore", version.ref = "r2-pem-keystore-version" }
 
@@ -98,7 +103,7 @@ ktor-client = [ "ktor-client-core", "ktor-client-java",
 
 hoplite = [ "hoplite-core", "hoplite-datetime", "hoplite-hocon" ]
 
-db-deps = ["flyway-core", "jooq", "hikaricp", "jooq-kotlin-coroutines", "sqlite" ]
+db-deps = ["flyway-core", "flyway-database-postgresql", "jooq", "hikaricp", "jooq-kotlin-coroutines", "postgresql" ]
 
 
 [plugins]
@@ -106,5 +111,4 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }
 kotlin-plugin-dataframe = { id = "org.jetbrains.kotlin.plugin.dataframe", version.ref = "kotlin-version" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor-version" }
 kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin-version" }
-flyway = { id = "org.flywaydb.flyway", version.ref = "flyway-version" }
 jooq-codegen = { id = "org.jooq.jooq-codegen-gradle", version.ref = "jooq-version" }
