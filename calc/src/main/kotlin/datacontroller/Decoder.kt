@@ -1,5 +1,6 @@
 package com.moshy.drugcalc.calc.datacontroller
 
+import com.moshy.containers.circularIterator
 import com.moshy.drugcalc.calc.calc.*
 import com.moshy.drugcalc.types.calccommand.*
 import com.moshy.drugcalc.types.dataentry.*
@@ -18,6 +19,7 @@ class Decoder(
     transformerFreqs: Map<FrequencyName, FrequencyValue> = emptyMap()
 ) {
     private val tickDuration = config.tickDuration
+    private val cutoffMilligrams = config.cutoffMilligrams
 
     private val blendSums = names.blends.mapValues { (_, v) -> v.values.sum() }
 
@@ -62,10 +64,15 @@ class Decoder(
                             check(cName in names.compounds) {
                                 "the blend $name contains an unresolved compound $cName"
                             }
+                            val scale = cDose / blendSum
+                            val doseRamp = compoundOrTransformer.doseRamp?.let {
+                                RampedDose(it.addDose * scale, it.addFreqName)
+                            }
                             add(
                                 CycleDescriptionWithValidatedName(
                                     cName,
-                                    compoundOrTransformer.dose!! * (cDose / blendSum),
+                                    compoundOrTransformer.dose!! * scale,
+                                    doseRamp,
                                     compoundOrTransformer
                                 )
                             )
@@ -81,6 +88,7 @@ class Decoder(
                             CycleDescriptionWithValidatedName(
                                 cn,
                                 compoundOrTransformer.dose!!,
+                                compoundOrTransformer.doseRamp,
                                 compoundOrTransformer
                             )
                         )
@@ -91,22 +99,24 @@ class Decoder(
 
         // pass 2: decode compounds
         val decodedCycles = buildList {
-            for ((cName, dose, start, duration, fName) in expandedCycles) {
+            for ((cName, dose, start, duration, fName, doseRamp) in expandedCycles) {
                 // if this throws, some expansion transformation let an unvalidated compound name slip by
                 val cInfo = checkNotNull(names.compounds[cName]) {
                     "unresolved compound $cName"
                 }
-                val fVals = checkNotNull(names.frequencies[fName]) {
-                    "unresolved frequency $fName"
-                }
-                val (tcStart, tcDuration, tcFreqVals) = transcodeTimes(start, duration, fVals)
-                add(
-                    DecodedCycle(
-                        cName.compound.value,
-                        dose * cInfo.pctActive, cInfo.halfLife / tickDuration,
-                        tcStart, tcDuration, tcFreqVals
+                if (doseRamp == null) {
+                    val fVals = resolveFrequency(fName)
+                    val (tcStart, tcDuration, tcFreqVals) = transcodeTimes(start, duration, fVals)
+                    add(
+                        DecodedCycle(
+                            cName.compound.value,
+                            dose * cInfo.pctActive, cInfo.halfLife / tickDuration,
+                            tcStart, tcDuration, tcFreqVals
+                        )
                     )
-                )
+                } else {
+                    addAll(decodeRampedCycle(cName, dose, start, duration, fName, doseRamp, cInfo))
+                }
             }
         }
 
@@ -138,6 +148,101 @@ class Decoder(
         }
 
         return CycleCalculation(decodedCycles, decodedTransformerCycles)
+    }
+
+    private fun resolveFrequency(name: FrequencyName): FrequencyValue =
+        checkNotNull(names.frequencies[name] ?: names.frequencies[name.clean()]) {
+            "unresolved frequency $name"
+        }
+
+    /**
+     * Expand a ramped cycle into a list of constant-dose [DecodedCycle]s.
+     *
+     * The expansion preserves the original administration times: each run of consecutive
+     * administrations having the same dose becomes one [DecodedCycle] whose frequency values are
+     * the exact deltas between those administration times.
+     */
+    private fun decodeRampedCycle(
+        compoundName: CompoundName,
+        baseDose: Double,
+        start: Duration,
+        duration: Duration,
+        freqName: FrequencyName,
+        doseRamp: RampedDose,
+        cInfo: CompoundInfo,
+    ): List<DecodedCycle> {
+        val tcStart = start.transcode("start")
+        val tcDuration = duration.transcode("duration")
+        val freqTicks = resolveFrequency(freqName).mapIndexed { i, v ->
+            v.transcode("freqsVals[$i]")
+        }
+        val doseRampFreqTicks = resolveFrequency(doseRamp.addFreqName).mapIndexed { i, v ->
+            v.transcode("doseRamp.freqsVals[$i]")
+        }
+
+        val scaledBase = baseDose * cInfo.pctActive
+        val scaledAdd = doseRamp.addDose * cInfo.pctActive
+
+        // administration times, relative to start
+        val administrationTimes = buildList {
+            var t = 0
+            val freqIter = freqTicks.circularIterator()
+            while (t <= tcDuration) {
+                add(t)
+                t += freqIter.next()
+            }
+        }
+
+        data class Group(val k: Int, val times: MutableList<Int> = mutableListOf())
+
+        val groups = mutableListOf<Group>()
+        var completedIntervals = 0
+        var nextDoseRampBoundary = doseRampFreqTicks.first()
+        var doseRampFreqIdx = 0
+        for (t in administrationTimes) {
+            while (nextDoseRampBoundary <= t) {
+                ++completedIntervals
+                ++doseRampFreqIdx
+                nextDoseRampBoundary += doseRampFreqTicks[
+                    doseRampFreqIdx % doseRampFreqTicks.size
+                ]
+            }
+            val dose = scaledBase + completedIntervals * scaledAdd
+            // DecodedCycle requires a positive dose; compoundCycle cannot handle doses at or below cutoff.
+            if (dose <= cutoffMilligrams) {
+                // A nonpositive ramp step is monotonic, so once the dose reaches zero (or the
+                // cutoff) it can never become positive again. Stop instead of emitting
+                // zero/negative doses.
+                if (scaledAdd <= 0.0)
+                    break
+                continue
+            }
+            val last = groups.lastOrNull()
+            if (last != null && last.k == completedIntervals)
+                last.times.add(t)
+            else
+                groups.add(Group(completedIntervals).apply { times.add(t) })
+        }
+
+        val halfLife = cInfo.halfLife / tickDuration
+        return groups.map { group ->
+            val groupDose = scaledBase + group.k * scaledAdd
+            val groupStart = tcStart + group.times.first()
+            if (group.times.size == 1) {
+                // A single dose still needs a positive duration and frequency; [2] prevents a redose.
+                DecodedCycle(
+                    compoundName.compound.value, groupDose, halfLife,
+                    groupStart, 1, listOf(2)
+                )
+            } else {
+                DecodedCycle(
+                    compoundName.compound.value, groupDose, halfLife,
+                    groupStart,
+                    group.times.last() - group.times.first(),
+                    group.times.zipWithNext { a, b -> b - a }
+                )
+            }
+        }
     }
 
     private data class TranscodedDurations(
@@ -177,9 +282,16 @@ private data class CycleDescriptionWithValidatedName(
     val dose: Double,
     val start: Duration,
     val duration: Duration,
-    val freqName: FrequencyName
+    val freqName: FrequencyName,
+    val doseRamp: RampedDose?,
 ) {
-    constructor(compoundName: CompoundName, dose: Double, durations: CycleDescription)
-            : this(compoundName, dose, durations.start, durations.duration, durations.freqName)
+    constructor(
+        compoundName: CompoundName,
+        dose: Double,
+        doseRamp: RampedDose?,
+        durations: CycleDescription
+    ) : this(
+        compoundName, dose, durations.start, durations.duration, durations.freqName, doseRamp
+    )
 }
 

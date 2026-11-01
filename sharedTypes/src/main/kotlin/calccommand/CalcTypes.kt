@@ -90,6 +90,31 @@ object DecodeSpecSerializer : KSerializer<DecodeSpec> {
     }
 }
 
+/** A stepwise dose ramp.
+ *
+ * The dose administered at time `t` is `base + k * addDose`, where `k` is the number of completed
+ * [addFreqName] intervals at `t`. The first dose is the base dose.
+ *
+ * @property addDose amount to add per ramp interval, in milligrams; may be negative, but not zero
+ * @property addFreqName ramp interval frequency name; must exist in {frequencies}
+ *
+ * @throws IllegalArgumentException if values are invalid
+ */
+@Serializable
+data class RampedDose(
+    val addDose: Double,
+    val addFreqName: FrequencyName,
+) {
+    init {
+        require(addDose.isFinite()) {
+            "non-finite addDose"
+        }
+        require(addDose != 0.0) {
+            "zero addDose"
+        }
+    }
+}
+
 /** Describes a cycle of a compound.
  *
  * @property prefix optional prefix; see PREFIX_XXX
@@ -100,6 +125,7 @@ object DecodeSpecSerializer : KSerializer<DecodeSpec> {
  * @property duration duration
  * @property freqName frequency name; must exist in {frequencies}
  * @property group group number; must be nonnegative; defaults to 0
+ * @property doseRamp optional dose ramp; only valid for compounds and blends
  *
  * @throws IllegalArgumentException if values are invalid
  */
@@ -115,6 +141,7 @@ data class CycleDescription(
     val duration: Duration,
     val freqName: FrequencyName,
     val group: Int = 0,
+    val doseRamp: RampedDose? = null,
 ) {
     init {
         when (prefix) {
@@ -139,7 +166,11 @@ data class CycleDescription(
                 require(dose?.takeIf { it > 0.0 } != null) {
                     "missing or nonpositive dose"
                 }
-            PREFIX_TRANSFORMER -> {}
+            PREFIX_TRANSFORMER -> {
+                require(doseRamp == null) {
+                    "doseRamp not allowed for transformer"
+                }
+            }
         }
 
         require(!start.isNegative()) {

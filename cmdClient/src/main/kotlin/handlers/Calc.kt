@@ -8,6 +8,7 @@ import com.moshy.drugcalc.cmdclient.states.ForCalc
 import com.moshy.drugcalc.cmdclient.states.ForCalc.*
 import com.moshy.drugcalc.common.PreferredIODispatcher
 import com.moshy.drugcalc.types.calccommand.*
+import com.moshy.drugcalc.types.dataentry.FrequencyName
 import com.moshy.ProxyMap
 import com.moshy.containers.zipForEach
 import com.moshy.drugcalc.common.toTruthy
@@ -103,7 +104,7 @@ internal fun AppState.configureCalc(): Repl.EntryBuilder.() -> Unit = {
             }
         }
         this["add"] {
-            usage = "$name {flags=.b|.t}? cb=compound {vx=var|xfrm}? {d=dose}? s=time t=time fn=freqname {gr=group}"
+            usage = "$name {flags=.b|.t}? cb=compound {vx=var|xfrm}? {d=dose}? s=time t=time fn=freqname {dr=addDose@addFreq}? {gr=group}"
             help = "add cycle to list"
             handler = { (_, kw, _, out) ->
                 val data = parseCycleDescription(kw, null)
@@ -206,19 +207,38 @@ internal fun AppState.configureCalc(): Repl.EntryBuilder.() -> Unit = {
     }
 }
 
-private fun parseCycleDescription(kvToks: Map<String, String>, old: CycleDescription?): CycleDescription =
-    buildMap {
+internal fun parseCycleDescription(kvToks: Map<String, String>, old: CycleDescription?): CycleDescription {
+    val doseRampName = name(CycleDescription::doseRamp)
+    var doseRampTok: String? = null
+    val props = buildMap {
         kvToks.forEach { (k, v) ->
             val remapK = descriptionRemap[k] ?: throw IllegalArgumentException("unrecognized: $k")
-            this[remapK] = v
+            if (remapK == doseRampName) {
+                // the dose ramp is supplied as a single "<add-dose>@<add-frequency>" token
+                doseRampTok = v
+            } else {
+                this[remapK] = v
+            }
         }
-    }.let {
-        val map = ProxyMap.fromProps<CycleDescription>(it, module = WithLenientDuration)
-        if (old != null)
-            map.applyToObject(old)
-        else
-            map.createObject()
     }
+    val map = ProxyMap.fromProps<CycleDescription>(props, module = WithLenientDuration)
+    val cycle = if (old != null)
+        map.applyToObject(old)
+    else
+        map.createObject()
+    return doseRampTok?.let {
+        val at = it.indexOf('@')
+        require(at >= 0) {
+            "expected <add-dose>@<add-frequency>, got: $it"
+        }
+        cycle.copy(
+            doseRamp = RampedDose(
+                it.substring(0, at).toDouble(),
+                FrequencyName(it.substring(at + 1))
+            )
+        )
+    } ?: cycle
+}
 
 private fun ForCalc.checkForExpectedResult() =
     require (calcResult.isNotEmpty() || reqCycles.isEmpty()) {
@@ -394,7 +414,9 @@ private val descriptionRemap = mapOf(
     aliasName("freq", CycleDescription::freqName),
     id(name(CycleDescription::group)),
     aliasName("g", CycleDescription::group),
-    aliasName("gr", CycleDescription::group)
+    aliasName("gr", CycleDescription::group),
+    id(name(CycleDescription::doseRamp)),
+    aliasName("dr", CycleDescription::doseRamp),
 )
 
 private val renderVarRemap = mapOf(

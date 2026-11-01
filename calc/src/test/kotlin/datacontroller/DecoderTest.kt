@@ -165,6 +165,130 @@ internal class DecoderTest {
         assertEquals(expectedCalc, result[1])
     }
 
+    @Test
+    fun `testDecoder expands doseRamp into constant-dose groups`() {
+        val tick = C.CONFIG.tickDuration
+        val result = doDecode(
+            listOf(
+                CycleDescription(
+                    compoundOrBlend = "foo", variantOrTransformer = "bar", dose = 10.0,
+                    start = C.ZERO_DUR, duration = C.ONE_DAY * 7,
+                    freqName = FrequencyName("f1"),
+                    doseRamp = RampedDose(5.0, FrequencyName("f2"))
+                )
+            ),
+            C.CONFIG, C.DATA
+        )
+
+        val halfLife = durationToTicksF(C.COMPOUND_1.second.halfLife, tick)
+        val oneDay = durationToTicks(C.ONE_DAY, tick)
+        val twoDays = durationToTicks(C.ONE_DAY * 2, tick)
+        val base = 10.0 * C.C1_PCT_ACTIVE
+        val add = 5.0 * C.C1_PCT_ACTIVE
+        val expected = CycleCalculation(
+            compounds = listOf(
+                DecodedCycle("foo", base, halfLife, 0, oneDay, listOf(oneDay)),
+                DecodedCycle("foo", base + add, halfLife, twoDays, oneDay, listOf(oneDay)),
+                DecodedCycle("foo", base + 2 * add, halfLife, twoDays * 2, oneDay, listOf(oneDay)),
+                DecodedCycle("foo", base + 3 * add, halfLife, twoDays * 3, oneDay, listOf(oneDay)),
+            )
+        )
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun `testDecoder doseRamp down drops nonpositive doses`() {
+        val tick = C.CONFIG.tickDuration
+        val result = doDecode(
+            listOf(
+                CycleDescription(
+                    compoundOrBlend = "foo", variantOrTransformer = "bar", dose = 10.0,
+                    start = C.ZERO_DUR, duration = C.ONE_DAY * 7,
+                    freqName = FrequencyName("f1"),
+                    doseRamp = RampedDose(-10.0, FrequencyName("f1"))
+                )
+            ),
+            C.CONFIG, C.DATA
+        )
+
+        val expected = CycleCalculation(
+            compounds = listOf(
+                DecodedCycle(
+                    "foo", 10.0 * C.C1_PCT_ACTIVE,
+                    durationToTicksF(C.COMPOUND_1.second.halfLife, tick),
+                    0, 1, listOf(2)
+                )
+            )
+        )
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun `testDecoder doseRamp down stops before nonpositive dose`() {
+        val tick = C.CONFIG.tickDuration
+        val result = doDecode(
+            listOf(
+                CycleDescription(
+                    compoundOrBlend = "foo", variantOrTransformer = "bar", dose = 10.0,
+                    start = C.ZERO_DUR, duration = C.ONE_DAY * 8,
+                    freqName = FrequencyName("f1"),
+                    doseRamp = RampedDose(-3.0, FrequencyName("f2"))
+                )
+            ),
+            C.CONFIG, C.DATA
+        )
+
+        val halfLife = durationToTicksF(C.COMPOUND_1.second.halfLife, tick)
+        val oneDay = durationToTicks(C.ONE_DAY, tick)
+        val base = 10.0 * C.C1_PCT_ACTIVE
+        val add = -3.0 * C.C1_PCT_ACTIVE
+        val expected = CycleCalculation(
+            compounds = listOf(
+                DecodedCycle("foo", base, halfLife, 0, oneDay, listOf(oneDay)),
+                DecodedCycle("foo", base + add, halfLife, oneDay * 2, oneDay, listOf(oneDay)),
+                DecodedCycle("foo", base + 2 * add, halfLife, oneDay * 4, oneDay, listOf(oneDay)),
+                DecodedCycle("foo", base + 3 * add, halfLife, oneDay * 6, oneDay, listOf(oneDay)),
+            )
+        )
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun `testDecoder scales blend doseRamp by component share`() {
+        val tick = C.CONFIG.tickDuration
+        val result = doDecode(
+            listOf(
+                CycleDescription(
+                    prefix = CycleDescription.PREFIX_BLEND,
+                    compoundOrBlend = "fred",
+                    dose = 300.0,
+                    start = C.ZERO_DUR, duration = C.ONE_DAY * 3,
+                    freqName = FrequencyName("f1"),
+                    doseRamp = RampedDose(30.0, FrequencyName("f2"))
+                )
+            ),
+            C.CONFIG, C.DATA
+        )
+
+        val oneDay = durationToTicks(C.ONE_DAY, tick)
+        val twoDays = durationToTicks(C.ONE_DAY * 2, tick)
+        val halfLife1 = durationToTicksF(C.COMPOUND_1.second.halfLife, tick)
+        val halfLife3 = durationToTicksF(C.COMPOUND_3.second.halfLife, tick)
+        val base1 = 300.0 * (2.0 / 3) * C.C1_PCT_ACTIVE
+        val add1 = 30.0 * (2.0 / 3) * C.C1_PCT_ACTIVE
+        val base3 = 300.0 * (1.0 / 3)
+        val add3 = 30.0 * (1.0 / 3)
+        val expected = CycleCalculation(
+            compounds = listOf(
+                DecodedCycle("foo", base1, halfLife1, 0, oneDay, listOf(oneDay)),
+                DecodedCycle("foo", base1 + add1, halfLife1, twoDays, oneDay, listOf(oneDay)),
+                DecodedCycle("foo", base3, halfLife3, 0, oneDay, listOf(oneDay)),
+                DecodedCycle("foo", base3 + add3, halfLife3, twoDays, oneDay, listOf(oneDay)),
+            )
+        )
+        assertEquals(expected, result)
+    }
+
     data class DecoderP(
         val cycle: List<CycleDescription>,
         val config: Config = C.CONFIG,

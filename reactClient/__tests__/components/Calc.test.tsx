@@ -359,6 +359,78 @@ describe('Calc', () => {
         await findByRole('button', {name: 'Evaluate'})
     })
 
+    it('expands the ramp fields and submits them', async () => {
+        window.history.pushState({}, '', '/')
+        mockNextFetch({'f1': 'PT1H'})        // 1. frequencies.w
+        mockNextFetch(['c1', 'c2'])          // 2. compounds
+        mockNextFetch([])                    // 3. blends
+        mockNextFetch(['t1'])                // 4. transformer names
+        mockNextFetch(['tf1'])               // 5. transformer frequencies
+        mockNextFetch(['v1'])                // 6. variants for 'c1'
+        mockNextFetch({})                    // 7. /api/calc response
+
+        const {findByText, findByRole, container} = render(<Calc />)
+        await findByText('Cycle')
+        await findByRole('button', {name: 'Evaluate'})
+
+        const compoundSelect = container.querySelector('select[name="cycle.0.compoundOrBlend"]') as HTMLSelectElement
+        await act(async () => {
+            fireEvent.change(compoundSelect, {target: {value: 'c1'}})
+        })
+        await waitFor(() => {
+            expect(container.querySelector('select[name="cycle.0.variantOrTransformer"] option[value="v1"]')).not.toBeNull()
+        })
+
+        fireEvent.change(
+            container.querySelector('select[name="cycle.0.variantOrTransformer"]') as HTMLSelectElement,
+            {target: {value: 'v1'}},
+        )
+        fireEvent.change(container.querySelector('input[name="cycle.0.dose"]') as HTMLInputElement, {
+            target: {value: '10'},
+        })
+        fireEvent.change(container.querySelector('input[name="cycle.0.start"]') as HTMLInputElement, {
+            target: {value: '1d'},
+        })
+        fireEvent.change(container.querySelector('input[name="cycle.0.duration"]') as HTMLInputElement, {
+            target: {value: '2h'},
+        })
+        fireEvent.change(container.querySelector('select[name="cycle.0.freqName"]') as HTMLSelectElement, {
+            target: {value: 'f1'},
+        })
+
+        // The redose fields are hidden until the ramp checkbox is checked.
+        expect(container.querySelector('input[name="cycle.0.doseRampDose"]')).toBeNull()
+        const doseRampCheckbox = container.querySelector(
+            'input[name="cycle.0.doseRampEnabled"]',
+        ) as HTMLInputElement
+        expect(doseRampCheckbox).not.toBeNull()
+        await act(async () => {
+            fireEvent.click(doseRampCheckbox)
+        })
+        await waitFor(() => {
+            expect(container.querySelector('input[name="cycle.0.doseRampDose"]')).not.toBeNull()
+        })
+
+        fireEvent.change(container.querySelector('input[name="cycle.0.doseRampDose"]') as HTMLInputElement, {
+            target: {value: '5'},
+        })
+        fireEvent.change(
+            container.querySelector('select[name="cycle.0.doseRampFreqName"]') as HTMLSelectElement,
+            {target: {value: 'f1'}},
+        )
+
+        const btn = (await findByRole('button', {name: 'Evaluate'})) as HTMLButtonElement
+        await act(async () => {
+            fireEvent.click(btn)
+        })
+
+        const lastCall = fetchMock.mock.lastCall
+        expect(lastCall).not.toBeUndefined()
+        if (lastCall === undefined) throw new Error('expected a fetch call')
+        const body = JSON.parse((lastCall[1] as RequestInit).body as string)
+        expect(body.cycle[0].doseRamp).toEqual({addDose: 5, addFreqName: 'f1'})
+    })
+
     it('imports query string with transformer prefix', async () => {
         // Query string with prefix '.t' (encoded as 't')
         window.history.pushState({}, '', '?fl=t&cb=c1&d=10&s=1d&t=2h&fn=f1')
