@@ -392,6 +392,7 @@ private val descriptionRemap = mapOf(
     id(name(CycleDescription::freqName)),
     aliasName("fn", CycleDescription::freqName),
     aliasName("freq", CycleDescription::freqName),
+    id(name(CycleDescription::group)),
     aliasName("g", CycleDescription::group),
     aliasName("gr", CycleDescription::group)
 )
