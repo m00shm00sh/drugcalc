@@ -405,6 +405,9 @@ class DataController(
             try {
                 getVariantsForCompound(k)
             } catch (_: NoSuchElementException) {
+                // The loading cache remembers the failed load. Clear it so that a following write,
+                // which inserts the missing compound, can repopulate the cache.
+                compoundVariantsSearchCache.invalidate(k)
                 null
             }
         }
