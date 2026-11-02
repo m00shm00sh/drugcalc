@@ -11,7 +11,7 @@ import com.moshy.drugcalc.types.dataentry.CompoundName
 import com.moshy.drugcalc.types.dataentry.FrequencyName
 import com.moshy.drugcalc.types.dataentry.FrequencyValue
 import kotlin.time.Duration
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /** Delegate for abstracting away database connection implementation from database operations.
  *

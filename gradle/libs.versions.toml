@@ -1,24 +1,24 @@
 
 [versions]
-kotlin-version = "2.2.20"
-kx-serialization-version = "1.8.1"
-kx-datetime-version = "0.6.2"
-kx-coroutines-version = "1.10.2"
-kx-dataframe-version = "1.0.0-Beta2"
+kotlin-version = "2.4.21"
+kx-serialization-version = "1.12.0"
+kx-datetime-version = "0.8.0"
+kx-coroutines-version = "1.11.0"
+kx-dataframe-version = "1.0.0-rc02"
 kx-html-version = "0.12.0"
 
-ktor-version = "3.2.0"
+ktor-version = "3.6.1"
 
-slf4j-version = "2.0.17"
-logback-version = "1.5.18"
+slf4j-version = "2.0.20"
+logback-version = "1.6.6"
 
 hoplite-version = "2.9.0"
 aedile-version = "2.1.2"
 
-flyway-version = "11.9.1"
-jooq-version = "3.20.5"
-hikaricp-version = "6.3.0"
-postgresql-version = "42.7.4"
+flyway-version = "13.12.0"
+jooq-version = "3.21.9"
+hikaricp-version = "7.1.0"
+postgresql-version = "42.7.14"
 testcontainers-version = "1.21.4"
 
 r2-pem-keystore-version = "0.3"
@@ -29,7 +29,7 @@ kproxymap-version = "v0.14.0"
 kcontainers-version = "v0.8.0"
 krepl-version = "v0.9.0"
 
-junit-version = "5.13.1"
+junit-version = "6.1.3"
 
 
 [libraries]

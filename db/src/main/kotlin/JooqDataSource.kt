@@ -9,8 +9,8 @@ import com.moshy.drugcalc.types.dataentry.*
 import com.moshy.ProxyMap
 import com.moshy.containers.*
 import com.zaxxer.hikari.*
+import kotlin.time.Instant
 import kotlinx.coroutines.*
-import kotlinx.datetime.Instant
 import org.jooq.*
 import org.jooq.impl.*
 
