@@ -25,43 +25,125 @@ import { zodSuperRefinerForGroupIds } from './constrainGroupIds'
  * prettier's typescript handling butchers indentation of union types
  */
 
-const CycleDescriptionSharedSchema = z
-    .object({
-        compoundOrBlend: zodNonemptyStringSchema('select a compound or blend'),
-        start: zodDisplayDurationStringSchema,
-        duration: zodDisplayDurationStringSchema,
-        freqName: zodNonemptyStringSchema('select a frequency'),
-        group: zodNumberString
-    })
-    .extend(AvailableCBsCacheSchema.shape)
-    .extend(AvailableFNsCacheSchema.shape)
-    .extend(SelectableSchema.shape)
+type Prefix = "" | ".b" | ".t"
+
+const zodNonzeroFiniteNumberSchema = (what: string) =>
+    z.number({ error: `input a ${what}` })
+        .refine(Number.isFinite, { error: `${what} must be finite` })
+        .refine((v) => v !== 0, { error: `${what} must be nonzero` })
+
+const DoseRampSchema = z.object({
+    addDose: zodNonzeroFiniteNumberSchema('ramp dose'),
+    addFreqName: zodNonemptyStringSchema('select a ramp frequency'),
+})
+
+const CycleDescriptionSharedSchema = z.object({
+    compoundOrBlend: zodNonemptyStringSchema('select a compound or blend'),
+    start: zodDisplayDurationStringSchema,
+    duration: zodDisplayDurationStringSchema,
+    freqName: zodNonemptyStringSchema('select a frequency'),
+    group: z.number(),
+})
 
 export const CycleDescriptionSchema = z.union([
     CycleDescriptionSharedSchema.extend({
         // compound
-        prefix: z.literal(''),
+        prefix: z.literal('').optional(),
         variantOrTransformer: zodNonemptyStringSchema('select a variant or transformer').optional(),
         dose: zodPositiveNumberSchema('dose'),
-    })
-        .extend(AvailableVXsCacheSchema.shape),
+        doseRamp: DoseRampSchema.optional(),
+    }),
     CycleDescriptionSharedSchema.extend({
         // blend
         prefix: z.literal('.b'),
         dose: zodPositiveNumberSchema('dose'),
+        doseRamp: DoseRampSchema.optional(),
     }),
     CycleDescriptionSharedSchema.extend({
         // transformer
         prefix: z.literal('.t'),
         compoundOrBlend: zodNonemptyStringSchema('select a compound'),
         variantOrTransformer: zodNonemptyStringSchema('select a transformer'),
-    })
-        .extend(AvailableVXsCacheSchema.shape),
+    }),
 ])
 
-type Prefix = "" | ".b" | ".t"
-
 export type CycleDescription = z.infer<typeof CycleDescriptionSchema>
+
+const CalcRequestRowSharedSchema = z
+    .object({
+        compoundOrBlend: zodNonemptyStringSchema('select a compound or blend'),
+        start: zodDisplayDurationStringSchema,
+        duration: zodDisplayDurationStringSchema,
+        freqName: zodNonemptyStringSchema('select a frequency'),
+        group: zodNumberString,
+        doseRampEnabled: z.boolean().optional(),
+        doseRampDose: zodNonzeroFiniteNumberSchema('ramp dose').optional(),
+        doseRampFreqName: zodNonemptyStringSchema('select a ramp frequency').optional(),
+    })
+    .extend(AvailableCBsCacheSchema.shape)
+    .extend(AvailableFNsCacheSchema.shape)
+    .extend(SelectableSchema.shape)
+
+const validateDoseRamp = (
+    row: z.infer<typeof CalcRequestRowSharedSchema> & { prefix: Prefix },
+    ctx: z.core.$RefinementCtx,
+) => {
+    const hasDose = row.doseRampDose !== undefined
+    const hasFreq = row.doseRampFreqName !== undefined
+    if (hasDose !== hasFreq) {
+        ctx.addIssue({
+            code: 'custom',
+            path: ['doseRampDose'],
+            message: 'ramp dose and ramp frequency must be set together',
+        })
+    }
+    if (row.doseRampEnabled && (!hasDose || !hasFreq)) {
+        ctx.addIssue({
+            code: 'custom',
+            path: ['doseRampDose'],
+            message: 'ramp dose and ramp frequency are required',
+        })
+    } else if (!row.doseRampEnabled && (hasDose || hasFreq)) {
+        ctx.addIssue({
+            code: 'custom',
+            path: ['doseRampEnabled'],
+            message: 'enable the ramp to use a ramp dose',
+        })
+    }
+    if (row.prefix === '.t' && (row.doseRampEnabled || hasDose || hasFreq)) {
+        ctx.addIssue({
+            code: 'custom',
+            path: ['doseRampEnabled'],
+            message: 'ramp is not supported for transformers',
+        })
+    }
+}
+
+const CalcRequestRowSchema = z
+    .union([
+        CalcRequestRowSharedSchema.extend({
+            // compound
+            prefix: z.literal(''),
+            variantOrTransformer: zodNonemptyStringSchema('select a variant or transformer').optional(),
+            dose: zodPositiveNumberSchema('dose'),
+        })
+            .extend(AvailableVXsCacheSchema.shape),
+        CalcRequestRowSharedSchema.extend({
+            // blend
+            prefix: z.literal('.b'),
+            dose: zodPositiveNumberSchema('dose'),
+        }),
+        CalcRequestRowSharedSchema.extend({
+            // transformer
+            prefix: z.literal('.t'),
+            compoundOrBlend: zodNonemptyStringSchema('select a compound'),
+            variantOrTransformer: zodNonemptyStringSchema('select a transformer'),
+        })
+            .extend(AvailableVXsCacheSchema.shape),
+    ])
+    .superRefine(validateDoseRamp)
+
+export type CalcRequestRow = z.infer<typeof CalcRequestRowSchema>
 
 const extractCompoundsFromCycle = (rows: CycleDescription[]): string[] =>
     rows
@@ -80,10 +162,13 @@ const extractBlendsFromCycle = (rows: CycleDescription[]): string[] =>
         .filterDistinct()
 
 const extractFrequenciesFromCycle = (rows: CycleDescription[]): string[] =>
-    rows.map((e) => e.freqName).filterDistinct()
-
-const CalcRequestRowSchema = z.intersection(CycleDescriptionSchema, SelectableSchema)
-export type CalcRequestRow = z.infer<typeof CalcRequestRowSchema>
+    rows
+        .flatMap((e) =>
+            'doseRamp' in e && e.doseRamp
+                ? [e.freqName, e.doseRamp.addFreqName]
+                : [e.freqName],
+        )
+        .filterDistinct()
 
 export const prefixOptions = {
     compound: '',
@@ -122,22 +207,26 @@ export const calcRequestRowInit = (): CalcRequestRow =>
         duration: '',
         freqName: '',
         group: '0',
+        doseRampEnabled: false,
     }) as Partial<CalcRequestRow> as CalcRequestRow
 
 export const cycleFieldsToCycleDescription = (fields: CalcRequestRow[]): CycleDescription[] =>
     fields.map((e) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { selected, cb, fn, ...d } = {
+        const { selected, cb, fn, doseRampEnabled, doseRampDose, doseRampFreqName, ...d } = {
             ...e,
             start: displayToIso8601(e.start),
             duration: displayToIso8601(e.duration),
             group: Number(e.group)
         }
-        stripIf(d.prefix === '.t', d, 'dose')
-        stripIf(d.prefix === '.b', d, 'variantOrTransformer')
-        stripIf(d.prefix === '', d, 'prefix')
-        stripIf('vx' in d, d, 'vx')
-        return d as unknown as CycleDescription
+        const out = { ...d } as Record<string, unknown>
+        stripIf(out.prefix === '.t', out, 'dose')
+        stripIf(out.prefix === '.b', out, 'variantOrTransformer')
+        stripIf(out.prefix === '', out, 'prefix')
+        stripIf('vx' in out, out, 'vx')
+        if (doseRampEnabled && doseRampDose !== undefined && doseRampFreqName !== undefined)
+            out.doseRamp = { addDose: doseRampDose, addFreqName: doseRampFreqName }
+        return out as unknown as CycleDescription
     })
 
 const Q_FLAGS = 'fl'
@@ -148,6 +237,8 @@ const Q_START = 's'
 const Q_DURATION = 't'
 const Q_FREQ_NAME = 'fn'
 const Q_GROUP_ID = 'g'
+const Q_DOSE_RAMP_DOSE = 'rd'
+const Q_DOSE_RAMP_FREQ_NAME = 'rfn'
 
 const encodeFlag = (fl: Prefix | undefined): string => {
     switch (fl) {
@@ -179,6 +270,8 @@ export const importRowsFromQueryString = (q: URLSearchParams): CalcRequestRow[] 
     const qT = q.getAll(Q_DURATION)
     const qFN = q.getAll(Q_FREQ_NAME)
     const qG = q.getAll(Q_GROUP_ID)
+    const qRD = q.getAll(Q_DOSE_RAMP_DOSE)
+    const qRFN = q.getAll(Q_DOSE_RAMP_FREQ_NAME)
 
     const qCBlen = qCB.length
     const checkLen = (qTok: string[], qNam: string) => {
@@ -192,10 +285,20 @@ export const importRowsFromQueryString = (q: URLSearchParams): CalcRequestRow[] 
     checkLen(qT, Q_DURATION)
     checkLen(qFN, Q_FREQ_NAME)
     if (qG.length > 0) checkLen(qG, Q_GROUP_ID)
+    // ramp params are optional as a pair; if either is present, both must be per-row
+    if (qRD.length > 0 || qRFN.length > 0) {
+        checkLen(qRD, Q_DOSE_RAMP_DOSE)
+        checkLen(qRFN, Q_DOSE_RAMP_FREQ_NAME)
+    }
 
     const rows: CalcRequestRow[] = []
     for (let i = 0; i < qCBlen; ++i) {
         const fl = decodeFlag(qFL[i])
+        const doseRampDose = qRD[i] ?? ''
+        const doseRampFreqName = qRFN[i] ?? ''
+        if ((doseRampDose === '') !== (doseRampFreqName === ''))
+            throw Error(`ramp params must both be set or both be empty for row ${i}`)
+        const hasDoseRamp = doseRampDose !== ''
         rows.push({
             prefix: fl,
             compoundOrBlend: qCB[i],
@@ -204,7 +307,10 @@ export const importRowsFromQueryString = (q: URLSearchParams): CalcRequestRow[] 
             start: qS[i],
             duration: qT[i],
             freqName: qFN[i],
-            group: qG[i] ?? '0'
+            group: qG[i] ?? '0',
+            doseRampEnabled: hasDoseRamp,
+            doseRampDose: hasDoseRamp ? Number(doseRampDose) : undefined,
+            doseRampFreqName: hasDoseRamp ? doseRampFreqName : undefined,
         })
     }
     // components/Calc's form validator will validate these values
@@ -225,6 +331,14 @@ export const exportRowsToQueryString = (rows: readonly CalcRequestRow[]): URLSea
         q.append(Q_DURATION, r.duration)
         q.append(Q_FREQ_NAME, r.freqName)
         q.append(Q_GROUP_ID, r.group)
+        q.append(
+            Q_DOSE_RAMP_DOSE,
+            r.doseRampEnabled && r.doseRampDose !== undefined ? r.doseRampDose.toString() : '',
+        )
+        q.append(
+            Q_DOSE_RAMP_FREQ_NAME,
+            r.doseRampEnabled && r.doseRampFreqName !== undefined ? r.doseRampFreqName : '',
+        )
     }
     return q
 }

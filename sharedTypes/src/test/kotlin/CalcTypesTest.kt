@@ -4,6 +4,7 @@ import com.moshy.drugcalc.types.calccommand.Config
 import com.moshy.drugcalc.types.calccommand.CycleDescription
 import com.moshy.drugcalc.types.calccommand.CycleResult
 import com.moshy.drugcalc.types.calccommand.DecodeSpec
+import com.moshy.drugcalc.types.calccommand.RampedDose
 import com.moshy.drugcalc.types.calccommand.XYList
 import com.moshy.drugcalc.types.dataentry.*
 import org.junit.jupiter.api.Assertions.*
@@ -271,5 +272,79 @@ internal class CalcTypesTest {
             freqName = FrequencyName("every day")
         )
         assertEquals(0, cycle.group)
+    }
+
+    @Test
+    fun `RampedDose accepts positive and negative addDose`() {
+        assertDoesNotThrow {
+            RampedDose(5.0, FrequencyName("every week"))
+            RampedDose(-5.0, FrequencyName("every week"))
+        }
+    }
+
+    @Test
+    fun `RampedDose rejects zero addDose`() {
+        val ex = assertThrows<IllegalArgumentException> {
+            RampedDose(0.0, FrequencyName("every week"))
+        }
+        assertEquals("zero addDose", ex.message)
+    }
+
+    @Test
+    fun `RampedDose rejects non-finite addDose`() {
+        assertAll(
+            {
+                val ex = assertThrows<IllegalArgumentException> {
+                    RampedDose(Double.NaN, FrequencyName("every week"))
+                }
+                assertEquals("non-finite addDose", ex.message)
+            },
+            {
+                val ex = assertThrows<IllegalArgumentException> {
+                    RampedDose(Double.POSITIVE_INFINITY, FrequencyName("every week"))
+                }
+                assertEquals("non-finite addDose", ex.message)
+            }
+        )
+    }
+
+    @Test
+    fun `CycleDescription accepts doseRamp for compound and blend`() {
+        val doseRamp = RampedDose(5.0, FrequencyName("every week"))
+        assertDoesNotThrow {
+            CycleDescription(
+                compoundOrBlend = "testosterone",
+                dose = 100.0,
+                start = Duration.ZERO,
+                duration = 7.0.toDuration(DurationUnit.DAYS),
+                freqName = FrequencyName("every day"),
+                doseRamp = doseRamp
+            )
+            CycleDescription(
+                prefix = CycleDescription.PREFIX_BLEND,
+                compoundOrBlend = "sustanon 250",
+                dose = 1.0,
+                start = Duration.ZERO,
+                duration = 7.0.toDuration(DurationUnit.DAYS),
+                freqName = FrequencyName("every day"),
+                doseRamp = doseRamp
+            )
+        }
+    }
+
+    @Test
+    fun `CycleDescription rejects doseRamp for transformer`() {
+        val ex = assertThrows<IllegalArgumentException> {
+            CycleDescription(
+                prefix = CycleDescription.PREFIX_TRANSFORMER,
+                compoundOrBlend = "ligma",
+                variantOrTransformer = "median",
+                start = Duration.ZERO,
+                duration = 7.0.toDuration(DurationUnit.DAYS),
+                freqName = FrequencyName("every day"),
+                doseRamp = RampedDose(5.0, FrequencyName("every week"))
+            )
+        }
+        assertEquals("doseRamp not allowed for transformer", ex.message)
     }
 }

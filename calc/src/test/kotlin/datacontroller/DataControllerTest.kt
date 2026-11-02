@@ -1,6 +1,7 @@
 package com.moshy.drugcalc.calc.datacontroller
 
 import com.moshy.drugcalc.types.calccommand.CycleDescription
+import com.moshy.drugcalc.types.calccommand.RampedDose
 import com.moshy.drugcalc.types.dataentry.*
 import com.moshy.drugcalc.types.datasource.*
 import com.moshy.containers.*
@@ -54,7 +55,8 @@ internal class DataControllerTest {
                 dose = 1.0,
                 start = t1,
                 duration = t1,
-                freqName = FrequencyName("every day")
+                freqName = FrequencyName("every day"),
+                doseRamp = RampedDose(0.5, FrequencyName("every 3 days"))
             ),
             CycleDescription(
                 prefix = CycleDescription.PREFIX_BLEND,
@@ -88,6 +90,7 @@ internal class DataControllerTest {
         val fNames = setOf(
             FrequencyName("every day"),
             FrequencyName("every other day"),
+            FrequencyName("every 3 days"),
             FrequencyName("every week"),
         )
         val data = resolveNamesForCycle(cycle)

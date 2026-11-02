@@ -105,7 +105,7 @@ const CycleDescriptionEditorRow = ({
                 rowError && 'invalid'
             )}
         >
-            <Grid colSpec="nc-5" auxClasses={['gap-2', 'justify-items-center']}>
+            <Grid colSpec="nc-6" auxClasses={['gap-2', 'justify-items-center']}>
                 <FormInput
                     type="checkbox"
                     label=" "
@@ -144,6 +144,9 @@ const CycleDescriptionEditorRow = ({
                                 if (curRow.prefix === '.t')
                                     curRow.vx = await cachedTransformerNames()
                                 curRow.fn = [...curRow.fn, ...await cachedTransformerFrequencies()]
+                                stripIf('doseRampEnabled' in curRow, curRow, 'doseRampEnabled')
+                                stripIf('doseRampDose' in curRow, curRow, 'doseRampDose')
+                                stripIf('doseRampFreqName' in curRow, curRow, 'doseRampFreqName')
                                 break
                         }
                         update(curRow)
@@ -202,6 +205,41 @@ const CycleDescriptionEditorRow = ({
                     name={`${row}.freqName`}
                     optionValues={getOrElse(curRow, 'fn', [])}
                 />
+                {curRow.prefix !== '.t' && (
+                    <FormInput
+                        type="checkbox"
+                        label="dose ramp"
+                        blockClasses={['row-2', 'col-6']}
+                        name={`${row}.doseRampEnabled`}
+                        onChange={(e) => {
+                            const enabled = e.currentTarget.checked
+                            curRow.doseRampEnabled = enabled
+                            if (!enabled) {
+                                curRow.doseRampDose = undefined
+                                curRow.doseRampFreqName = undefined
+                            }
+                            update({ ...curRow })
+                        }}
+                    />
+                )}
+                {curRow.prefix !== '.t' && curRow.doseRampEnabled && (
+                    <>
+                        <FormInput
+                            label="dose ramp amount"
+                            placeholder="dose ramp (mg)"
+                            blockClasses={['row-3', 'col-1']}
+                            name={`${row}.doseRampDose`}
+                            type="number"
+                            step={0.0001}
+                        />
+                        <FormSelectWithOptions
+                            blockClasses={['row-3', 'col-2']}
+                            label="dose ramp frequency"
+                            name={`${row}.doseRampFreqName`}
+                            optionValues={getOrElse(curRow, 'fn', [])}
+                        />
+                    </>
+                )}
             </Grid>
         </fieldset>
     )

@@ -188,12 +188,14 @@ class DataController(
                         .clean()
                         .let(cNames::add)
                     c.freqName.clean().let(fNames::add)
+                    c.doseRamp?.addFreqName?.clean()?.let(fNames::add)
                 }
                 CycleDescription.PREFIX_BLEND -> {
                     BlendName(c.compoundOrBlend)
                         .clean()
                         .let(bNames::add)
                     c.freqName.clean().let(fNames::add)
+                    c.doseRamp?.addFreqName?.clean()?.let(fNames::add)
                 }
                 CycleDescription.PREFIX_TRANSFORMER -> {
                     c.freqName.clean().let(xfrmFreqNames::add)
