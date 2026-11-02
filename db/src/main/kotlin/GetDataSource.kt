@@ -9,7 +9,8 @@ import org.flywaydb.core.Flyway
 
 fun getDataSource(c: DBConfig): DataSourceDelegate {
     val jdbcUrl = "jdbc:${c.driver}:${c.url}"
-    runMigrations(jdbcUrl, c.user, c.password)
+    if (c.runMigrationsOnConfig)
+        runMigrations(jdbcUrl, c.user, c.password)
     val config = HikariConfig().apply {
         this.jdbcUrl = jdbcUrl
         if (c.user != null)

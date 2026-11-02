@@ -8,4 +8,5 @@ data class DBConfig(
     val password: String? = null,
     val maxPoolSize: Int? = null,
     val connectTimeout: Long? = null,
+    val runMigrationsOnConfig: Boolean = false
 )

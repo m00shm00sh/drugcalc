@@ -49,6 +49,7 @@ internal object TestPostgres {
                 url = "//${container.host}:${container.getMappedPort(PORT)}/$name",
                 user = USER,
                 password = PASSWORD,
+                runMigrationsOnConfig = true
             )
         )
         live.add(LiveDb(name, source))
