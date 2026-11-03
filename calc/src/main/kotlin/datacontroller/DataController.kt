@@ -137,7 +137,7 @@ class DataController(
             }
     }
 
-    private suspend inline fun <K, V : Comparable<V>> paginatingGetter(
+    private suspend inline fun <K : Any, V : Comparable<V>> paginatingGetter(
         cache: OneToManyLoadingCache<K, V>,
         name: K,
         paginationSpecifier: PaginationSpecifier<V>? = null

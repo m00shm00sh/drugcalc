@@ -1,3 +1,3 @@
 plugins {
-    id("dev.panuszewski.typesafe-conventions") version "0.7.3"
+    id("dev.panuszewski.typesafe-conventions") version "0.12.1"
 }
