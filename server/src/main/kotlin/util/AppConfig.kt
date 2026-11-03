@@ -32,6 +32,8 @@ internal object AppConfig {
     ) {
         data class Limits(
             val requestBodyLimit: Long = (1L shl 20), // 1 MiB
+            val rateLimitNum: Int = 10,
+            val rateLimitTime: Duration = 1.toDuration(DurationUnit.SECONDS)
         )
         data class Bind(
             val host: String,
