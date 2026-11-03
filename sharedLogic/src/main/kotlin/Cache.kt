@@ -6,7 +6,7 @@ import com.sksamuel.aedile.core.*
 import com.sksamuel.aedile.core.LoadingCache as AeLoadingCache
 import kotlin.time.Duration
 
-fun <K, V> newCache(policy: CacheEvictionPolicy) =
+fun <K : Any, V> newCache(policy: CacheEvictionPolicy) =
     Caffeine
         .newBuilder()
         .apply { policy.accessTime?.let(::expireAfterAccess) }
@@ -15,7 +15,7 @@ fun <K, V> newCache(policy: CacheEvictionPolicy) =
 
 typealias LoadingCache<K, V> = AeLoadingCache<K, V>
 
-fun <K, V> newLoadingCache(
+fun <K : Any, V> newLoadingCache(
     policy: CacheEvictionPolicy,
     compute: suspend (K) -> V
 ): LoadingCache<K, V> =

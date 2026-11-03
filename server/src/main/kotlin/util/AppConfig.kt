@@ -71,11 +71,20 @@ internal object AppConfig {
         val jwt: Jwt,
     )
 
+	/* In Hoplite v3:
+	 * Matching config keys against each implementation is deprecated, because the result can be
+	 * unexpected when multiple config sources, for example config files and environment variables,
+	 * are merged. Calling `withExplicitSealedTypes()` on the `ConfigLoaderBuilder` instead
+	 * requires the config to name the implementation of each sealed type explicitly, and loading
+	 * fails if it doesn't.
+	 */
+    @OptIn(ExperimentalHoplite::class)
     fun config(args: Array<String>) =
         ConfigLoaderBuilder.default()
             .addCommandLineSource(args, prefix = "-D")
             .addResourceSource("/application.conf")
             .addFileSource("application.conf", optional = true)
+            .withExplicitSealedTypes()
             .build()
             .loadConfigOrThrow<App>()
 }
