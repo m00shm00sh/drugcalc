@@ -51,10 +51,10 @@ class DataController(
 
     private suspend fun updateCompoundsSearchCacheOnModify(compounds: Collection<CompoundName>, isDel: Boolean) {
         val cVariantsToModify = buildMap {
-            for (c in compounds) {
-                getOrPut(c.compound) { mutableSetOf() }.apply {
-                    if (c.variant.isNotEmpty())
-                        add(c.variant)
+            for ((compound, variant) in compounds) {
+                getOrPut(compound) { mutableSetOf() }.apply {
+                    if (variant.isNotEmpty())
+                        add(variant)
                 }
             }
         }
@@ -181,24 +181,24 @@ class DataController(
             )
         }
 
-        for (c in cycle) {
-            when (c.prefix) {
+        for ((prefix, compoundOrBlend, variantOrTransformer, _, _, _, freqName, _, doseRamp) in cycle) {
+            when (prefix) {
                 CycleDescription.PREFIX_COMPOUND -> {
-                    CompoundName(CompoundBase(c.compoundOrBlend), c.variantOrTransformer)
+                    CompoundName(CompoundBase(compoundOrBlend), variantOrTransformer)
                         .clean()
                         .let(cNames::add)
-                    c.freqName.clean().let(fNames::add)
-                    c.doseRamp?.addFreqName?.clean()?.let(fNames::add)
+                    freqName.clean().let(fNames::add)
+                    doseRamp?.addFreqName?.clean()?.let(fNames::add)
                 }
                 CycleDescription.PREFIX_BLEND -> {
-                    BlendName(c.compoundOrBlend)
+                    BlendName(compoundOrBlend)
                         .clean()
                         .let(bNames::add)
-                    c.freqName.clean().let(fNames::add)
-                    c.doseRamp?.addFreqName?.clean()?.let(fNames::add)
+                    freqName.clean().let(fNames::add)
+                    doseRamp?.addFreqName?.clean()?.let(fNames::add)
                 }
                 CycleDescription.PREFIX_TRANSFORMER -> {
-                    c.freqName.clean().let(xfrmFreqNames::add)
+                    freqName.clean().let(xfrmFreqNames::add)
                 }
             }
         }

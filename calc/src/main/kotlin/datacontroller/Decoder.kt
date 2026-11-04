@@ -225,10 +225,10 @@ class Decoder(
         }
 
         val halfLife = cInfo.halfLife / tickDuration
-        return groups.map { group ->
-            val groupDose = scaledBase + group.k * scaledAdd
-            val groupStart = tcStart + group.times.first()
-            if (group.times.size == 1) {
+        return groups.map { (k, times) ->
+            val groupDose = scaledBase + k * scaledAdd
+            val groupStart = tcStart + times.first()
+            if (times.size == 1) {
                 // A single dose still needs a positive duration and frequency; [2] prevents a redose.
                 DecodedCycle(
                     compoundName.compound.value, groupDose, halfLife,
@@ -238,8 +238,8 @@ class Decoder(
                 DecodedCycle(
                     compoundName.compound.value, groupDose, halfLife,
                     groupStart,
-                    group.times.last() - group.times.first(),
-                    group.times.zipWithNext { a, b -> b - a }
+                    times.last() - times.first(),
+                    times.zipWithNext { a, b -> b - a }
                 )
             }
         }
