@@ -536,7 +536,7 @@ private fun ForData.handleImport(paginate: Paginator) = withRepl { repl, (pos, k
     }
 }
 
-private fun <K, V> checkImport(
+internal fun <K, V> checkImport(
     existing: Map<K, V>,
     name: String,
     otherConflictKeys: Set<K> = emptySet(),
@@ -548,7 +548,7 @@ private fun <K, V> checkImport(
     }
 // ugly and type-unsafe to use the base class for the generic params but there's no cleaner solution
 @JvmName($$"checkImport$Mutable")
-private fun checkImport(
+internal fun checkImport(
     existing: MutableMap<Comparable<*>, *>,
     name: String,
     otherConflictKeys: Set<Comparable<*>> = emptySet(),
@@ -560,7 +560,7 @@ private fun checkImport(
         a.putAll(b)
         a
     }
-private fun <K, V> checkImport(
+internal fun <K, V> checkImport(
     existing: Map<K, V>,
     name: String,
     otherConflictKeys: Set<K> = emptySet(),
@@ -700,7 +700,7 @@ private suspend fun Data.pushRemote(app: AppState): String {
     }
 }
 
-private fun Set<CompoundName>.reshapeByBaseAndVariant(): Map<CompoundBase, Set<String>> =
+internal fun Set<CompoundName>.reshapeByBaseAndVariant(): Map<CompoundBase, Set<String>> =
     buildMap<CompoundBase, MutableSet<String>> {
         this@reshapeByBaseAndVariant.forEach { k ->
             require(!k.selectAllVariants) {
@@ -709,7 +709,7 @@ private fun Set<CompoundName>.reshapeByBaseAndVariant(): Map<CompoundBase, Set<S
             getOrPut(k.compound) { mutableSetOf() }.add(k.variant)
         }
     }
-private fun <V> Map<CompoundName, V>.reshapeByBaseAndVariant(): Map<CompoundBase, Map<String, V>> =
+internal fun <V> Map<CompoundName, V>.reshapeByBaseAndVariant(): Map<CompoundBase, Map<String, V>> =
     buildMap<CompoundBase, MutableMap<String, V>> {
         this@reshapeByBaseAndVariant.forEach { (k, v) ->
             require(!k.selectAllVariants) {
@@ -719,13 +719,13 @@ private fun <V> Map<CompoundName, V>.reshapeByBaseAndVariant(): Map<CompoundBase
         }
     }
 
-private fun LinesBuilder.appendData(d: Data, indent: Int = 0) {
+internal fun LinesBuilder.appendData(d: Data, indent: Int = 0) {
     appendCompoundsMap(d.compounds.keys.reshapeByBaseAndVariant(), "compounds", indent)
     appendSet(d.blends.keys, "blends", indent)
     appendSet(d.frequencies.keys, "frequencies", indent)
 }
 
-private fun LinesBuilder.appendDataSummary(d: Data, indent: Int = 0) {
+internal fun LinesBuilder.appendDataSummary(d: Data, indent: Int = 0) {
     val tabs = "\t".repeat(indent)
     val entries = listOf(
         "compound entries" to d.compounds.size,
@@ -793,7 +793,7 @@ private val compoundInfoRemap = mapOf(
     aliasName("n", CompoundInfo::note),
 )
 
-private fun Map<String, String>.toCompoundUpdater(): ProxyMap<CompoundInfo> =
+internal fun Map<String, String>.toCompoundUpdater(): ProxyMap<CompoundInfo> =
     this.let { m ->
         buildMap {
             m["halfLife"]?.let { put("halfLife", Duration.parse(it)) }
@@ -810,7 +810,7 @@ private fun <R> io(func: (String) -> R): suspend (String) -> R = {
     }
 }
 
-private fun dataApiBase(s: String?) =
+internal fun dataApiBase(s: String?) =
     if (s != null) "/api/data/$s"
     else "/api/data/"
 
@@ -818,7 +818,7 @@ private const val COMPOUNDS = "compounds"
 private const val BLENDS = "blends"
 private const val FREQS = "frequencies"
 
-private fun apiLink(cn: CompoundName?): String {
+internal fun apiLink(cn: CompoundName?): String {
     if (cn == null) return dataApiBase(COMPOUNDS)
     val cbv = cn.compound.value.encode()
     if (cn.selectAllVariants)
@@ -827,13 +827,13 @@ private fun apiLink(cn: CompoundName?): String {
     return dataApiBase("$COMPOUNDS/$cbv/$variant")
 }
 
-private fun apiLink(bn: BlendName?): String {
+internal fun apiLink(bn: BlendName?): String {
     if (bn == null) return dataApiBase(BLENDS)
     val bnv = bn.value.encode()
     return dataApiBase("$BLENDS/$bnv")
 }
 
-private fun apiLink(fn: FrequencyName?): String {
+internal fun apiLink(fn: FrequencyName?): String {
     if (fn == null) return dataApiBase(FREQS)
     val fnv = fn.value.encode()
     return dataApiBase("$FREQS/$fnv")
