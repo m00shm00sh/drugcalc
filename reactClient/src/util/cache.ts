@@ -9,7 +9,7 @@ type InvalidatableAsyncFunction<R, T extends unknown[]> =
 export default function cache<R, T extends unknown[]>(
     func: (...args: [...T]) => Promise<R>,
     keyHasher: (...args: [...T]) => string,
-    writeExpireAfterMsec: number = Number.MAX_VALUE,
+    writeExpireAfterMsec: number = 2 ** 31 - 1,
 ): InvalidatableAsyncFunction<R, T> {
     type CacheEntry = {
         inserted: number
