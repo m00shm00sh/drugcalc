@@ -22,7 +22,7 @@ internal suspend fun AsyncJooq.getFrequencies(names: Collection<FrequencyName>) 
              * This would ensure monotonicity.
              */
             suspendedBlockingFetch {
-                forEach { (freqName, item) ->
+                forEachLazy { (freqName, item) ->
                     requireNotNull(freqName) { "frequency name is null" }
                     requireNotNull(item) { "frequency item is null" }
 
