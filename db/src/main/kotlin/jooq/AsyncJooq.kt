@@ -54,17 +54,16 @@ internal class AsyncJooq(
      *
      * For convenience, if there is exactly one statement in the argument list and it's not a result query,
      * it's considered a tagged query.
+     *
      * If there are zero arguments, no transaction is performed.
      */
     suspend fun suspendedBlockingTransaction(
         queryFactories: List<QueryFactory>
     ): List<Int> {
+        if (queryFactories.isEmpty()) return emptyList()
         /* can't offload to transactionResult because we will have a suspend -> block -> suspend chain,
           * which won't work with coroutines and we need the transaction manager to capture cancellation
           */
-        require(queryFactories.isNotEmpty()) {
-            "missing transaction statements"
-        }
         return dsl.transactionCoroutine(ctx) { c ->
             val ctx = c.dsl()
             queryFactories.mapNotNull {

@@ -30,7 +30,7 @@ internal class StringIterDecoder private constructor(
 
     override fun decodeNotNullMark(): Boolean = iter.peek()?.isNotEmpty() ?: false
     override fun decodeNull(): Nothing? = null.takeIf { nextStr().isEmpty() }
-    override fun decodeBoolean(): Boolean = nextStr().toBoolean()
+    override fun decodeBoolean(): Boolean = nextStr().toBooleanStrict()
     override fun decodeByte(): Byte = nextStr().toByte()
     override fun decodeShort(): Short = nextStr().toShort()
     override fun decodeInt(): Int = nextStr().toInt()
@@ -39,7 +39,8 @@ internal class StringIterDecoder private constructor(
     override fun decodeDouble(): Double = nextStr().toDouble()
     override fun decodeChar(): Char = nextStr().firstOrNull() ?: throw SerializationException()
     override fun decodeString(): String = nextStr()
-    override fun decodeEnum(enumDescriptor: SerialDescriptor): Int = enumDescriptor.elementNames.indexOf(iter.next())
+    override fun decodeEnum(enumDescriptor: SerialDescriptor): Int =
+        enumDescriptor.elementNames.indexOf(nextStr()).also { if (it == -1) throw SerializationException() }
     override fun beginStructure(descriptor: SerialDescriptor): CompositeDecoder {
         if (depth > 0 && !checked.getOrPut(descriptor) {
                 for (elem in (0..<descriptor.elementsCount).map(descriptor::getElementDescriptor)) {
