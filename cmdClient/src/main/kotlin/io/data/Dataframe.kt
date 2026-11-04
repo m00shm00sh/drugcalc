@@ -110,7 +110,7 @@ private fun dfToMap(df: DataFrame<Compound>, startOffset: Int = 0): Map<Compound
                         else
                             CompoundName(compound)
                     val info = buildMap {
-                        halfLife.let { put("halfLife", it) }
+                        put("halfLife", halfLife)
                         pctActive?.let { put("pctActive", it) }
                         note.convertHyphenMarkerToEmptyString()?.let { put("note", it) }
                     }.let {
