@@ -310,7 +310,7 @@ private suspend fun ForCalc.renderPlotToFile(filename: String, split: Boolean = 
         }
     }
 
-    val xVals = calcResult.entries.associate { (k, v) -> k to v.x as List<Double> }
+    val xVals = calcResult.entries.associate { (k, v) -> k to v.x }
     val yVals = calcResult.entries.associate { (k, v) -> k to v.y }
 
     val p = Plotly.plot {
