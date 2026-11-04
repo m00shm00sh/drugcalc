@@ -171,7 +171,10 @@ private fun readXcsv(filename: String): Map<String, CsvChunk> =
                 }
             }
         }
-    }.mapValues { (_, v) -> CsvChunk(v.first, v.toString()) }
+    }.mapValues { (_, v) ->
+        val (offset, builder) = v
+        CsvChunk(offset, builder.toString())
+    }
 
 private inline fun <reified F : Any, K, V> tryGetXcsvChunk(chunks: Map<String, CsvChunk>, chunk: String): Map<K, V> =
     chunks[chunk]?.let { (off, data) ->
