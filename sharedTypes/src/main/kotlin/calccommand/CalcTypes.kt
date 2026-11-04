@@ -279,7 +279,7 @@ sealed class XYList {
 /**
  * Converts scalar lists to XY with zeros omitted.
  */
-@JvmName("IndexedPoints\$toXYList")
+@JvmName($$"IndexedPoints$toXYList")
 fun List<Double>.toXYList(): XYList.OfRaw {
     val xs: MutableList<Int> = mutableListOf()
     val ys: MutableList<Double> = mutableListOf()
