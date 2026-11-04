@@ -25,9 +25,7 @@ internal typealias RangeList<DataT, IndexishT> = List<RangeValue<DataT, Indexish
 
 @JvmName($$"RangeList$toXYList")
 internal fun RangeList<Double, Int>.toXYList(): XYList.OfRaw =
-    this.map { Pair(it.from, it.value) }.run {
-        XYList.OfRaw.barPlot(
-            this.map { it.first },
-            this.map { it.second }
-        )
-    }
+    XYList.OfRaw.barPlot(
+        map { it.from },
+        map { it.value }
+    )
