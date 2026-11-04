@@ -135,6 +135,15 @@ internal fun Route.configureDataRoutes(
         names.list
     }
     authenticatedAsAdmin {
+        post<DataRoute.Compounds.Name, Map<String, CompoundInfo>, Unit> { params, insertMap ->
+            requireOperationSucceeded {
+                dataController.putEntries(
+                    Data(compounds = insertMap.mapKeys { (variant, _) ->
+                        CompoundName(params.compound, variant)
+                    })
+                )
+            }
+        }
         delete<DataRoute.Compounds.Name, Unit> { params ->
             val cn = CompoundName.selectAllVariants(params.compound)
             checkedDelete(cn) {

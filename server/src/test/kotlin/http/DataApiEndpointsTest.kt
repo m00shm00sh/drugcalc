@@ -258,6 +258,71 @@ internal class DataApiEndpointsTest {
     }
 
     /*
+     * /api/data/compounds/{c} POST
+     */
+
+    @Test
+    fun testPostCompoundVariants() = withServer(DC_RO(RoFlag.FORBID_CLEAR), users, jwtConfig) {
+        val _1d = 1.toDuration(DurationUnit.DAYS)
+        val _2d = 2.toDuration(DurationUnit.DAYS)
+        val _99d = 99.toDuration(DurationUnit.DAYS)
+        initializeJwts()
+        // empty variant: anavar has no variants in the fixture
+        testEndpoint<Map<String, CompoundInfo>, Unit>(
+            Method.PostJson, "/api/data/compounds/anavar",
+            { bearerAuth(adminJwt) }, mapOf("" to CompoundInfo(_1d))
+        )
+        testEndpoint<Unit, CompoundInfo>(Method.GetJson, "/api/data/compounds/anavar/-",
+            message = "{} (empty variant remapped to base)"
+        ) {
+            assertEquals(_1d, halfLife)
+        }
+        // non-empty variants: the base comes from the path, not from the body keys
+        testEndpoint<Map<String, CompoundInfo>, Unit>(
+            Method.PostJson, "/api/data/compounds/testosterone",
+            { bearerAuth(adminJwt) }, mapOf(
+                "spam" to CompoundInfo(_2d),
+                "eggs" to CompoundInfo(_2d),
+            )
+        )
+        testEndpoint<Unit, CompoundInfo>(Method.GetJson, "/api/data/compounds/testosterone/spam",
+            message = "{} (new non-empty variant)"
+        ) {
+            assertEquals(_2d, halfLife)
+        }
+        testEndpoint<Unit, List<CompoundBase>>(Method.GetJson, "/api/data/compounds",
+            message = "{} (body key is not used as a compound base)"
+        ) {
+            assertDoesNotContain(this, CompoundBase("spam"))
+        }
+        // a compound base that does not exist yet is created from the path
+        testEndpoint<Map<String, CompoundInfo>, Unit>(
+            Method.PostJson, "/api/data/compounds/wham",
+            { bearerAuth(adminJwt) }, mapOf("ham" to CompoundInfo(_99d))
+        )
+        testEndpoint<Unit, List<CompoundBase>>(Method.GetJson, "/api/data/compounds",
+            message = "{} (get-compounds proxy)"
+        ) {
+            assertContains(this, CompoundBase("wham"))
+        }
+        testEndpoint<Unit, CompoundInfo>(Method.GetJson, "/api/data/compounds/wham/ham",
+            message = "{} (new compound, new variant)"
+        ) {
+            assertEquals(_99d, halfLife)
+        }
+    }
+
+    @Test
+    fun `testPostCompoundVariants f`() =
+        testExpectedFailures<Map<String, CompoundInfo>>(
+            Method.PostJson, "/api/data/compounds/ham",
+            emptyMap(), listOf(
+                "[]",
+                "{\"a\":{\"halfLife\":\"-1d\"}}"
+            )
+        )
+
+    /*
      * /api/data/compounds/{c} DELETE
      */
 
