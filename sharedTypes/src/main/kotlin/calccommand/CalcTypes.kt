@@ -157,6 +157,11 @@ data class CycleDescription(
                     "expected non-empty transformer"
                 }
             }
+
+            else ->
+                require(false) {
+                    "unexpected prefix: $prefix"
+                }
         }
         require(compoundOrBlend.isNotEmpty()) {
             "empty compoundName"

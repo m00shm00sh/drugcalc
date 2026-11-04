@@ -1,5 +1,6 @@
 package com.moshy.drugcalc.types
 
+import com.moshy.drugcalc.commontest.assertContains
 import com.moshy.drugcalc.types.calccommand.Config
 import com.moshy.drugcalc.types.calccommand.CycleDescription
 import com.moshy.drugcalc.types.calccommand.CycleResult
@@ -61,6 +62,20 @@ internal class CalcTypesTest {
         val decoder = DecodeSpec.Scaled(2.toDuration(DurationUnit.HOURS))
         val decoded = decoder.decodeGivenConfig(encoded, tConfig)
         assertEquals(expected, decoded)
+    }
+
+    @Test
+    fun `CycleDescription rejects unexpected prefix`() {
+        val exMsg = assertThrows<IllegalArgumentException> {
+            CycleDescription(
+                prefix = "abc",
+                compoundOrBlend = "",
+                start = Duration.ZERO,
+                duration = Duration.ZERO,
+                freqName = FrequencyName("z")
+            )
+        }.message
+        assertContains("prefix", exMsg)
     }
 
     @Test
