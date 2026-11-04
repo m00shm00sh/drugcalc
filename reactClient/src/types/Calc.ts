@@ -303,7 +303,7 @@ export const importRowsFromQueryString = (q: URLSearchParams): CalcRequestRow[] 
             prefix: fl,
             compoundOrBlend: qCB[i],
             variantOrTransformer: qVX[i],
-            dose: Number(qD),
+            dose: Number(qD[i]),
             start: qS[i],
             duration: qT[i],
             freqName: qFN[i],
