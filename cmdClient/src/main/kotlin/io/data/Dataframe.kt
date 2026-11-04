@@ -139,22 +139,22 @@ private fun dfToMap(df: DataFrame<Blend>, startOffset: Int = 0): Map<BlendName, 
             df.rows().forEach { row ->
                 with(row) {
                     physicalIndexP1 = startOffset + index() + 1
-                        val blendName = name.let(::BlendName)
-                        if (currentName == null || currentName != blendName) {
-                            // move inner on blendName transition, not first row
-                            if (currentName != null)
-                                this@buildMap[currentName!!] =
-                                    BlendValue(inner!! as Map<CompoundName, Double>, noteForName.orEmpty())
-                            inner = mutableMapOf()
-                            currentName = blendName
+                    val blendName = name.let(::BlendName)
+                    if (currentName == null || currentName != blendName) {
+                        // move inner on blendName transition, not first row
+                        if (currentName != null)
+                            this@buildMap[currentName!!] =
+                                BlendValue(inner!! as Map<CompoundName, Double>, noteForName.orEmpty())
+                        inner = mutableMapOf()
+                        currentName = blendName
                         noteForName = null
                     }
-                            note?.let { rowNote ->
-                                if (noteForName != null && rowNote != noteForName)
-                                    throw IllegalArgumentException("at line $physicalIndexP1: unexpected note value")
-                                noteForName = rowNote
-                            }
-                        inner!![CompoundName(CompoundBase(componentCompound), componentVariant)] = componentDose
+                    note?.let { rowNote ->
+                        if (noteForName != null && rowNote != noteForName)
+                            throw IllegalArgumentException("at line $physicalIndexP1: unexpected note value")
+                        noteForName = rowNote
+                    }
+                    inner!![CompoundName(CompoundBase(componentCompound), componentVariant)] = componentDose
                 }
             }
             if (currentName != null && inner != null)
