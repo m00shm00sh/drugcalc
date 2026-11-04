@@ -147,12 +147,13 @@ private fun dfToMap(df: DataFrame<Blend>, startOffset: Int = 0): Map<BlendName, 
                                     BlendValue(inner!! as Map<CompoundName, Double>, noteForName.orEmpty())
                             inner = mutableMapOf()
                             currentName = blendName
+                        noteForName = null
+                    }
                             note?.let { rowNote ->
                                 if (noteForName != null && rowNote != noteForName)
                                     throw IllegalArgumentException("at line $physicalIndexP1: unexpected note value")
                                 noteForName = rowNote
                             }
-                        }
                         inner!![CompoundName(CompoundBase(componentCompound), componentVariant)] = componentDose
                 }
             }
