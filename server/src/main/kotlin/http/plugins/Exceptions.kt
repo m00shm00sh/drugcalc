@@ -7,6 +7,7 @@ import io.ktor.http.*
 import io.ktor.serialization.JsonConvertException
 import io.ktor.server.application.*
 import io.ktor.server.plugins.BadRequestException
+import io.ktor.server.plugins.PayloadTooLargeException
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 
@@ -39,6 +40,14 @@ internal fun Application.configureExceptions(flags: AppConfig.DevFlags) {
                         causes.forEach { logger.debug("{}", it) }
 
                     call.respondText(text = exMsg(400), status = HttpStatusCode.BadRequest)
+                }
+
+                is PayloadTooLargeException -> {
+                    logger.debug("413: {}", cause.message)
+                    call.respondText(
+                        text = exMsg(413),
+                        status = HttpStatusCode.PayloadTooLarge
+                    )
                 }
 
                 is NoSuchElementException -> {
