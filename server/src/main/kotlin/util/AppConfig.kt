@@ -32,9 +32,21 @@ internal object AppConfig {
     ) {
         data class Limits(
             val requestBodyLimit: Long = (1L shl 20), // 1 MiB
-            val rateLimitNum: Int = 10,
-            val rateLimitTime: Duration = 1.toDuration(DurationUnit.SECONDS)
-        )
+            // shared across all clients; protects the server as a whole
+            val globalRateLimit: RateLimit = RateLimit(num = 1000),
+            // applied per client; keeps one client from starving the rest
+            val clientRateLimit: RateLimit = RateLimit(num = 10),
+        ) {
+            data class RateLimit(
+                val num: Int,
+                val time: Duration = 1.toDuration(DurationUnit.SECONDS),
+            ) {
+                init {
+                    require(num > 0) { "rate limit must be positive" }
+                    require(time > Duration.ZERO) { "rate limit time must be positive" }
+                }
+            }
+        }
         data class Bind(
             val host: String,
             val port: Int = 0,
