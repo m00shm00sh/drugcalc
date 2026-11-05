@@ -13,7 +13,7 @@ import kotlin.time.toDuration
  * @param cycle decoded cycle
  * @param config calculator config
  * @see CycleCalculation
- * @see Config
+ * @see CalcConfig
  * @throws IllegalArgumentException if a transformer is invalid
  */
 fun evaluateDecodedCycle(cycle: CycleCalculation, config: CalcConfig): CycleResult<XYList.OfRaw> {
