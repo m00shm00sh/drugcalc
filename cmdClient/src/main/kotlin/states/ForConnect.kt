@@ -9,13 +9,17 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.io.IOException
 import kotlinx.serialization.*
 import java.lang.IllegalArgumentException
 import java.security.cert.X509Certificate
 import javax.net.ssl.*
 
 @Serializable
-internal class ForConnect {
+internal class ForConnect(
+    @Transient
+    private val clientFactory: (ConnectParams) -> HttpClient = ::createClient,
+) {
     @Serializable
     data class ConnectParams(
         val addr: String = "http://127.0.0.1:8080",
@@ -34,34 +38,46 @@ internal class ForConnect {
 
     suspend fun getClient(): HttpClient {
         client?.let { return it }
-
-        val client = HttpClient(Java) {
-            if (connect.insecure)
-                engine {
-                    config {
-                        sslContext(insecureTlsContext())
-                    }
-                }
-            install(ContentNegotiation) {
-                json()
+        val client = clientFactory(connect)
+        var success = false
+        try {
+            val req = client.get(connect.makeConnectableUrl("/api/"))
+            require(req.status == HttpStatusCode.OK) {
+                throw RuntimeException("heartbeat: http ${req.status}")
             }
+            val hbResult = req.body<String>()
+            require(hbResult == "OK") {
+                "unexpected heartbeat result: $hbResult"
+            }
+            this.client = client
+            success = true
+            return client
+        } catch (e: IOException) {
+            throw RuntimeException("GET heartbeat: ${e.message}", e)
+        } finally {
+            if (!success)
+                client.close()
         }
-        val req = client.get(connect.makeConnectableUrl("/api/"))
-        require(req.status == HttpStatusCode.OK) {
-            throw RuntimeException("heartbeat: http ${req.status}")
-        }
-        val hbResult = req.body<String>()
-        require(hbResult == "OK") {
-            "unexpected heartbeat result: $hbResult"
-        }
-        this.client = client
-        return client
     }
 
     fun clearClient() {
+        client?.close()
         client = null
     }
 }
+
+private fun createClient(params: ForConnect.ConnectParams): HttpClient =
+    HttpClient(Java) {
+        if (params.insecure)
+            engine {
+                config {
+                    sslContext(insecureTlsContext())
+                }
+            }
+        install(ContentNegotiation) {
+            json()
+        }
+    }
 
 private fun defaultPortForProto(s: String) =
     when (s) {
