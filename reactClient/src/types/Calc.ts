@@ -10,11 +10,11 @@ import {
     zodIsoDurationStringSchema,
 } from './duration'
 import {
-	AvailableCBsCacheSchema,
-	AvailableFNsCacheSchema,
-	AvailableVXsCacheSchema,
-	zodNonemptyStringSchema,
-	zodNumberString
+    AvailableCBsCacheSchema,
+    AvailableFNsCacheSchema,
+    AvailableVXsCacheSchema,
+    zodNonemptyStringSchema,
+    zodNumberString,
 } from './string'
 import { SelectableSchema } from './Selectable'
 import { getOrElse, stripIf } from '../util/filter-setif'
@@ -150,7 +150,7 @@ const extractCompoundsFromCycle = (rows: CycleDescription[]): string[] =>
         .filter((e) => !e.prefix)
         .map((e) => {
             const c: CompoundName = [e.compoundOrBlend]
-            if (!e.prefix && e.variantOrTransformer) c.push(e.variantOrTransformer)
+            if (e.variantOrTransformer) c.push(e.variantOrTransformer)
             return packCompoundName(c)
         })
         .filterDistinct()
@@ -293,7 +293,7 @@ export const importRowsFromQueryString = (q: URLSearchParams): CalcRequestRow[] 
 
     const rows: CalcRequestRow[] = []
     for (let i = 0; i < qCBlen; ++i) {
-        const fl = decodeFlag(qFL[i])
+        const fl = decodeFlag(qFL[i] ?? '')
         const doseRampDose = qRD[i] ?? ''
         const doseRampFreqName = qRFN[i] ?? ''
         if ((doseRampDose === '') !== (doseRampFreqName === ''))
@@ -318,9 +318,8 @@ export const importRowsFromQueryString = (q: URLSearchParams): CalcRequestRow[] 
 }
 export const exportRowsToQueryString = (rows: readonly CalcRequestRow[]): URLSearchParams => {
     const q = new URLSearchParams()
-    const noPrefixes = rows.find((e) => e.prefix) === undefined
-    const noVX =
-        rows.find((e) => 'variantOrTransformer' in e && e.variantOrTransformer) === undefined
+    const noPrefixes = !rows.some((e) => e.prefix)
+    const noVX = !rows.some((e) => 'variantOrTransformer' in e && e.variantOrTransformer)
 
     for (const r of rows) {
         if (!noPrefixes) q.append(Q_FLAGS, encodeFlag(r.prefix))

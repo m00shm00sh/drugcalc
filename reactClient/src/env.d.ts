@@ -16,6 +16,6 @@ declare module '*.svg?react' {
  * ESM package; the mock in Calc.test.tsx substitutes it during tests.
  */
 declare module 'plotly.js-gl2d-dist-min/' {
-    const Plotly: any
+    const Plotly: object
     export default Plotly
 }

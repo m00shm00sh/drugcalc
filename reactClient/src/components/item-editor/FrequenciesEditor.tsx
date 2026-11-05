@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import classNames from 'classnames'
 import { useState } from 'react'
-import type { UseFieldArrayRemove } from 'react-hook-form'
 import { FormProvider, useFieldArray, useForm, useFormContext } from 'react-hook-form'
 import { useLocalFrequencies } from '../../hooks/useLocalData'
 import type { FrequencyEditorDataContainer, FrequencyEditorRow } from '../../types/Frequencies'
@@ -27,7 +26,6 @@ import { Flex } from '../widgets/RowCol'
 import { ItemEditor } from './ItemEditorCommands'
 
 type FrequencyComponentProps = {
-    remove: UseFieldArrayRemove
     frequencyIndex: number
     componentIndex: number
 }
@@ -70,7 +68,6 @@ const FrequencyComponents = ({ parentIndex }: FrequencyComponentsProps) => {
                         key={field.id}
                         frequencyIndex={parentIndex}
                         componentIndex={index}
-                        remove={remove}
                     />
                 ))}
                 <ItemEditor

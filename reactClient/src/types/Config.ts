@@ -17,7 +17,7 @@ export const ConfigSchema = z.object({
 })
 export type Config = z.infer<typeof ConfigSchema>
 
-const zConfigItem = (name: string, value: z.core.SomeType) =>
+const zConfigItem = <N extends keyof Config>(name: N, value: z.core.SomeType) =>
     z.object({ type: z.literal(name), value: value }).extend(SelectableSchema.shape)
 
 export const ConfigEditorSchema = z.discriminatedUnion('type', [
@@ -39,19 +39,16 @@ export const isConfigItem = (s: string): s is keyof Config =>
 
 export const ConfigEditorContainerSchema = z.object({
     config: z.array(ConfigEditorSchema).superRefine((data, ctx) => {
-        const seen: (keyof Config)[] = []
+        const seen = new Set<keyof Config>()
         for (const [i, { type }] of data.entries()) {
-            // XXX: jest coverage shows this line is dead code
-            if (!isConfigItem(type)) throw Error('failed test for config key')
-            const inter = seen.filterIntersecting([type])
-            if (inter.length > 0) {
+            if (seen.has(type)) {
                 ctx.addIssue({
                     code: 'custom',
                     path: [i, 'type'],
                     message: 'duplicate key',
                 })
             }
-            seen.push(type)
+            seen.add(type)
         }
     }),
 })
@@ -105,7 +102,7 @@ const transformConfigItemFromField = (k: keyof Config, v: unknown): unknown => {
     switch (k) {
         case 'doLambdaDoseCorrection':
             if (v === undefined) return undefined
-            return Boolean(['false', 'true'].indexOf(v as string))
+            return v === 'true'
         case 'tickDuration':
             return displayToIso8601(v as string)
     }

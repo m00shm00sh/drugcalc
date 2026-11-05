@@ -12,7 +12,7 @@ import type { Selectable } from '../../../types/Selectable'
 import { del, NO_RESPONSE, postJson } from '../../../util/fetcher'
 import type { Invalidatable } from '../../../util/cache'
 import { type Nullable, requireTrue } from '../../../util/util'
-import { awaitAllWithBackpressure, toAwaitable } from '../../../util/awaitAllWithBackpressure'
+import { awaitAllWithBackpressure, toThunk } from '../../../util/awaitAllWithBackpressure'
 
 type RHFKey1<FormContainer> = keyof FormContainer & ArrayPath<FormContainer>
 type RHFKey<FormContainer> = RHFKey1<FormContainer> & Path<FormContainer>
@@ -32,7 +32,7 @@ export function selectedItemsFromRemoteFormLoader<
 
     const loader = async (data: FormRow[]): Promise<readonly Nullable<FormRow>[]> =>
         awaitAllWithBackpressure(
-            data.map((e) => (e.selected ? fetchDetailsOrUndefined(e) : toAwaitable(e))),
+            data.map((e) => (e.selected ? () => fetchDetailsOrUndefined(e) : toThunk(e))),
             concurrencyLimit
         )
 
@@ -49,8 +49,8 @@ export function selectedItemsFromRemoteFormLoader<
                     setError(ek, {
                         message: `couldn't fetch ${lastComponent(ek)}`,
                     })
-                    updater(i, resetValues(data[i]))
                 }
+                updater(i, resetValues(data[i]))
             } else {
                 for (const ek of errorKeys(i)) {
                     clearErrors(ek)
@@ -119,9 +119,9 @@ export function selectedItemsOnRemoteDeleter<
         awaitAllWithBackpressure(
             data.map((e) => {
                 if (!e.selected)
-                    return toAwaitable(e)
+                    return toThunk(e)
                 const path = pathEncoder(e)
-                return didDeleteOrUndefined(e, `${delEndpoint}/${path}`)
+                return () => didDeleteOrUndefined(e, `${delEndpoint}/${path}`)
             }), concurrencyLimit)
 
     return async () => {

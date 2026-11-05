@@ -37,8 +37,7 @@ export const fetchCompounds = async (bcbv: ByCompoundByVariant): Promise<string[
 export const cachedRemoteVariants = cache(
     async (cName: string) => {
         requireTrue(!!cName, 'unexpected empty cName')
-        const b = encodeURIComponent(cName).replace('%20', '+')
-        return await fetchJson(`/api/data/compounds/${b}`, VariantNamesListSchema, [])
+        return await fetchJson(`/api/data/compounds/${uriEncode(cName)}`, VariantNamesListSchema, [])
     },
     (s: string) => s,
     60000,
@@ -48,8 +47,7 @@ export const cachedRemoteVariants = cache(
 export const cachedRemoteVariantsOrNull = cache(
     async (cName: string) => {
         requireTrue(!!cName, 'unexpected empty cName')
-        const b = encodeURIComponent(cName).replace('%20', '+')
-        return await fetchJson(`/api/data/compounds/${b}`, VariantNamesListSchema)
+        return await fetchJson(`/api/data/compounds/${uriEncode(cName)}`, VariantNamesListSchema)
     },
     (s: string) => s,
     60000,
@@ -80,9 +78,7 @@ export async function fetchCompoundDetailsOrNull(
     requireTrue(!!cName[0], 'invalid compound name')
     const path = compoundPath(cName)
     const response = await fetchJson(`/api/data/compounds/${path}`, CompoundInfoSchema)
-    if (response) {
-        if (!response.pctActive) response.pctActive = 1.0
-    }
+    if (response && !response.pctActive) response.pctActive = 1.0
     return response
 }
 
