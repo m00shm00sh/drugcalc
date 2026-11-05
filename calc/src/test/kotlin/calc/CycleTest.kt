@@ -105,6 +105,26 @@ internal class CycleTest {
                     }
                 ),
                 arrayOf(
+                    "compound below cutoff",
+                    CheckArg.nothrow<DecodedCycleResult, _>(
+                        CycleCalculation(
+                            listOf(
+                                DecodedCycle(
+                                    "foo",
+                                    dose = config.cutoffMilligrams / 2,
+                                    halfLife = durationToTicksF(ONE_DAY, config.tickDuration),
+                                    start = 0,
+                                    duration = durationToTicks(ONE_DAY * 7, config.tickDuration),
+                                    freqs = durationToTicks(
+                                        listOf(ONE_DAY * 2),
+                                        config.tickDuration
+                                    )
+                                )
+                            )
+                        )
+                    ) { assertTrue(it.isEmpty()) }
+                ),
+                arrayOf(
                     "missing transformer",
                     CheckArg.throws<IllegalArgumentException, _>(
                         CycleCalculation(
@@ -283,6 +303,46 @@ internal class CycleTest {
                             { assertLess(200.0, it["foo"]!![4]) },
                             { assertEquals(100.0, it["bar"]!![4]) }
                         )
+                    }
+                ),
+                arrayOf(
+                    "compoundCycle(dose == cutoff)",
+                    CheckArg.nothrow<CycleResult, _>(
+                        EvaluateAndReduceCompoundCyclesP(
+                            listOf(
+                                DecodedCycle(
+                                    "foo",
+                                    config.cutoffMilligrams,
+                                    durationToTicksF(ONE_DAY, config.tickDuration),
+                                    0,
+                                    durationToTicks(ONE_DAY * 7, config.tickDuration),
+                                    durationToTicks(listOf(ONE_DAY * 2), config.tickDuration)
+                                )
+                            ),
+                            config
+                        )
+                    ) {
+                        assertTrue(it.isEmpty())
+                    }
+                ),
+                arrayOf(
+                    "compoundCycle(dose < cutoff)",
+                    CheckArg.nothrow<CycleResult, _>(
+                        EvaluateAndReduceCompoundCyclesP(
+                            listOf(
+                                DecodedCycle(
+                                    "foo",
+                                    config.cutoffMilligrams / 2,
+                                    durationToTicksF(ONE_DAY, config.tickDuration),
+                                    0,
+                                    durationToTicks(ONE_DAY * 7, config.tickDuration),
+                                    durationToTicks(listOf(ONE_DAY * 2), config.tickDuration)
+                                )
+                            ),
+                            config
+                        )
+                    ) {
+                        assertTrue(it.isEmpty())
                     }
                 ),
                 arrayOf(

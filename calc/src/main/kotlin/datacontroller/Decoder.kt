@@ -208,7 +208,7 @@ class Decoder(
                 ]
             }
             val dose = scaledBase + completedIntervals * scaledAdd
-            // DecodedCycle requires a positive dose; compoundCycle cannot handle doses at or below cutoff.
+            // DecodedCycle requires a positive dose; doses at or below the cutoff produce no data.
             if (dose <= cutoffMilligrams) {
                 // A nonpositive ramp step is monotonic, so once the dose reaches zero (or the
                 // cutoff) it can never become positive again. Stop instead of emitting
