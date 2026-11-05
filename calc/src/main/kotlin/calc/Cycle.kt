@@ -62,8 +62,7 @@ internal fun evaluateAndReduceCompoundCycles(cycles: List<DecodedCycle>, config:
                         dose!! * min(lambda, 1.0)
                     } else
                         dose!!
-                @Suppress("UNCHECKED_CAST") val cycleVals =
-                    compoundCycle(
+                val cycleVals = compoundCycle(
                         correctedDose, halfLife!!, duration, freqs,
                         config.cutoffMilligrams
                     )
