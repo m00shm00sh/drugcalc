@@ -32,6 +32,13 @@ internal class ForConnectTest {
     }
 
     @Test
+    fun `makeConnectableUrl handles leading slash`() {
+        val params = ForConnect.ConnectParams("http://example:1234")
+
+        assertEquals("http://example:1234/api", params.makeConnectableUrl("/api"))
+    }
+
+    @Test
     fun `non-ok heartbeat status closes the client`() = runBlocking {
         val client = mockClient(HttpStatusCode.InternalServerError, "")
 

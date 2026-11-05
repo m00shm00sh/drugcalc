@@ -26,7 +26,8 @@ internal class ForConnect(
         val insecure: Boolean = false,
     ) {
         fun makeConnectableUrl(path: String): String {
-            return "$addr/$path"
+            val addSlash = if (path.startsWith("/")) "" else "/"
+            return "$addr$addSlash$path"
         }
 
     }
