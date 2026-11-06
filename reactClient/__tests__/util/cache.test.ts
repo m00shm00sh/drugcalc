@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals'
-import cache from '../../src/util/cache'
+import cache, { DEFAULT_WRITE_EXPIRE_AFTER_MSEC } from '../../src/util/cache'
 import type { Invalidatable } from '../../src/util/cache'
 
 describe('cache', () => {
@@ -71,8 +71,8 @@ describe('cache', () => {
         await m({})
         expect(invokeCount).toBe(1)
     })
-    it('should default timeout to max number', () => {
+    it('should default timeout to the largest setTimeout delay', () => {
         const m = nextC(testFunc0, () => '')
-        expect(m.writeExpireAfterMsec).toBe(Number.MAX_VALUE)
+        expect(m.writeExpireAfterMsec).toBe(DEFAULT_WRITE_EXPIRE_AFTER_MSEC)
     })
 })

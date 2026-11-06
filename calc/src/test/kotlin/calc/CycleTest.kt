@@ -3,7 +3,6 @@ package com.moshy.drugcalc.calc.calc
 import com.moshy.drugcalc.types.calccommand.*
 import com.moshy.drugcalc.commontest.*
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.*
@@ -13,8 +12,6 @@ import kotlin.time.*
 private val ONE_DAY = 1.toDuration(DurationUnit.DAYS)
 private val DAY = 2
 private val config = Config(ONE_DAY / 2, 0.01, false)
-
-private fun Config.decodeFreqs(freqs: List<Duration>) = freqs.map { (it / tickDuration).toInt() }
 
 
 internal class CycleTest {
@@ -103,6 +100,26 @@ internal class CycleTest {
                             { assertEquals(XYList.PlotType.BAR, it["foo:median"]!!.plotType) }
                         )
                     }
+                ),
+                arrayOf(
+                    "compound below cutoff",
+                    CheckArg.nothrow<DecodedCycleResult, _>(
+                        CycleCalculation(
+                            listOf(
+                                DecodedCycle(
+                                    "foo",
+                                    dose = config.cutoffMilligrams / 2,
+                                    halfLife = durationToTicksF(ONE_DAY, config.tickDuration),
+                                    start = 0,
+                                    duration = durationToTicks(ONE_DAY * 7, config.tickDuration),
+                                    freqs = durationToTicks(
+                                        listOf(ONE_DAY * 2),
+                                        config.tickDuration
+                                    )
+                                )
+                            )
+                        )
+                    ) { assertTrue(it.isEmpty()) }
                 ),
                 arrayOf(
                     "missing transformer",
@@ -283,6 +300,46 @@ internal class CycleTest {
                             { assertLess(200.0, it["foo"]!![4]) },
                             { assertEquals(100.0, it["bar"]!![4]) }
                         )
+                    }
+                ),
+                arrayOf(
+                    "compoundCycle(dose == cutoff)",
+                    CheckArg.nothrow<CycleResult, _>(
+                        EvaluateAndReduceCompoundCyclesP(
+                            listOf(
+                                DecodedCycle(
+                                    "foo",
+                                    config.cutoffMilligrams,
+                                    durationToTicksF(ONE_DAY, config.tickDuration),
+                                    0,
+                                    durationToTicks(ONE_DAY * 7, config.tickDuration),
+                                    durationToTicks(listOf(ONE_DAY * 2), config.tickDuration)
+                                )
+                            ),
+                            config
+                        )
+                    ) {
+                        assertTrue(it.isEmpty())
+                    }
+                ),
+                arrayOf(
+                    "compoundCycle(dose < cutoff)",
+                    CheckArg.nothrow<CycleResult, _>(
+                        EvaluateAndReduceCompoundCyclesP(
+                            listOf(
+                                DecodedCycle(
+                                    "foo",
+                                    config.cutoffMilligrams / 2,
+                                    durationToTicksF(ONE_DAY, config.tickDuration),
+                                    0,
+                                    durationToTicks(ONE_DAY * 7, config.tickDuration),
+                                    durationToTicks(listOf(ONE_DAY * 2), config.tickDuration)
+                                )
+                            ),
+                            config
+                        )
+                    ) {
+                        assertTrue(it.isEmpty())
                     }
                 ),
                 arrayOf(

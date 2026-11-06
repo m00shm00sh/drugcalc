@@ -13,7 +13,7 @@ import kotlin.time.toDuration
  * @param cycle decoded cycle
  * @param config calculator config
  * @see CycleCalculation
- * @see Config
+ * @see CalcConfig
  * @throws IllegalArgumentException if a transformer is invalid
  */
 fun evaluateDecodedCycle(cycle: CycleCalculation, config: CalcConfig): CycleResult<XYList.OfRaw> {
@@ -62,13 +62,11 @@ internal fun evaluateAndReduceCompoundCycles(cycles: List<DecodedCycle>, config:
                         dose!! * min(lambda, 1.0)
                     } else
                         dose!!
-                @Suppress("UNCHECKED_CAST") val cycleVals =
-                    compoundCycle(
+                val cycleVals = compoundCycle(
                         correctedDose, halfLife!!, duration, freqs,
-                        config.cutoffMilligrams
-                    )
-                        .toOffsetList(start)
-                getOrPut(CompoundBase(activeCompound)) { mutableListOf() }.add(cycleVals)
+                        config.cutoffMilligrams)
+                if (cycleVals.isEmpty()) continue
+                getOrPut(CompoundBase(activeCompound)) { mutableListOf() }.add(cycleVals.toOffsetList(start))
             }
         }
 
@@ -80,7 +78,7 @@ internal fun evaluateAndReduceCompoundCycles(cycles: List<DecodedCycle>, config:
  *
  * For testing, it is adequate to call [evaluateAndReduceCompoundCycles] with just one cycle having start==0.
  *
- * Returns an empty list when [dose] is 0.
+ * Returns an empty list when [dose] is at or below cutoff.
  *
  * @param dose dosage, in milligrams; positive
  * @param halfLife compound half life, in time ticks
@@ -96,6 +94,8 @@ private fun compoundCycle(
 ): List<Double> {
     // evaluate exponential decay until the released dose is below the cutoff
     val lastRelease: Int = ceil(releaseInv(dose, cutoff, halfLife)).toInt()
+
+    if (lastRelease <= 0) return emptyList()
 
     // evaluate the values for one iteration and then reference them during shift and sum
     val oneIter = List(lastRelease) { i -> release(dose, i, halfLife) }

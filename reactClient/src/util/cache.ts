@@ -1,4 +1,7 @@
 
+// setTimeout uses a signed 32-bit delay; larger values fire immediately.
+export const DEFAULT_WRITE_EXPIRE_AFTER_MSEC = 2 ** 31 - 1
+
 export type Invalidatable = {
     invalidateAll: () => undefined
     readonly writeExpireAfterMsec: number
@@ -9,7 +12,7 @@ type InvalidatableAsyncFunction<R, T extends unknown[]> =
 export default function cache<R, T extends unknown[]>(
     func: (...args: [...T]) => Promise<R>,
     keyHasher: (...args: [...T]) => string,
-    writeExpireAfterMsec: number = Number.MAX_VALUE,
+    writeExpireAfterMsec: number = DEFAULT_WRITE_EXPIRE_AFTER_MSEC,
 ): InvalidatableAsyncFunction<R, T> {
     type CacheEntry = {
         inserted: number
@@ -32,7 +35,7 @@ export default function cache<R, T extends unknown[]>(
                         const now = Date.now()
                         const e = resultCache.get(k)
                         if (e === undefined || now - e.inserted < writeExpireAfterMsec) return
-                        resultCache.delete(hashedK)
+                        resultCache.delete(k)
                     },
                     writeExpireAfterMsec,
                     hashedK,

@@ -168,9 +168,7 @@ export const loadCompoundDetailsFromRemote = async (
         if (!i) return undefined
         const o: CompoundEditorRow = { ...row, ...i }
         o.halfLife = iso8601ToDisplay(o.halfLife)
-        if (o.pctActive === undefined)
-            throw Error('unexpected: fetchCompoundDetailsOrNull should\'ve set {}.pctActive')
-        o.pctActive *= 100
+        o.pctActive = (o.pctActive ?? 1) * 100
         return o
     })
 

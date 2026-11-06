@@ -6,10 +6,10 @@ jest.unstable_mockModule('../../../../src/util/fetcher', () => ({
     NO_RESPONSE: Symbol('NO_RESPONSE'),
 }))
 jest.unstable_mockModule('../../../../src/util/awaitAllWithBackpressure', () => ({
-    awaitAllWithBackpressure: jest.fn(async (awaitables: readonly Promise<unknown>[]) =>
-        Promise.all(awaitables)
+    awaitAllWithBackpressure: jest.fn(async (thunks: readonly (() => Promise<unknown>)[]) =>
+        Promise.all(thunks.map((thunk) => thunk()))
     ),
-    toAwaitable: jest.fn((o: any) => Promise.resolve(o)),
+    toThunk: jest.fn((o: any) => () => Promise.resolve(o)),
 }))
 
 const {
@@ -23,6 +23,12 @@ const { awaitAllWithBackpressure } = await import('../../../../src/util/awaitAll
 const mockDel = del as any
 const mockPostJson = postJson as any
 const mockAwaitAll = awaitAllWithBackpressure as any
+
+beforeEach(() => {
+    mockAwaitAll.mockImplementation(async (thunks: readonly (() => Promise<unknown>)[]) =>
+        Promise.all(thunks.map((thunk) => thunk()))
+    )
+})
 
 describe('selectedItemsFromRemoteFormLoader', () => {
     it('sets error and resets values when fetch returns undefined', async () => {
@@ -51,6 +57,34 @@ describe('selectedItemsFromRemoteFormLoader', () => {
             message: 'couldn\'t fetch name',
         })
         expect(updater).toHaveBeenCalledWith(0, { selected: true })
+    })
+
+    it('resets a failed row once even when it has several error keys', async () => {
+        mockAwaitAll.mockResolvedValue([undefined])
+        const formMethods: any = {
+            getValues: jest.fn(() => [{ selected: true }]),
+            setError: jest.fn(),
+            clearErrors: jest.fn(),
+        }
+        const fetchDetails: any = async () => undefined
+        const errorKeys = (i: number) => [`items.${i}.name`, `items.${i}.variant`]
+        const resetValues = jest.fn((r: any) => ({ ...r, reset: true }))
+        const updater = jest.fn()
+
+        const loader = selectedItemsFromRemoteFormLoader(
+            formMethods,
+            'items' as any,
+            fetchDetails as any,
+            errorKeys as any,
+            resetValues as any,
+            updater,
+        )
+        await loader()
+
+        expect(formMethods.setError).toHaveBeenCalledTimes(2)
+        expect(resetValues).toHaveBeenCalledTimes(1)
+        expect(updater).toHaveBeenCalledTimes(1)
+        expect(updater).toHaveBeenCalledWith(0, { selected: true, reset: true })
     })
 
     it('clears errors and updates row when fetch succeeds', async () => {

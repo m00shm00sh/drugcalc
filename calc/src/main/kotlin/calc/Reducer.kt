@@ -36,9 +36,7 @@ internal fun reducer(values: List<OffsetList<Double>>, sizeHint: Int = 0): List<
     )
     val maxLength = sizeHint.takeIf { it > 0 } ?: values.maxOf { it.offset + it.data.size }
     val outList = MutableList(maxLength) { 0.0 }
-    for (item in values) {
-        val offset = item.offset
-        val data = item.data
+    for ((offset, data) in values) {
         for (i in data.indices) {
             outList[offset + i] += data[i]
         }

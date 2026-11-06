@@ -3,7 +3,6 @@ package com.moshy.drugcalc.calc.calc
 import com.moshy.drugcalc.types.dataentry.*
 import com.moshy.drugcalc.types.calccommand.*
 import com.moshy.containers.circularIterator
-import kotlinx.coroutines.channels.ticker
 
 /** Returns a transformer that applies [blockTransform] to each block.
  *

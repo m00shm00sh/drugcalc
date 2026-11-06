@@ -122,10 +122,12 @@ export const CompoundsDeleter = ({ loginToken }: EditorProps) => {
                                     label="compound"
                                     onChange={async (e) => {
                                         const newCompound = e.currentTarget.value
-                                        const row = getValues(`compounds.${index}`)
+                                        // work on a copy: getValues returns the live form value
+                                        const row = { ...getValues(`compounds.${index}`) }
+                                        row.compound = newCompound
                                         if (!row.expand)
                                             row.vx = await cachedRemoteVariants(newCompound)
-                                        update(index, {...row})
+                                        update(index, row)
                                     }}
                                 />
                                 <SelectVariant

@@ -1,7 +1,7 @@
 import type { FieldPath, UseFieldArrayReturn, UseFormReturn } from 'react-hook-form'
 
 import type { CompoundDeleterDataContainer, CompoundDeleterRow } from '../../../types/Compounds'
-import { awaitAllWithBackpressure, toAwaitable } from '../../../util/awaitAllWithBackpressure'
+import { awaitAllWithBackpressure, toThunk } from '../../../util/awaitAllWithBackpressure'
 import { cachedRemoteVariantsOrNull } from '../../../util/data-fetcher'
 import type { Nullable } from '../../../util/util'
 
@@ -15,9 +15,9 @@ export function expandExpansionItems(
         awaitAllWithBackpressure(
             data.map((e) => (e.expand
                 ? (e.vx !== undefined
-                    ? toAwaitable(e.vx)
-                    : cachedRemoteVariantsOrNull(e.compound))
-                : toAwaitable([]))
+                    ? toThunk(e.vx)
+                    : () => cachedRemoteVariantsOrNull(e.compound))
+                : toThunk([]))
             ),
             concurrencyLimit
         )

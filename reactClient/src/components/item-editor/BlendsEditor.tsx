@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import classNames from 'classnames'
 import { createContext, useContext, useMemo, useState } from 'react'
-import type { UseFieldArrayRemove } from 'react-hook-form'
 import { FormProvider, useFieldArray, useForm, useFormContext } from 'react-hook-form'
 import { makeInvoker, useAsyncResult } from '../../hooks/useAsyncFetch'
 import { useLocalBlends, useLocalCompounds } from '../../hooks/useLocalData'
@@ -41,7 +40,6 @@ const MergedCompoundNamesContext = createContext<string[]>([])
 const VariantsFetcherContext = createContext(cachedRemoteVariants)
 
 type BlendComponentProps = {
-    remove: UseFieldArrayRemove
     update: (row: BlendEditorComponentRow) => void
     blendIndex: number
     componentIndex: number
@@ -78,9 +76,12 @@ const BlendComponent = ({ blendIndex, componentIndex, update }: BlendComponentPr
                     optionValues={compounds}
                     onChange={async (e) => {
                         const newCompound = e.currentTarget.value
+                        const currentRow = getValues(
+                            `blends.${blendIndex}.components.${componentIndex}`,
+                        )
                         const vx = await variantsFetcher(newCompound)
                         update({
-                            ...curRow,
+                            ...currentRow,
                             compound: newCompound,
                             variant: undefined,
                             vx: vx
@@ -121,7 +122,6 @@ const BlendComponents = ({ parentIndex }: BlendComponentsProps) => {
                     key={field.id}
                     blendIndex={parentIndex}
                     componentIndex={index}
-                    remove={() => remove(index)}
                     update={(c: BlendEditorComponentRow) => update(index, c)}
                 />
             ))}
@@ -203,9 +203,10 @@ const BlendsEditorBody = ({ initData, loginProps: {isLoggedIn, loginToken}, setS
                 {fields.map((field, index) => (
                     <fieldset
                         key={field.id}
-                        className={
-                            `border ${errors?.blends?.[index] && 'invalid'}`
-                        }
+                        className={classNames(
+                            'border',
+                            errors?.blends?.[index] && 'invalid'
+                        )}
                     >
                         <Flex dir="row">
                             <fieldset className="gap-2 p-2">
@@ -223,7 +224,7 @@ const BlendsEditorBody = ({ initData, loginProps: {isLoggedIn, loginToken}, setS
                                     name=''
                                     type="text"
                                     placeholder=''
-                                    roValue={doseForRow(index).toString()}
+                                    roValue={doseForRow(index)}
                                     label="total dose (calculated)"
                                 />
                                 <FormTextArea
@@ -261,15 +262,17 @@ export const BlendsEditor = (loginProps: EditorProps) => {
     )
 
     // for useAsyncFetch, auxDeps = [localCompoundNames]
-    const getCompounds = cache(
-        async () => await fetchCompounds(localCompoundNames),
-        () => '',
-        60000,
+    const getCompounds = useMemo(
+        () => cache(async () => await fetchCompounds(localCompoundNames), () => '', 60000),
+        [localCompoundNames],
     )
-    const getVariants = cache(
-        async (c: string) => await fetchVariants(localCompoundNames, c),
-        (s) => s,
-        60000,
+    const getVariants = useMemo(
+        () => cache(
+            async (c: string) => await fetchVariants(localCompoundNames, c),
+            (s) => s,
+            60000,
+        ),
+        [localCompoundNames],
     )
 
     const [storage, setStorage] = useLocalBlends()
@@ -282,7 +285,7 @@ export const BlendsEditor = (loginProps: EditorProps) => {
                     b.components
                         .map(c => c.compound)
                 ).filterDistinct()
-            const variantsFetchers = variantsToFetch.map((c) => getVariants(c))
+            const variantsFetchers = variantsToFetch.map((c) => () => getVariants(c))
             const fetchedVariants = await awaitAllWithBackpressure(variantsFetchers)
             const variants = Object.fromEntries(
                 variantsToFetch.map((v, i) => [v, fetchedVariants[i]])

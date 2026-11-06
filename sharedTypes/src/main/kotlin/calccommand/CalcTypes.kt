@@ -157,6 +157,11 @@ data class CycleDescription(
                     "expected non-empty transformer"
                 }
             }
+
+            else ->
+                require(false) {
+                    "unexpected prefix: $prefix"
+                }
         }
         require(compoundOrBlend.isNotEmpty()) {
             "empty compoundName"
@@ -279,7 +284,7 @@ sealed class XYList {
 /**
  * Converts scalar lists to XY with zeros omitted.
  */
-@JvmName("IndexedPoints\$toXYList")
+@JvmName($$"IndexedPoints$toXYList")
 fun List<Double>.toXYList(): XYList.OfRaw {
     val xs: MutableList<Int> = mutableListOf()
     val ys: MutableList<Double> = mutableListOf()

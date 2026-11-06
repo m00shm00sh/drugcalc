@@ -404,18 +404,16 @@ private fun ForData.handleDataRemoveRemote(app: AppState) = discardRepl { (pos, 
         is CurrentSection.Compounds -> {
             if (name != null) {
                 name as CompoundName
-                val cbv = name.compound.value.encode()
-                val cvv = name.variant.encode().ifBlank { "-" }
                 if (!all) {
-                    url = "/api/compounds/$cbv/$cvv"
+                    url = apiLink(name)
                     result = "compound $name"
                 } else {
-                    url = "/api/compounds/$cbv"
+                    url = apiLink(name.copy(selectAllVariants = true))
                     result = "compound ${quote(name.compound)} <all-variants>"
                 }
             } else {
                 confirmOperation("delete all compounds", in_, out)
-                url = "/api/data/compounds"
+                url = apiLink(null as CompoundName?)
                 result = "<all compounds>"
             }
         }
@@ -423,11 +421,11 @@ private fun ForData.handleDataRemoveRemote(app: AppState) = discardRepl { (pos, 
         is CurrentSection.Blends -> {
             if (name != null) {
                 name as BlendName
-                url = "/api/blends/${name.value.encode()}"
+                url = apiLink(name)
                 result = "blend $name"
             } else {
                 confirmOperation("delete all blends", in_, out)
-                url = "/api/blends"
+                url = apiLink(null as BlendName?)
                 result = "<all blends>"
             }
         }
@@ -435,11 +433,11 @@ private fun ForData.handleDataRemoveRemote(app: AppState) = discardRepl { (pos, 
         is CurrentSection.Frequencies -> {
             if (name != null) {
                 name as FrequencyName
-                url = "/api/frequencies/${name.value.encode()}"
+                url = apiLink(name)
                 result = "frequency $name"
             } else {
                 confirmOperation("delete all frequencies", in_, out)
-                url = "/api/frequencies"
+                url = apiLink(null as FrequencyName?)
                 result = "<all frequencies>"
             }
         }
@@ -451,7 +449,7 @@ private fun ForData.handleDataRemoveRemote(app: AppState) = discardRepl { (pos, 
 
         null -> {
             confirmOperation("delete all entries", in_, out)
-            url = "/api/data"
+            url = dataApiBase(null)
             result = "<all data>"
         }
     }
@@ -538,7 +536,7 @@ private fun ForData.handleImport(paginate: Paginator) = withRepl { repl, (pos, k
     }
 }
 
-private fun <K, V> checkImport(
+internal fun <K, V> checkImport(
     existing: Map<K, V>,
     name: String,
     otherConflictKeys: Set<K> = emptySet(),
@@ -550,7 +548,7 @@ private fun <K, V> checkImport(
     }
 // ugly and type-unsafe to use the base class for the generic params but there's no cleaner solution
 @JvmName($$"checkImport$Mutable")
-private fun checkImport(
+internal fun checkImport(
     existing: MutableMap<Comparable<*>, *>,
     name: String,
     otherConflictKeys: Set<Comparable<*>> = emptySet(),
@@ -562,7 +560,7 @@ private fun checkImport(
         a.putAll(b)
         a
     }
-private fun <K, V> checkImport(
+internal fun <K, V> checkImport(
     existing: Map<K, V>,
     name: String,
     otherConflictKeys: Set<K> = emptySet(),
@@ -616,7 +614,7 @@ private fun ForData.handleSaveRemote(app: AppState) = discardRepl { (_, _, _, ou
                 "nothing to commit"
             }
             app.doRequest<Unit, Map<CompoundName, ProxyMap<CompoundInfo>>>(
-                NetRequestMethod.Patch, "/api/data/compounds",
+                NetRequestMethod.Patch, apiLink(null as CompoundName?),
                 flags = NRF_AUTH_AND_JSON,
                 body = current.editPage
             )
@@ -644,7 +642,7 @@ private suspend fun Data.pushRemote(app: AppState): String {
     val compoundsBV = compounds.reshapeByBaseAndVariant()
     if (hasMultipleDataSections) {
         app.doRequest<Unit, Data>(
-            NetRequestMethod.Post, "/api/data/compounds",
+            NetRequestMethod.Post, dataApiBase(null),
             flags = NRF_AUTH_AND_JSON,
             body = this
         )
@@ -656,7 +654,6 @@ private suspend fun Data.pushRemote(app: AppState): String {
     return when {
         compounds.isNotEmpty() && !doMultipleCompounds -> {
             val cb = compounds.keys.first().compound
-            val cbv = cb.value.encode()
 
             val body = compoundsBV.values.first()
             check(body.isNotEmpty()) {
@@ -664,7 +661,7 @@ private suspend fun Data.pushRemote(app: AppState): String {
             }
 
             app.doRequest<Unit, Map<String, CompoundInfo>>(
-                NetRequestMethod.Post, "/api/data/compounds/$cbv",
+                NetRequestMethod.Post, apiLink(CompoundName(cb, selectAllVariants = true)),
                 flags = NRF_AUTH_AND_JSON,
                 body = body,
             )
@@ -673,7 +670,7 @@ private suspend fun Data.pushRemote(app: AppState): String {
 
         compounds.isNotEmpty() && doMultipleCompounds -> {
             app.doRequest<Unit, Map<CompoundName, CompoundInfo>>(
-                NetRequestMethod.Post, "/api/data/compounds",
+                NetRequestMethod.Post, apiLink(null as CompoundName?),
                 flags = NRF_AUTH_AND_JSON,
                 body = compounds,
             )
@@ -682,7 +679,7 @@ private suspend fun Data.pushRemote(app: AppState): String {
 
         blends.isNotEmpty() -> {
             app.doRequest<Unit, Map<BlendName, BlendValue>>(
-                NetRequestMethod.Post, "/api/data/blends",
+                NetRequestMethod.Post, apiLink(null as BlendName?),
                 flags = NRF_AUTH_AND_JSON,
                 body = blends,
             )
@@ -691,7 +688,7 @@ private suspend fun Data.pushRemote(app: AppState): String {
 
         frequencies.isNotEmpty() -> {
             app.doRequest<Unit, Map<FrequencyName, FrequencyValue>>(
-                NetRequestMethod.Post, "/api/data/frequencies",
+                NetRequestMethod.Post, apiLink(null as FrequencyName?),
                 flags = NRF_AUTH_AND_JSON,
                 body = frequencies,
             )
@@ -703,7 +700,7 @@ private suspend fun Data.pushRemote(app: AppState): String {
     }
 }
 
-private fun Set<CompoundName>.reshapeByBaseAndVariant(): Map<CompoundBase, Set<String>> =
+internal fun Set<CompoundName>.reshapeByBaseAndVariant(): Map<CompoundBase, Set<String>> =
     buildMap<CompoundBase, MutableSet<String>> {
         this@reshapeByBaseAndVariant.forEach { k ->
             require(!k.selectAllVariants) {
@@ -712,7 +709,7 @@ private fun Set<CompoundName>.reshapeByBaseAndVariant(): Map<CompoundBase, Set<S
             getOrPut(k.compound) { mutableSetOf() }.add(k.variant)
         }
     }
-private fun <V> Map<CompoundName, V>.reshapeByBaseAndVariant(): Map<CompoundBase, Map<String, V>> =
+internal fun <V> Map<CompoundName, V>.reshapeByBaseAndVariant(): Map<CompoundBase, Map<String, V>> =
     buildMap<CompoundBase, MutableMap<String, V>> {
         this@reshapeByBaseAndVariant.forEach { (k, v) ->
             require(!k.selectAllVariants) {
@@ -722,13 +719,13 @@ private fun <V> Map<CompoundName, V>.reshapeByBaseAndVariant(): Map<CompoundBase
         }
     }
 
-private fun LinesBuilder.appendData(d: Data, indent: Int = 0) {
+internal fun LinesBuilder.appendData(d: Data, indent: Int = 0) {
     appendCompoundsMap(d.compounds.keys.reshapeByBaseAndVariant(), "compounds", indent)
     appendSet(d.blends.keys, "blends", indent)
     appendSet(d.frequencies.keys, "frequencies", indent)
 }
 
-private fun LinesBuilder.appendDataSummary(d: Data, indent: Int = 0) {
+internal fun LinesBuilder.appendDataSummary(d: Data, indent: Int = 0) {
     val tabs = "\t".repeat(indent)
     val entries = listOf(
         "compound entries" to d.compounds.size,
@@ -796,7 +793,7 @@ private val compoundInfoRemap = mapOf(
     aliasName("n", CompoundInfo::note),
 )
 
-private fun Map<String, String>.toCompoundUpdater(): ProxyMap<CompoundInfo> =
+internal fun Map<String, String>.toCompoundUpdater(): ProxyMap<CompoundInfo> =
     this.let { m ->
         buildMap {
             m["halfLife"]?.let { put("halfLife", Duration.parse(it)) }
@@ -811,4 +808,33 @@ private fun <R> io(func: (String) -> R): suspend (String) -> R = {
     withContext(PreferredIODispatcher()) {
         func(it)
     }
+}
+
+internal fun dataApiBase(s: String?) =
+    if (s != null) "/api/data/$s"
+    else "/api/data/"
+
+private const val COMPOUNDS = "compounds"
+private const val BLENDS = "blends"
+private const val FREQS = "frequencies"
+
+internal fun apiLink(cn: CompoundName?): String {
+    if (cn == null) return dataApiBase(COMPOUNDS)
+    val cbv = cn.compound.value.encode()
+    if (cn.selectAllVariants)
+        return dataApiBase("$COMPOUNDS/$cbv")
+    val variant = cn.variant.encode().ifBlank { "-" }
+    return dataApiBase("$COMPOUNDS/$cbv/$variant")
+}
+
+internal fun apiLink(bn: BlendName?): String {
+    if (bn == null) return dataApiBase(BLENDS)
+    val bnv = bn.value.encode()
+    return dataApiBase("$BLENDS/$bnv")
+}
+
+internal fun apiLink(fn: FrequencyName?): String {
+    if (fn == null) return dataApiBase(FREQS)
+    val fnv = fn.value.encode()
+    return dataApiBase("$FREQS/$fnv")
 }

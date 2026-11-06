@@ -10,7 +10,6 @@ import com.moshy.ProxyMap
 import com.moshy.drugcalc.calc.calc.TRANSFORMER_FREQ_INFO
 import com.moshy.drugcalc.calc.calc.getTransformersInfo
 import com.moshy.drugcalc.server.http.routing.util.*
-import com.moshy.drugcalc.server.http.routing.util.UrlStringSerializer.Companion.encode
 import com.moshy.drugcalc.server.util.AccessException
 import com.moshy.drugcalc.server.util.AppConfig
 import com.moshy.drugcalc.types.calccommand.TransformerInfo
@@ -135,6 +134,15 @@ internal fun Route.configureDataRoutes(
         names.list
     }
     authenticatedAsAdmin {
+        post<DataRoute.Compounds.Name, Map<String, CompoundInfo>, Unit> { params, insertMap ->
+            requireOperationSucceeded {
+                dataController.putEntries(
+                    Data(compounds = insertMap.mapKeys { (variant, _) ->
+                        CompoundName(params.compound, variant)
+                    })
+                )
+            }
+        }
         delete<DataRoute.Compounds.Name, Unit> { params ->
             val cn = CompoundName.selectAllVariants(params.compound)
             checkedDelete(cn) {

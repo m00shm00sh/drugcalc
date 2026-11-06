@@ -34,9 +34,12 @@ internal suspend fun AsyncJooq.getBlends(
                     val blendNameAsCompoundName = blendName.let(::BlendName)
                     if (currentName == null || currentName != blendNameAsCompoundName) {
                         // move inner on blendName transition, not first row
-                        if (currentName != null)
+                        if (currentName != null) {
+                            val oldNote = noteForName
+                            checkNotNull(oldNote) { "null note for blend being flushed" }
                             this@buildMap[currentName!!] =
-                                BlendValue(inner!! as Map<CompoundName, Double>, note)
+                                BlendValue(inner!! as Map<CompoundName, Double>, oldNote)
+                        }
                         inner = mutableMapOf()
                         currentName = blendNameAsCompoundName
                         noteForName = note

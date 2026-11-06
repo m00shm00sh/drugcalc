@@ -1,7 +1,12 @@
 import { z } from 'zod'
-import { BACKEND } from './constants'
 import type { ValueOrSupplier } from './filter-setif'
 import type { Nullable } from './util'
+
+function fallbackOrUndefined<T>(fallback: ValueOrSupplier<T> | undefined): Nullable<T> {
+    if (fallback === undefined) return undefined
+    if (typeof fallback === 'function') return (fallback as () => T)()
+    return fallback as T
+}
 
 export async function fetchJson<T extends object, ZT extends z.ZodType<T> = z.ZodType<T>>(
     relativeLink: string,
@@ -21,25 +26,21 @@ export async function fetchJson<T extends object, ZT extends z.ZodType<T> = z.Zo
 ): Promise<Nullable<z.infer<typeof schema>>> {
     let response: Response | undefined
     try {
-        response = await fetch(`${BACKEND}${relativeLink}`, {
+        response = await fetch(relativeLink, {
             headers: {
                 Accept: 'application/json',
             },
         })
     } catch (e) {
         console.log(`fetch error(GET ${relativeLink}): ${e}`)
-        if (on404OrHardFail === undefined) return undefined
-        if (typeof on404OrHardFail === 'function') return on404OrHardFail()
-        return on404OrHardFail as z.infer<typeof schema>
+        return fallbackOrUndefined(on404OrHardFail)
     }
 
     if (!response.ok && response.status !== 404) {
         throw Error(`couldn't fetch ${relativeLink}: ${response.status}`)
     }
     if (response.status === 404) {
-        if (on404OrHardFail === undefined) return undefined
-        if (typeof on404OrHardFail === 'function') return on404OrHardFail()
-        return on404OrHardFail as z.infer<typeof schema>
+        return fallbackOrUndefined(on404OrHardFail)
     }
     const data = await response.json()
     return schema.parse(data)
@@ -53,7 +54,7 @@ export async function postJson<R, T extends object, ZT extends z.ZodType<R> = z.
     body: T,
     auxHeaders: Record<string, string> = {},
 ): Promise<z.infer<typeof responseSchema>> {
-    const response = await fetch(`${BACKEND}${relativeLink}`, {
+    const response = await fetch(relativeLink, {
         method: 'POST',
         headers: {
             Accept: 'application/json',
@@ -80,9 +81,9 @@ export async function del(
 ): Promise<boolean> {
     if (!bearer)
         throw Error(`missing bearer`)
-    let response: Response | null
+    let response: Response
     try {
-        response = await fetch(`${BACKEND}${relativeLink}`, {
+        response = await fetch(relativeLink, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${bearer}`

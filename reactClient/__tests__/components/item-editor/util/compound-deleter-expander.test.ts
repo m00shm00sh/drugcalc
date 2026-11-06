@@ -1,18 +1,19 @@
 import { describe, expect, it, jest } from '@jest/globals'
 
 jest.unstable_mockModule('../../../../src/util/awaitAllWithBackpressure', () => ({
-    awaitAllWithBackpressure: jest.fn(),
-    toAwaitable: jest.fn(),
+    awaitAllWithBackpressure: jest.fn(
+        async (thunks: readonly (() => Promise<unknown>)[]) =>
+            Promise.all(thunks.map((thunk) => thunk())),
+    ),
+    toThunk: jest.fn((o: unknown) => () => Promise.resolve(o)),
 }))
 jest.unstable_mockModule('../../../../src/util/data-fetcher', () => ({
     cachedRemoteVariantsOrNull: jest.fn(),
 }))
 
 const { expandExpansionItems } = await import('../../../../src/components/item-editor/util/compound-deleter-expander')
-const { awaitAllWithBackpressure } = await import('../../../../src/util/awaitAllWithBackpressure')
 const { cachedRemoteVariantsOrNull } = await import('../../../../src/util/data-fetcher')
 
-const mockAwaitAll = awaitAllWithBackpressure as any
 const mockCachedRemoteVariantsOrNull = cachedRemoteVariantsOrNull as any
 
 const makeFormMethods = (data: any[]) => ({
@@ -32,20 +33,19 @@ describe('expandExpansionItems', () => {
     })
 
     it('skips non-expanded rows', async () => {
-        mockAwaitAll.mockResolvedValue([[]])
         const formMethods = makeFormMethods([{ compound: 'a', expand: false }])
         const arrayMethods = makeArrayMethods()
 
         const expand = expandExpansionItems(formMethods as any, arrayMethods as any)
         await expand()
 
+        expect(mockCachedRemoteVariantsOrNull).not.toHaveBeenCalled()
         expect(arrayMethods.update).not.toHaveBeenCalled()
         expect(arrayMethods.insert).not.toHaveBeenCalled()
         expect(formMethods.setError).not.toHaveBeenCalled()
     })
 
     it('caches variants when expand is true and vx is undefined', async () => {
-        mockAwaitAll.mockResolvedValue([['v1', 'v2']])
         mockCachedRemoteVariantsOrNull.mockResolvedValue(['v1', 'v2'])
         const formMethods = makeFormMethods([{ compound: 'a', expand: true }])
         const arrayMethods = makeArrayMethods()
@@ -65,7 +65,7 @@ describe('expandExpansionItems', () => {
     })
 
     it('sets error when variant fetch returns undefined', async () => {
-        mockAwaitAll.mockResolvedValue([undefined])
+        mockCachedRemoteVariantsOrNull.mockResolvedValue(undefined)
         const formMethods = makeFormMethods([{ compound: 'a', expand: true }])
         const arrayMethods = makeArrayMethods()
 
@@ -79,7 +79,6 @@ describe('expandExpansionItems', () => {
     })
 
     it('uses cached vx when expand is true and vx is defined', async () => {
-        mockAwaitAll.mockResolvedValue([['cached-v1']])
         const formMethods = makeFormMethods([{ compound: 'a', expand: true, vx: ['cached-v1'] }])
         const arrayMethods = makeArrayMethods()
 
@@ -95,7 +94,7 @@ describe('expandExpansionItems', () => {
     })
 
     it('clears errors for all variant rows after update', async () => {
-        mockAwaitAll.mockResolvedValue([['v1', 'v2']])
+        mockCachedRemoteVariantsOrNull.mockResolvedValue(['v1', 'v2'])
         const formMethods = makeFormMethods([{ compound: 'a', expand: true }])
         const arrayMethods = makeArrayMethods()
 
@@ -106,7 +105,7 @@ describe('expandExpansionItems', () => {
     })
 
     it('does not insert when there are no additional variants', async () => {
-        mockAwaitAll.mockResolvedValue([['v1']])
+        mockCachedRemoteVariantsOrNull.mockResolvedValue(['v1'])
         const formMethods = makeFormMethods([{ compound: 'a', expand: true }])
         const arrayMethods = makeArrayMethods()
 
@@ -122,7 +121,9 @@ describe('expandExpansionItems', () => {
     })
 
     it('processes multiple expanded rows in reverse order', async () => {
-        mockAwaitAll.mockResolvedValue([['v1'], ['v2', 'v3']])
+        mockCachedRemoteVariantsOrNull.mockImplementation(async (c: string) =>
+            c === 'a' ? ['v1'] : ['v2', 'v3'],
+        )
         const formMethods = makeFormMethods([
             { compound: 'a', expand: true },
             { compound: 'b', expand: true },

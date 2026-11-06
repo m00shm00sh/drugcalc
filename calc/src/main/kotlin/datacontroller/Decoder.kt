@@ -208,7 +208,7 @@ class Decoder(
                 ]
             }
             val dose = scaledBase + completedIntervals * scaledAdd
-            // DecodedCycle requires a positive dose; compoundCycle cannot handle doses at or below cutoff.
+            // DecodedCycle requires a positive dose; doses at or below the cutoff produce no data.
             if (dose <= cutoffMilligrams) {
                 // A nonpositive ramp step is monotonic, so once the dose reaches zero (or the
                 // cutoff) it can never become positive again. Stop instead of emitting
@@ -225,10 +225,10 @@ class Decoder(
         }
 
         val halfLife = cInfo.halfLife / tickDuration
-        return groups.map { group ->
-            val groupDose = scaledBase + group.k * scaledAdd
-            val groupStart = tcStart + group.times.first()
-            if (group.times.size == 1) {
+        return groups.map { (k, times) ->
+            val groupDose = scaledBase + k * scaledAdd
+            val groupStart = tcStart + times.first()
+            if (times.size == 1) {
                 // A single dose still needs a positive duration and frequency; [2] prevents a redose.
                 DecodedCycle(
                     compoundName.compound.value, groupDose, halfLife,
@@ -238,8 +238,8 @@ class Decoder(
                 DecodedCycle(
                     compoundName.compound.value, groupDose, halfLife,
                     groupStart,
-                    group.times.last() - group.times.first(),
-                    group.times.zipWithNext { a, b -> b - a }
+                    times.last() - times.first(),
+                    times.zipWithNext { a, b -> b - a }
                 )
             }
         }

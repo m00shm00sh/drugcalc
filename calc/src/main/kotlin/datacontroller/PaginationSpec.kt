@@ -18,7 +18,7 @@ data class PaginationSpecifier<T>(
             "count must be positive"
         }
         require(!((direction != null) xor (seekAfter != null))) {
-            "non-null direction must be tied with non-null limit"
+            "non-null direction must be tied with non-null seekAfter"
         }
     }
 

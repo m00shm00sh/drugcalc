@@ -5,7 +5,7 @@ import com.moshy.drugcalc.server.util.*
 import io.ktor.server.application.serverConfig
 import io.ktor.server.engine.*
 import io.ktor.server.netty.Netty
-import kotlin.coroutines.coroutineContext
+import kotlinx.coroutines.currentCoroutineContext
 import kotlin.system.exitProcess
 
 internal suspend fun createKtorServer(config: AppConfig.App): Server =
@@ -50,7 +50,7 @@ createKtorServer(
     factory: ApplicationEngineFactory<Engine, Configuration>,
     serverConfigure: Configuration.() -> Unit = {},
 ): Server {
-    val context = coroutineContext
+    val context = currentCoroutineContext()
     val props = serverConfig(applicationEnvironment {
         log = logger("ktor")
     }) {

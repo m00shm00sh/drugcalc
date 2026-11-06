@@ -46,12 +46,19 @@ export function useAsyncResult<R>(invocation: _Invokable<R>): R {
     ]
     // biome-ignore lint/correctness/useExhaustiveDependencies: see three lines above
     useEffect(() => {
+        let cancelled = false
         const fetchResult = async () => {
-            const result = await invocation.func(...invocation.args)
-            setResult(result)
+            try {
+                const result = await invocation.func(...invocation.args)
+                if (!cancelled) setResult(result)
+            } catch {
+                // retain the previous value; callers rely on stale data on failure
+            }
         }
-        fetchResult()
-        return () => {}
+        void fetchResult()
+        return () => {
+            cancelled = true
+        }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [...deps])
     return result

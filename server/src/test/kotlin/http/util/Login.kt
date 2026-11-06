@@ -1,7 +1,7 @@
 package com.moshy.drugcalc.server.http.util
 
-import com.moshy.drugcalc.server.http.LoginResponse
 import com.moshy.drugcalc.server.http.user.*
+import com.moshy.drugcalc.types.login.LoginResponse
 import com.moshy.drugcalc.types.login.UserRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body

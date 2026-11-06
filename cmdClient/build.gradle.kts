@@ -27,6 +27,7 @@ dependencies {
     implementation(libs.krepl)
 
     testImplementation(libs.kx.coroutines.test)
+    testImplementation(libs.ktor.client.mock)
     testImplementation(project(":sharedTestLogic"))
 }
 

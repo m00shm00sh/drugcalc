@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Blocking
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.convertTo
 import org.jetbrains.kotlinx.dataframe.io.readCsv
+import org.jetbrains.kotlinx.dataframe.io.readCsvStr
 import org.jetbrains.kotlinx.dataframe.io.readExcel
 import java.io.File
 import java.util.Arrays
@@ -171,11 +172,14 @@ private fun readXcsv(filename: String): Map<String, CsvChunk> =
                 }
             }
         }
-    }.mapValues { (_, v) -> CsvChunk(v.first, v.toString()) }
+    }.mapValues { (_, v) ->
+        val (offset, builder) = v
+        CsvChunk(offset, builder.toString())
+    }
 
 private inline fun <reified F : Any, K, V> tryGetXcsvChunk(chunks: Map<String, CsvChunk>, chunk: String): Map<K, V> =
     chunks[chunk]?.let { (off, data) ->
-        val df = DataFrame.readCsv(data).convertTo<F>()
+        val df = DataFrame.readCsvStr(data).convertTo<F>()
         dfToMap(df, off)
     }
         ?: emptyMap()

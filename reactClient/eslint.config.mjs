@@ -7,7 +7,7 @@ import tseslint from 'typescript-eslint'
 import stylistic from '@stylistic/eslint-plugin'
 
 export default defineConfig([
-    globalIgnores(['dist']),
+    globalIgnores(['dist', 'coverage']),
     {
         files: ['**/*.{ts,tsx}'],
         extends: [
@@ -27,6 +27,13 @@ export default defineConfig([
             'stylistic/semi': ['error', 'never'],
             'stylistic/indent': ['error', 4],
             'no-unexpected-multiline': 'error',
+        },
+    },
+    {
+        // Test doubles and jest mock plumbing are inherently loosely typed.
+        files: ['__tests__/**/*.{ts,tsx}'],
+        rules: {
+            '@typescript-eslint/no-explicit-any': 'off',
         },
     },
 ])

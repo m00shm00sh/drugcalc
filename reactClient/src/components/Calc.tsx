@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import classNames from 'classnames'
-import { ComponentType, createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import type { ComponentType } from 'react'
 import type { PlotParams } from 'react-plotly.js'
 import { FormProvider, useFieldArray, useForm, useFormContext } from 'react-hook-form'
 import * as createPlotlyComponent from 'react-plotly.js/factory'
@@ -42,7 +43,7 @@ import {
 } from '../util/data-fetcher'
 import { getOrElse, stripIf } from '../util/filter-setif'
 import cache from '../util/cache'
-import { awaitAllWithBackpressure, toAwaitable } from '../util/awaitAllWithBackpressure'
+import { awaitAllWithBackpressure, toThunk } from '../util/awaitAllWithBackpressure'
 import { EditorCommands } from './EditorCommands'
 import { FormInput, FormSelectWithOptions } from './FormField'
 import { Centered } from './widgets/Centered'
@@ -118,38 +119,37 @@ const CycleDescriptionEditorRow = ({
                     optionValues={selectPrefix}
                     onChange={async (e) => {
                         const newPrefix = e.currentTarget.value
-                        stripIf('variantOrTransformer' in curRow, curRow, 'variantOrTransformer')
-                        stripIf('dose' in curRow, curRow, 'dose')
-                        curRow.fn = frequencies
+                        // copy the current form value so we never mutate form state in place
+                        const currentRow = { ...getValues(`cycle.${index}`) }
+                        stripIf('variantOrTransformer' in currentRow, currentRow, 'variantOrTransformer')
+                        stripIf('dose' in currentRow, currentRow, 'dose')
+                        currentRow.fn = frequencies
                         switch (newPrefix) {
                             case '':
-                                /* we used getValues to get value at start of value,
-                                 * not watch to get live value, so we have to assign
-                                 * the changed value because it will be stale otherwise
-                                 */
-                                curRow.prefix = ''
-                                curRow.cb = compounds
-                                // this check is silly and redundant but welcome to typescript
-                                if (curRow.prefix === '')
-                                    curRow.vx = await getVariants(curRow.compoundOrBlend)
+                                currentRow.prefix = ''
+                                currentRow.cb = compounds
+                                if (currentRow.prefix === '')
+                                    currentRow.vx = await getVariants(currentRow.compoundOrBlend)
                                 break
                             case '.b':
-                                curRow.prefix = '.b'
-                                curRow.cb = blends
+                                currentRow.prefix = '.b'
+                                currentRow.cb = blends
                                 break
                             case '.t':
-                                curRow.prefix = '.t'
-                                curRow.cb = compounds
-                                // this check is silly and redundant but welcome to typescript
-                                if (curRow.prefix === '.t')
-                                    curRow.vx = await cachedTransformerNames()
-                                curRow.fn = [...curRow.fn, ...await cachedTransformerFrequencies()]
-                                stripIf('doseRampEnabled' in curRow, curRow, 'doseRampEnabled')
-                                stripIf('doseRampDose' in curRow, curRow, 'doseRampDose')
-                                stripIf('doseRampFreqName' in curRow, curRow, 'doseRampFreqName')
+                                currentRow.prefix = '.t'
+                                currentRow.cb = compounds
+                                if (currentRow.prefix === '.t')
+                                    currentRow.vx = await cachedTransformerNames()
+                                currentRow.fn = [
+                                    ...currentRow.fn,
+                                    ...await cachedTransformerFrequencies(),
+                                ]
+                                stripIf('doseRampEnabled' in currentRow, currentRow, 'doseRampEnabled')
+                                stripIf('doseRampDose' in currentRow, currentRow, 'doseRampDose')
+                                stripIf('doseRampFreqName' in currentRow, currentRow, 'doseRampFreqName')
                                 break
                         }
-                        update(curRow)
+                        update(currentRow)
                     }}
                 />
                 <FormSelectWithOptions
@@ -158,9 +158,11 @@ const CycleDescriptionEditorRow = ({
                     optionValues={getOrElse(curRow, 'cb', [])}
                     onChange={async (e) => {
                         const newCompound = e.currentTarget.value
-                        if (curRow.prefix === '')
-                            curRow.vx = await getVariants(newCompound)
-                        update({...curRow})
+                        const currentRow = { ...getValues(`cycle.${index}`) }
+                        currentRow.compoundOrBlend = newCompound
+                        if (currentRow.prefix === '')
+                            currentRow.vx = await getVariants(newCompound)
+                        update(currentRow)
                     }}
                 />
                 <FormSelectWithOptions
@@ -213,12 +215,13 @@ const CycleDescriptionEditorRow = ({
                         name={`${row}.doseRampEnabled`}
                         onChange={(e) => {
                             const enabled = e.currentTarget.checked
-                            curRow.doseRampEnabled = enabled
+                            const currentRow = { ...getValues(`cycle.${index}`) }
+                            currentRow.doseRampEnabled = enabled
                             if (!enabled) {
-                                curRow.doseRampDose = undefined
-                                curRow.doseRampFreqName = undefined
+                                currentRow.doseRampDose = undefined
+                                currentRow.doseRampFreqName = undefined
                             }
-                            update({ ...curRow })
+                            update(currentRow)
                         }}
                     />
                 )}
@@ -344,48 +347,45 @@ export const Calc = () => {
     const [localBlends] = useLocalBlends()
     const [localCompounds] = useLocalCompounds()
     const [localFrequencies] = useLocalFrequencies()
-    const [localCompoundsFromStorage] = useLocalCompounds()
     const localCompoundNames = useMemo(
-        () => reshapeCompoundKeys(localCompoundsFromStorage),
-        [localCompoundsFromStorage],
+        () => reshapeCompoundKeys(localCompounds),
+        [localCompounds],
     )
 
     // for useAsyncFetch, auxDeps = [localCompoundNames]
-    const getCompounds = cache(
-        async () => await fetchCompounds(localCompoundNames),
-        () => '',
-        60000,
+    const getCompounds = useMemo(
+        () => cache(async () => await fetchCompounds(localCompoundNames), () => '', 60000),
+        [localCompoundNames],
     )
 
     // for useAsyncFetch, auxDeps = [localCompoundNames]
-    const getVariants = cache(
-        async (c: string) => await fetchVariants(localCompoundNames, c),
-        (s) => s,
-        60000,
+    const getVariants = useMemo(
+        () => cache(
+            async (c: string) => await fetchVariants(localCompoundNames, c),
+            (s) => s,
+            60000,
+        ),
+        [localCompoundNames],
     )
 
-
-    const [localBlendsFromStorage] = useLocalBlends()
     const localBlendNames = useMemo(
-        () => Object.keys(localBlendsFromStorage),
-        [localBlendsFromStorage],
+        () => Object.keys(localBlends),
+        [localBlends],
     )
     // for useAsyncFetch, auxDeps = [localBlendNames]
-    const getBlends = cache(
-        async () => await fetchBlends(localBlendNames),
-        () => '',
-        60000,
+    const getBlends = useMemo(
+        () => cache(async () => await fetchBlends(localBlendNames), () => '', 60000),
+        [localBlendNames],
     )
 
-    const [localFrequenciesFromStorage] = useLocalFrequencies()
     const localFrequencyItems = useMemo(
-        () => sortedFrequenciesWithWeights(localFrequenciesFromStorage),
-        [localFrequenciesFromStorage],
+        () => sortedFrequenciesWithWeights(localFrequencies),
+        [localFrequencies],
     )
     // for useAsyncFetch, auxDeps = [localFrequencyItems]
-    const getFrequencies = cache(
-        async () => await fetchFrequencies(localFrequencyItems),
-        () => '',
+    const getFrequencies = useMemo(
+        () => cache(async () => await fetchFrequencies(localFrequencyItems), () => ''),
+        [localFrequencyItems],
     )
 
     const initFrequencyNames = useAsyncResult(makeInvoker({
@@ -429,7 +429,7 @@ export const Calc = () => {
     )
     const hydratedInitValues = async (iv: CalcRequestRow[]) => {
         const variantsFetchers = iv.map((row) =>
-            row.prefix === '' ? getVariants(row.compoundOrBlend) : toAwaitable(undefined)
+            row.prefix === '' ? () => getVariants(row.compoundOrBlend) : toThunk(undefined)
         )
         const [
             compounds,
@@ -439,11 +439,11 @@ export const Calc = () => {
             transformerFreqs,
             ...variants
         ] = await awaitAllWithBackpressure([
-            getCompounds(),
-            getBlends(),
-            getFrequencies(),
-            cachedTransformerNames(),
-            cachedTransformerFrequencies(),
+            () => getCompounds(),
+            () => getBlends(),
+            () => getFrequencies(),
+            () => cachedTransformerNames(),
+            () => cachedTransformerFrequencies(),
             ...variantsFetchers
         ])
         const combinedTransformerFreqs = [...freqs, ...transformerFreqs]

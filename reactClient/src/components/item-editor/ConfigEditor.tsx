@@ -111,11 +111,11 @@ export const ConfigEditor = () => {
     })
 
     const doSubmit = (c: ConfigEditorContainer) => {
-        const r = c.config.map((r) => {
+        const rows = c.config.map((r) => {
             if (!isConfigItem(r.type)) throw Error('failed test for config key')
             return { ...r, type: r.type }
         })
-        setStoredConfig(configEditorFieldsToConfig(r))
+        setStoredConfig(configEditorFieldsToConfig(rows))
     }
 
     const {
