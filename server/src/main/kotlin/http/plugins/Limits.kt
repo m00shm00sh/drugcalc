@@ -4,6 +4,7 @@ import com.moshy.drugcalc.server.http.routing.HEARTBEAT_PATH
 import com.moshy.drugcalc.server.util.AppConfig
 import io.ktor.server.application.*
 import io.ktor.server.plugins.bodylimit.*
+import io.ktor.server.plugins.origin
 import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.request.path
 
@@ -19,10 +20,11 @@ internal fun Application.configureLimits(limits: AppConfig.Http.Limits) {
     }
     install(RateLimit) {
         // Applied to every request. The request key isolates each client by its
-        // remote address, so one client cannot consume another's budget.
+        // remote address (honoring X-Forwarded-For from the Caddy proxy), so one
+        // client cannot consume another's budget.
         // Heartbeat requests have zero weight, exempting them from both buckets.
         global {
-            requestKey { call -> call.request.local.remoteAddress }
+            requestKey { call -> call.request.origin.remoteAddress }
             requestWeight { call, _ -> if (call.isHeartbeat()) 0 else 1 }
             rateLimiter(
                 limit = limits.clientRateLimit.num,

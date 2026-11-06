@@ -1,0 +1,21 @@
+# TLS-terminating reverse proxy for drugcalc.
+#
+# The Ktor server listens on loopback over plain HTTP. Caddy obtains and
+# renews certificates automatically, then forwards requests to the backend.
+#
+# Required for a public deployment:
+#   DRUGCALC_DOMAIN=drugcalc.example.com
+#   ACME_EMAIL=admin@example.com
+#
+# The default domain, `localhost`, uses Caddy's locally-trusted CA. This is
+# suitable for development but not for public clients.
+{
+	email {$ACME_EMAIL:admin@example.com}
+}
+
+{$DRUGCALC_DOMAIN:localhost} {
+	encode zstd gzip
+
+	# Caddy adds X-Forwarded-For, X-Forwarded-Proto, and X-Forwarded-Host.
+	reverse_proxy {$DRUGCALC_UPSTREAM:127.0.0.1:8080}
+}

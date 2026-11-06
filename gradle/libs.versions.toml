@@ -21,8 +21,6 @@ hikaricp-version = "7.1.0"
 postgresql-version = "42.7.14"
 testcontainers-version = "1.21.4"
 
-r2-pem-keystore-version = "0.3"
-
 plotlykt-version = "0.7.2"
 
 kproxymap-version = "v0.14.0"
@@ -55,9 +53,9 @@ ktor-server-auth = { module = "io.ktor:ktor-server-auth", version.ref = "ktor-ve
 ktor-server-auth-jwt = { module = "io.ktor:ktor-server-auth-jwt", version.ref = "ktor-version" }
 ktor-server-body-limit = { module = "io.ktor:ktor-server-body-limit", version.ref = "ktor-version" }
 ktor-server-rate-limit = { module = "io.ktor:ktor-server-rate-limit", version.ref = "ktor-version" }
+ktor-server-forwarded-header = { module = "io.ktor:ktor-server-forwarded-header", version.ref = "ktor-version" }
 ktor-server-resources = { module = "io.ktor:ktor-server-resources", version.ref = "ktor-version" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor-version" }
-ktor-server-tls = { module = "io.ktor:ktor-network-tls-certificates", version.ref = "ktor-version" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor-version" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor-version" }
 ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor-version" }
@@ -79,8 +77,6 @@ flyway-database-postgresql = { module = "org.flywaydb:flyway-database-postgresql
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers-version" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit-version" }
 
-pem-keystore = { module = "io.r2:simple-pem-keystore", version.ref = "r2-pem-keystore-version" }
-
 plotly-kt = { module = "space.kscience:plotlykt-core", version.ref = "plotlykt-version" }
 
 kproxymap = { module = "com.github.m00shm00sh:kproxymap", version.ref = "kproxymap-version" }
@@ -95,7 +91,7 @@ junit-launcher = {module = "org.junit.platform:junit-platform-launcher" }
 ktor-server = [ "ktor-server-core", "ktor-server-openapi", "ktor-server-swagger", "ktor-server-content-negotiation",
         "ktor-serialization-kotlinx-json", "ktor-server-host-common", "ktor-server-status-pages",
         "ktor-server-auth", "ktor-server-auth-jwt", "ktor-server-body-limit", "ktor-server-rate-limit",
-        "ktor-server-resources", "ktor-server-netty", "ktor-server-tls"
+        "ktor-server-forwarded-header", "ktor-server-resources", "ktor-server-netty"
     ]
 ktor-server-test = [ "ktor-server-test-host", "ktor-client-core", "ktor-client-content-negotiation" ]
 

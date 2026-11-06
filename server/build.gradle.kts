@@ -24,8 +24,6 @@ dependencies {
 
     implementation(libs.bundles.hoplite)
 
-    implementation(libs.pem.keystore)
-
     testImplementation(libs.bundles.ktor.server.test)
     testImplementation(libs.kx.coroutines.test)
     testImplementation(project(":sharedTestLogic"))
