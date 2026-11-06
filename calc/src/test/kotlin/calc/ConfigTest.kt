@@ -11,10 +11,7 @@ import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
 private val ONE_DAY = (1.0).toDuration(DurationUnit.DAYS)
-private val NEGATIVE_MSEC = (-1.0).toDuration(DurationUnit.MILLISECONDS)
-private val ONE_MSEC = (1).toDuration(DurationUnit.MILLISECONDS)
 private val ZERO_MSEC = (0).toDuration(DurationUnit.MILLISECONDS)
-private val f1 = listOf(ONE_DAY)
 
 internal class ConfigInvariantsTest {
     // we only care about the ones with invariants verified in Config.<init>

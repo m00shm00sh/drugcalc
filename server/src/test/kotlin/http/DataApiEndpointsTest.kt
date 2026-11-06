@@ -1,6 +1,5 @@
 package com.moshy.drugcalc.server.http
 
-//import com.moshy.drugcalc.types.calccommand
 import com.moshy.drugcalc.types.dataentry.*
 import com.moshy.drugcalc.calctest.DataControllerTestSupport.RoFlag
 import com.moshy.drugcalc.calctest.DataControllerTestSupport.Companion.RO as DC_RO
@@ -11,23 +10,19 @@ import com.moshy.drugcalc.commontest.assertContains
 import com.moshy.drugcalc.commontest.assertDoesNotContain
 import com.moshy.drugcalc.commontest.assertEquals
 import com.moshy.ProxyMap
-import com.moshy.containers.assertIsSortedSet
 import com.moshy.drugcalc.calc.calc.TRANSFORMER_FREQ_INFO
 import com.moshy.drugcalc.calc.calc.getTransformersInfo
 import com.moshy.drugcalc.calctest.DataControllerTestSupport
-import com.moshy.drugcalc.commontest.assertLess
 import com.moshy.drugcalc.commontest.assertLessOrEqual
 import com.moshy.drugcalc.commontest.assertSetsAreEqual
 import com.moshy.drugcalc.types.calccommand.TransformerInfo
 import io.ktor.client.HttpClient
-import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 // unstarred import so it takes precedence for assert(DoesNotThrow|Throws)
 import org.junit.jupiter.api.Test
-import kotlin.test.assertContentEquals
 import kotlin.time.*
 
 // TODO: casefold+trim coverage for put post update del

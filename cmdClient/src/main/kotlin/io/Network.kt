@@ -1,13 +1,11 @@
 package com.moshy.drugcalc.cmdclient.io
 
 import com.moshy.drugcalc.cmdclient.AppState
-import com.moshy.drugcalc.cmdclient.states.ForConnect
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.util.reflect.TypeInfo
 import kotlinx.io.IOException
 import java.util.EnumSet
 

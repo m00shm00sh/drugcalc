@@ -3,7 +3,6 @@ package com.moshy.drugcalc.calc.calc
 import com.moshy.drugcalc.types.calccommand.*
 import com.moshy.drugcalc.commontest.*
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.*
@@ -13,8 +12,6 @@ import kotlin.time.*
 private val ONE_DAY = 1.toDuration(DurationUnit.DAYS)
 private val DAY = 2
 private val config = Config(ONE_DAY / 2, 0.01, false)
-
-private fun Config.decodeFreqs(freqs: List<Duration>) = freqs.map { (it / tickDuration).toInt() }
 
 
 internal class CycleTest {

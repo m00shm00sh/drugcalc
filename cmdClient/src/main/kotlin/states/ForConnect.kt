@@ -1,7 +1,7 @@
 package com.moshy.drugcalc.cmdclient.states
 
-import com.moshy.drugcalc.cmdclient.AppState
-import com.moshy.drugcalc.common.logger
+import com.moshy.drugcalc.cmdclient.io.resultOrThrow
+import com.moshy.drugcalc.cmdclient.io.resultTextOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.java.Java
@@ -11,7 +11,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.io.IOException
 import kotlinx.serialization.*
-import java.lang.IllegalArgumentException
 import java.security.cert.X509Certificate
 import javax.net.ssl.*
 
@@ -31,7 +30,6 @@ internal class ForConnect(
         }
 
     }
-    private val logger = logger("${AppState.NAME}:connect")
 
     var connect: ConnectParams = ConnectParams()
     @Transient
@@ -43,10 +41,7 @@ internal class ForConnect(
         var success = false
         try {
             val req = client.get(connect.makeConnectableUrl("/api/"))
-            require(req.status == HttpStatusCode.OK) {
-                throw RuntimeException("heartbeat: http ${req.status}")
-            }
-            val hbResult = req.body<String>()
+            val hbResult = req.resultTextOrThrow()
             require(hbResult == "OK") {
                 "unexpected heartbeat result: $hbResult"
             }
@@ -78,13 +73,6 @@ private fun createClient(params: ForConnect.ConnectParams): HttpClient =
         install(ContentNegotiation) {
             json()
         }
-    }
-
-private fun defaultPortForProto(s: String) =
-    when (s) {
-        "http" -> 80
-        "https" -> 443
-        else -> throw IllegalArgumentException("no default port for proto $s")
     }
 
 private fun insecureTlsContext() =

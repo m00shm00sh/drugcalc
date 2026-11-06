@@ -8,7 +8,6 @@ import io.ktor.server.response.respondText
 // do not import io.ktor.server.routing.*; it will pull in post<T>
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
-import io.netty.handler.codec.http.HttpResponseStatus
 
 internal suspend inline fun <reified O : Any>
 RoutingContext.handleResponseBody(status: HttpStatusCode, result: O) {
