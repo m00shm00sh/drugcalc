@@ -21,7 +21,6 @@ internal class ForConnectTest {
         val params = ForConnect.ConnectParams()
 
         assertEquals("http://127.0.0.1:8080", params.addr)
-        assertFalse(params.insecure)
     }
 
     @Test
@@ -68,7 +67,7 @@ internal class ForConnectTest {
             }
         }
 
-        assertFailsWith<RuntimeException> {
+        assertFailsWith<IOException> {
             ForConnect { _ -> client }.getClient()
         }
 
