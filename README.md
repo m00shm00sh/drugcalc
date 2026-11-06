@@ -24,8 +24,7 @@ This is a drug math calculator written in Kotlin that is spread among multiple m
     - [ktor-auth] for handling authorization headers
     - [ktor-auth-jwt] for JWT validation
     - ktor-server-body-limit for limiting JSON input sizes
-  - Because Ktor uses the Java 8 key store system, it doesn't support PEM certificates. We use [pem-keystore] to
-    work around this in a manner supporting hot-reload of SSL keys
+  - TLS is terminated outside the application by a Caddy reverse proxy; see [Reverse proxy](#reverse-proxy)
   - config file handling is done with [hoplite] and ktor is used in embedded mode so that we're in charge of reading
     and parsing config
 
@@ -37,6 +36,25 @@ There are other modules used for testing only:
 - calcTestLogic
   - prepares test instance of data controller with various read-only modes
   - populates database with initial values
+
+## Reverse proxy
+TLS is handled by Caddy rather than the application. The server listens on plain HTTP (loopback by default), while
+Caddy obtains and renews certificates and forwards requests to it. The included `Caddyfile` is configured through
+these environment variables:
+
+| Variable             | Default             | Description                                        |
+| -------------------- | ------------------- | -------------------------------------------------- |
+| `DRUGCALC_DOMAIN`    | `localhost`         | Public hostname to serve; Caddy obtains its cert   |
+| `ACME_EMAIL`         | `admin@example.com` | Contact address for ACME certificate registration  |
+| `DRUGCALC_UPSTREAM`  | `127.0.0.1:8080`    | Address of the Ktor HTTP backend                   |
+
+For example:
+
+```
+DRUGCALC_DOMAIN=drugcalc.example.com ACME_EMAIL=admin@example.com caddy run --config Caddyfile
+```
+
+For local development, omit `DRUGCALC_DOMAIN`; Caddy serves `https://localhost` using its locally-trusted CA.
 
 ## Building
 Gradle is configured with the following tasks:
@@ -71,7 +89,6 @@ If the server starts successfully, you'll see the following output:
 [ktor-status-pages]: https://start.ktor.io/p/status-pages
 [ktor-auth]: https://start.ktor.io/p/auth
 [ktor-auth-jwt]: https://start.ktor.io/p/auth-jwt
-[pem-keystore]: https://github.com/robymus/simple-pem-keystore
 [hoplite]: https://github.com/sksamuel/hoplite
 
 ; <!-- | [OpenAPI](https://start.ktor.io/p/openapi)                             | Serves OpenAPI documentation                                                       | !-->
