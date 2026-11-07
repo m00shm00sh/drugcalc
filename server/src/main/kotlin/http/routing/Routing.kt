@@ -38,11 +38,10 @@ internal fun Application.configureApiRoutes(
         // Per-client limiting is installed application-wide in configureLimits;
         // this adds the shared global bucket on top of it.
         rateLimit(GLOBAL_RATE_LIMIT) {
-            if (installApiDocs) {
-                openAPI("openapi")
-            }
-
             route("api") {
+                if (installApiDocs) {
+                    openAPI("doc")
+                }
                 configureLoginRoutes(flags, jwtService, userService)
                 configureDataRoutes(flags, dataController)
                 configureCalcRoutes(flags, dataController, evaluator)
