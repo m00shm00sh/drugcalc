@@ -36,3 +36,19 @@ dependencies {
 tasks.shadowJar {
     mergeServiceFiles()
 }
+
+/**
+ * Regenerates the committed OpenAPI specification from the Ktor routing tree.
+ *
+ * The generator lives in the test source set so it can build the routing tree with a stub data
+ * source instead of requiring a live database. Run with:
+ * `./gradlew :server:generateOpenApiSpec`
+ */
+tasks.register<JavaExec>("generateOpenApiSpec") {
+    group = "documentation"
+    description = "Regenerate src/main/resources/openapi/documentation.yaml from the Ktor routes"
+    dependsOn(tasks.named("testClasses"))
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.moshy.drugcalc.server.openapi.GenerateOpenApiSpecKt")
+    args(layout.projectDirectory.file("src/main/resources/openapi/documentation.yaml").asFile.absolutePath)
+}

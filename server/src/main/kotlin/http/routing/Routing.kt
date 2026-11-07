@@ -27,7 +27,8 @@ internal fun Application.configureApiRoutes(
     userService: UserService,
     jwtService: JwtService,
     evaluator: Evaluator,
-    jsonModule: Json
+    jsonModule: Json,
+    installApiDocs: Boolean = true,
 ) {
     install(Resources) {
         serializersModule = jsonModule.serializersModule
@@ -37,7 +38,9 @@ internal fun Application.configureApiRoutes(
         // Per-client limiting is installed application-wide in configureLimits;
         // this adds the shared global bucket on top of it.
         rateLimit(GLOBAL_RATE_LIMIT) {
-            openAPI("openapi")
+            if (installApiDocs) {
+                openAPI("openapi")
+            }
 
             route("api") {
                 configureLoginRoutes(flags, jwtService, userService)
