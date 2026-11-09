@@ -46,8 +46,10 @@ private val serializeYaml: (OpenApiDoc) -> String =
  * The version is 3.0.3 rather than Ktor's default 3.1.1 because the built-in HTML documentation
  * renderer (swagger-codegen) only supports OpenAPI 3.0. With a 3.1 document it drops every
  * schema `type`, so parameters render as "any"/undefined even though the YAML is valid.
+ *
+ * @param serverAddress Address advertised in the document's `servers` section.
  */
-internal fun openApiBaseDoc(): OpenApiDoc =
+internal fun openApiBaseDoc(serverAddress: String): OpenApiDoc =
     OpenApiDoc.build {
         openapiVersion = "3.0.3"
         info = OpenApiInfo(
@@ -56,7 +58,7 @@ internal fun openApiBaseDoc(): OpenApiDoc =
             version = "1.0.0",
         )
         servers {
-            server("http://0.0.0.0:8080")
+            server(serverAddress)
         }
     }
 

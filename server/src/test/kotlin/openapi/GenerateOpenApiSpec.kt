@@ -27,13 +27,16 @@ import kotlin.time.Instant
 /**
  * Regenerates `src/main/resources/openapi/documentation.yaml` from the Ktor routing tree.
  *
- * Run with `./gradlew :server:generateOpenApiSpec`.
+ * Run with `./gradlew :server:generateOpenApiSpec`. Override the advertised server address with
+ * `-PopenApiServerAddress=https://api.example.com`.
  */
 fun main(args: Array<String>) {
-    require(args.size == 1) {
-        "usage: generateOpenApiSpec <output-file>"
+    require(args.size == 2) {
+        "usage: generateOpenApiSpec <output-file> <server-address>"
     }
-    val output = Path.of(args.single())
+    val output = Path.of(args[0])
+    val serverAddress = args[1]
+    require(serverAddress.isNotBlank()) { "server address must not be blank" }
 
     runBlocking {
         runTestApplication {
@@ -54,7 +57,7 @@ fun main(args: Array<String>) {
             startApplication()
 
             val spec = openApiRoutingSource(JsonWithLenientIsoDuration)
-                .read(application, openApiBaseDoc())
+                .read(application, openApiBaseDoc(serverAddress))
                 .content
 
             output.parent?.toFile()?.mkdirs()
