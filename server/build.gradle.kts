@@ -21,6 +21,8 @@ dependencies {
     implementation(libs.logback.classic)
 
     implementation(libs.bundles.ktor.server)
+    // OpenAPIConfig exposes swagger-codegen types but ktor-server-openapi declares them runtime-only.
+    implementation(libs.swagger.codegen)
 
     implementation(libs.bundles.hoplite)
 

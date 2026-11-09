@@ -5,8 +5,8 @@ import com.moshy.containers.ListAsSortedSet
 import com.moshy.drugcalc.calc.calc.Evaluator
 import com.moshy.drugcalc.calc.datacontroller.DataController
 import com.moshy.drugcalc.server.http.configureModule
-import com.moshy.drugcalc.server.http.openApiBaseDoc
-import com.moshy.drugcalc.server.http.openApiRoutingSource
+import com.moshy.drugcalc.server.http.routing.util.openApiBaseDoc
+import com.moshy.drugcalc.server.http.routing.util.openApiRoutingSource
 import com.moshy.drugcalc.server.http.user.UserService
 import com.moshy.drugcalc.server.io.JsonWithLenientIsoDuration
 import com.moshy.drugcalc.server.util.AppConfig

@@ -19,19 +19,11 @@ import kotlin.time.Duration
 
 @Suppress("PropertyName")
 @Resource("data")
-internal class DataRoute(val _from: UrlString? = null, val limit: Int? = null) {
-    val from: String?
-        get() = _from?.value
+internal class DataRoute {
     @Resource("compounds")
     internal class Compounds(val parent: DataRoute) {
-        val from: CompoundBase?
-            get() = parent.from?.let(::CompoundBase)
-
         @Resource("{_compound}")
         internal class Name(val parent: Compounds, val _compound: UrlString) {
-            val from: String?
-                get() = parent.parent.from
-
             val compound: CompoundBase
                 get() = CompoundBase(_compound.value)
 
@@ -43,11 +35,40 @@ internal class DataRoute(val _from: UrlString? = null, val limit: Int? = null) {
         }
     }
 
+    /**
+     * Paginated variant of [Compounds] used only by the GET endpoint that lists compound names.
+     * Keeping pagination on a dedicated resource prevents `_from`/`limit` from being exposed on
+     * every nested data route.
+     */
+    @Resource("compounds")
+    internal class CompoundsList(
+        val parent: DataRoute,
+        val _from: UrlString? = null,
+        val limit: Int? = null,
+    ) {
+        val from: CompoundBase?
+            get() = _from?.value?.let(::CompoundBase)
+    }
+
+    /**
+     * Paginated variant of [Compounds.Name] used only by the GET endpoint that lists variants.
+     */
+    @Resource("{_compound}")
+    internal class CompoundVariantsList(
+        val parent: Compounds,
+        val _compound: UrlString,
+        val _from: UrlString? = null,
+        val limit: Int? = null,
+    ) {
+        val compound: CompoundBase
+            get() = CompoundBase(_compound.value)
+
+        val from: String?
+            get() = _from?.value
+    }
+
     @Resource("blends")
     internal class Blends(val parent: DataRoute) {
-        val from: BlendName?
-            get() = parent.from?.let(::BlendName)
-
         @Resource("{_blend}")
         internal class Name(val parent: Blends, val _blend: UrlString) {
             val blend: BlendName
@@ -55,16 +76,35 @@ internal class DataRoute(val _from: UrlString? = null, val limit: Int? = null) {
         }
     }
 
+    /** Paginated variant of [Blends] used only by the GET endpoint that lists blend names. */
+    @Resource("blends")
+    internal class BlendsList(
+        val parent: DataRoute,
+        val _from: UrlString? = null,
+        val limit: Int? = null,
+    ) {
+        val from: BlendName?
+            get() = _from?.value?.let(::BlendName)
+    }
+
     @Resource("frequencies")
     internal class Frequencies(val parent: DataRoute) {
-        val from: FrequencyName?
-            get() = parent.from?.let(::FrequencyName)
-
         @Resource("{_frequency}")
         internal class Name(val parent: Frequencies, val _frequency: UrlString) {
             val frequency: FrequencyName
                 get() = FrequencyName(_frequency.value)
         }
+    }
+
+    /** Paginated variant of [Frequencies] used only by the GET endpoint that lists frequency names. */
+    @Resource("frequencies")
+    internal class FrequenciesList(
+        val parent: DataRoute,
+        val _from: UrlString? = null,
+        val limit: Int? = null,
+    ) {
+        val from: FrequencyName?
+            get() = _from?.value?.let(::FrequencyName)
     }
 
     @Resource("frequencies.w")
@@ -106,8 +146,8 @@ internal fun Route.configureDataRoutes(
         }
     }
 
-    get<DataRoute.Compounds, List<CompoundBase>> { params ->
-        val pagination = paginationSpecifier(params.from, params.parent.limit)
+    get<DataRoute.CompoundsList, List<CompoundBase>> { params ->
+        val pagination = paginationSpecifier(params.from, params.limit)
         val names = dataController.getCompoundNames(pagination)
         names.list
     }
@@ -128,8 +168,8 @@ internal fun Route.configureDataRoutes(
             }
         }
     }
-    get<DataRoute.Compounds.Name, List<String>> { params ->
-        val pagination = paginationSpecifier(params.from, params.parent.parent.limit)
+    get<DataRoute.CompoundVariantsList, List<String>> { params ->
+        val pagination = paginationSpecifier(params.from, params.limit)
         val names = dataController.getVariantsForCompound(params.compound, pagination)
         names.list
     }
@@ -178,8 +218,8 @@ internal fun Route.configureDataRoutes(
         }
     }
 
-    get<DataRoute.Blends, List<BlendName>> { params ->
-        val pagination = paginationSpecifier(params.from, params.parent.limit)
+    get<DataRoute.BlendsList, List<BlendName>> { params ->
+        val pagination = paginationSpecifier(params.from, params.limit)
         val names = dataController.getBlendNames(pagination)
         names.list
     }
@@ -218,8 +258,8 @@ internal fun Route.configureDataRoutes(
             }
         }
     }
-    get<DataRoute.Frequencies, List<FrequencyName>> {route ->
-        val pagination = paginationSpecifier(route.from, route.parent.limit)
+    get<DataRoute.FrequenciesList, List<FrequencyName>> { route ->
+        val pagination = paginationSpecifier(route.from, route.limit)
         val names = dataController.getFrequencyNames(pagination)
         names.list
     }

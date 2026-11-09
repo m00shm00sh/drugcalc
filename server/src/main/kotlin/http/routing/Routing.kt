@@ -9,7 +9,6 @@ import com.moshy.drugcalc.server.http.user.UserService
 import com.moshy.drugcalc.server.util.AppConfig
 import io.ktor.resources.Resource
 import io.ktor.server.application.*
-import io.ktor.server.plugins.openapi.openAPI
 import io.ktor.server.plugins.ratelimit.rateLimit
 import io.ktor.server.resources.Resources
 import io.ktor.server.routing.*
@@ -39,9 +38,8 @@ internal fun Application.configureApiRoutes(
         // this adds the shared global bucket on top of it.
         rateLimit(GLOBAL_RATE_LIMIT) {
             route("api") {
-                if (installApiDocs) {
-                    openAPI("doc")
-                }
+                if (installApiDocs)
+                    configureOpenApiDocRoute(flags, monitor)
                 configureLoginRoutes(flags, jwtService, userService)
                 configureDataRoutes(flags, dataController)
                 configureCalcRoutes(flags, dataController, evaluator)

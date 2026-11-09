@@ -304,7 +304,11 @@ fun XYList.OfRaw.toTimeRescaledXYList(ticksPerDay: Double): XYList.OfDay =
 fun XYList.OfRaw.toDurationXYList(timeTick: Duration): XYList.OfDuration =
     XYList.OfDuration(plotType, x.map { timeTick * it }, y)
 
-/** Describes info and usage for a transformer. */
+/** Describes info and usage for a transformer.
+ *
+ * @property info human-readable description of what the transformer does
+ * @property usage usage template for the transformer
+ */
 @Serializable
 data class TransformerInfo(
     val info: String,
