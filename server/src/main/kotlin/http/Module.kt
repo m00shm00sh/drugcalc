@@ -11,6 +11,7 @@ import com.moshy.drugcalc.server.http.user.*
 import com.moshy.drugcalc.server.io.JsonWithLenientIsoDuration
 import com.moshy.drugcalc.server.util.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.forwardedheaders.XForwardedHeaders
 
 // main ktor entrypoint
 internal suspend fun Application.initializeKtorModule(config: AppConfig.App) {
@@ -63,6 +64,7 @@ internal fun Application.configureModule(
     val json = JsonWithLenientIsoDuration
 
     configureExceptions(config.flags)
+    install(XForwardedHeaders)
     configureLimits(config.http.limits)
     configureSerialization(json)
     configureSecurity(jwtService)

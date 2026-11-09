@@ -9,15 +9,13 @@ import com.moshy.krepl.asLine
 
 internal fun AppState.configureConnect(): Repl.EntryBuilder.() -> Unit = {
     val app = this@configureConnect
-    usage = "connect proto://host:port {insec=truthy}?"
+    usage = "connect proto://host:port"
     help = "configure and/or initialize connection"
     handler = { (pos, kw, _, out) ->
-        val insec = kw["insec"].toTruthy()
-
         with(app.forConnect) {
             val addr = pos.firstOrNull()
             when (pos.size) {
-                1 -> connect = ForConnect.ConnectParams(addr!!, insec)
+                1 -> connect = ForConnect.ConnectParams(addr!!)
                 0 -> requireNotNull(connect) {
                     "empty saved connection config"
                 }

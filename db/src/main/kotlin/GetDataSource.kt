@@ -33,8 +33,6 @@ fun getDataSource(c: DBConfig): DataSourceDelegate {
 internal fun runMigrations(jdbcUrl: String, user: String?, password: String?) {
     Flyway.configure()
         .dataSource(jdbcUrl, user, password)
-        // Keep TIMESTAMP defaults (CURRENT_TIMESTAMP) consistent with the application's UTC sessions.
-        .initSql("SET TIME ZONE 'UTC'")
         .load()
         .migrate()
 }
