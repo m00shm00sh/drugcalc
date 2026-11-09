@@ -58,6 +58,7 @@ internal fun Application.configureModule(
     userService: UserService,
     dataController: DataController,
     evaluator: Evaluator,
+    installApiDocs: Boolean = true,
 ) {
     val jwtService = JwtService(config.jwt, userService)
     val json = JsonWithLenientIsoDuration
@@ -67,5 +68,5 @@ internal fun Application.configureModule(
     configureLimits(config.http.limits)
     configureSerialization(json)
     configureSecurity(jwtService)
-    configureApiRoutes(config.flags, dataController, userService, jwtService, evaluator, json)
+    configureApiRoutes(config.flags, dataController, userService, jwtService, evaluator, json, installApiDocs)
 }

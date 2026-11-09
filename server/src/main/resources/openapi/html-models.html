@@ -1,0 +1,91 @@
+<!-- drugcalc-schema-anchors:start -->
+<div id="models">
+  <h1>Models</h1>
+  <p>Schemas referenced by this API.</p>
+</div>
+<script>
+$(document).ready(function () {
+  var $models = $('#models');
+
+  function schemaFor(name) {
+    try {
+      return defsParser.$refs.get('#/components/schemas/' + name) || defs[name];
+    } catch (e) {
+      return defs[name];
+    }
+  }
+
+  function renderSchema(schema, depth) {
+    var $body = $('<div></div>');
+    try {
+      var view = new JSONSchemaView(schema, depth);
+      $body.append(view.render());
+    } catch (e) {
+      $body.append($('<pre></pre>').text(JSON.stringify(schema, null, 2)));
+    }
+    return $body;
+  }
+
+  function addVariant($parent, name, depth) {
+    var $section = $('<div class="model"></div>')
+      .attr('id', '/components/schemas/' + name);
+    $section.append($('<h' + depth + '></h' + depth + '>').text(name));
+    $section.append(renderSchema(schemaFor(name), depth + 1));
+    $parent.append($section);
+  }
+
+  function addModel(name) {
+    var schema = schemaFor(name);
+    var $section = $('<div class="model"></div>')
+      .attr('id', '/components/schemas/' + name);
+    $section.append($('<h2></h2>').text(name));
+
+    if (schema && Object.keys(schema).length > 0) {
+      $section.append(renderSchema(schema, 1));
+    } else {
+      var variants = Object.keys(defs).filter(function (candidate) {
+        return candidate.indexOf(name + '.') === 0;
+      }).sort();
+      if (variants.length === 0) {
+        $section.append($('<p></p>').text('No schema information available.'));
+      } else {
+        $section.append($('<p></p>').text(
+          'This schema is composed of the following variants:'
+        ));
+        variants.forEach(function (variant) {
+          $section.append(
+            $('<p></p>').append(
+              $('<a></a>')
+                .attr('href', '#/components/schemas/' + variant)
+                .text(variant)
+            )
+          );
+          addVariant($section, variant, 3);
+        });
+      }
+    }
+
+    $models.append($section);
+  }
+
+  Object.keys(defs).sort().forEach(function (name) {
+    if (name.indexOf('.') === -1) {
+      addModel(name);
+    }
+  });
+
+  var initialRef = '';
+  try {
+    initialRef = decodeURIComponent(window.location.hash.substring(1));
+  } catch (e) {
+    initialRef = window.location.hash.substring(1);
+  }
+  if (initialRef.indexOf('/components/schemas/') === 0) {
+    var target = document.getElementById(initialRef);
+    if (target) {
+      target.scrollIntoView();
+    }
+  }
+});
+</script>
+<!-- drugcalc-schema-anchors:end -->

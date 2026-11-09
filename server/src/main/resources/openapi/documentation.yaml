@@ -1,0 +1,942 @@
+openapi: 3.0.3
+info:
+  title: DrugCalc API
+  version: 1.0.0
+  description: DrugCalc application API
+servers:
+- url: http://0.0.0.0:8080
+paths:
+  /api/login:
+    post:
+      summary: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+  /api/data:
+    post:
+      summary: ""
+      requestBody:
+        description: Data entries to insert. Each map is keyed by the corresponding
+          compound, blend, or frequency name.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Data"
+        required: true
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+    delete:
+      summary: ""
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+  /api/data/compounds:
+    post:
+      summary: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Map from compound name (key) to its [CompoundInfo](#/components/schemas/CompoundInfo)
+                (value).
+              additionalProperties:
+                $ref: "#/components/schemas/CompoundInfo"
+        required: true
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+    delete:
+      summary: ""
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+    get:
+      summary: ""
+      parameters:
+      - name: _from
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  description: A compound base name (CompoundBase).
+    patch:
+      summary: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Map from compound name (key) to a partial [CompoundInfo](#/components/schemas/CompoundInfo)
+                update.
+              additionalProperties:
+                $ref: "#/components/schemas/ProxyMapOfCompoundInfo"
+        required: true
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+  /api/data/compounds/{_compound}:
+    post:
+      summary: ""
+      parameters:
+      - name: _compound
+        in: path
+        description: URL-encoded compound base name (CompoundBase).
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Map from compound variant name (key) to its [CompoundInfo](#/components/schemas/CompoundInfo)
+                (value).
+              additionalProperties:
+                $ref: "#/components/schemas/CompoundInfo"
+        required: true
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+    delete:
+      summary: ""
+      parameters:
+      - name: _compound
+        in: path
+        description: URL-encoded compound base name (CompoundBase).
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+    get:
+      summary: ""
+      parameters:
+      - name: _compound
+        in: path
+        description: URL-encoded compound base name (CompoundBase).
+        required: true
+        schema:
+          type: string
+      - name: _from
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  description: A compound variant name.
+  /api/data/compounds/{_compound}/{_variant}:
+    put:
+      summary: ""
+      parameters:
+      - name: _compound
+        in: path
+        description: URL-encoded compound base name (CompoundBase).
+        required: true
+        schema:
+          type: string
+      - name: _variant
+        in: path
+        description: URL-encoded compound variant name.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompoundInfo"
+        required: true
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+    delete:
+      summary: ""
+      parameters:
+      - name: _compound
+        in: path
+        description: URL-encoded compound base name (CompoundBase).
+        required: true
+        schema:
+          type: string
+      - name: _variant
+        in: path
+        description: URL-encoded compound variant name.
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+    get:
+      summary: ""
+      parameters:
+      - name: _compound
+        in: path
+        description: URL-encoded compound base name (CompoundBase).
+        required: true
+        schema:
+          type: string
+      - name: _variant
+        in: path
+        description: URL-encoded compound variant name.
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompoundInfo"
+    patch:
+      summary: ""
+      parameters:
+      - name: _compound
+        in: path
+        description: URL-encoded compound base name (CompoundBase).
+        required: true
+        schema:
+          type: string
+      - name: _variant
+        in: path
+        description: URL-encoded compound variant name.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                halfLife:
+                  type: string
+                note:
+                  type: string
+                pctActive:
+                  type: number
+        required: true
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+  /api/data/blends:
+    post:
+      summary: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Map from blend name (key) to its [BlendValue](#/components/schemas/BlendValue)
+                (value).
+              additionalProperties:
+                $ref: "#/components/schemas/BlendValue"
+        required: true
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+    delete:
+      summary: ""
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+    get:
+      summary: ""
+      parameters:
+      - name: _from
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  description: A blend name (BlendName).
+  /api/data/blends/{_blend}:
+    put:
+      summary: ""
+      parameters:
+      - name: _blend
+        in: path
+        description: URL-encoded blend name (BlendName).
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlendValue"
+        required: true
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+    delete:
+      summary: ""
+      parameters:
+      - name: _blend
+        in: path
+        description: URL-encoded blend name (BlendName).
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+    get:
+      summary: ""
+      parameters:
+      - name: _blend
+        in: path
+        description: URL-encoded blend name (BlendName).
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlendValue"
+  /api/data/frequencies:
+    post:
+      summary: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Map from frequency name (key) to its [FrequencyValue](#/components/schemas/FrequencyValue)
+                (value).
+              additionalProperties:
+                $ref: "#/components/schemas/FrequencyValue"
+        required: true
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+    delete:
+      summary: ""
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+    get:
+      summary: ""
+      parameters:
+      - name: _from
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  description: A frequency name (FrequencyName).
+  /api/data/frequencies/{_frequency}:
+    put:
+      summary: ""
+      parameters:
+      - name: _frequency
+        in: path
+        description: URL-encoded frequency name (FrequencyName).
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FrequencyValue"
+        required: true
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+    delete:
+      summary: ""
+      parameters:
+      - name: _frequency
+        in: path
+        description: URL-encoded frequency name (FrequencyName).
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+      security:
+      - default: []
+    get:
+      summary: ""
+      parameters:
+      - name: _frequency
+        in: path
+        description: URL-encoded frequency name (FrequencyName).
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FrequencyValue"
+  /api/data/frequencies.w:
+    get:
+      summary: ""
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Map from frequency name (key) to its total duration (value).
+                additionalProperties:
+                  type: string
+                  format: duration
+  /api/data/transformers/names:
+    get:
+      summary: ""
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  description: A transformer name.
+  /api/data/transformers/names/{_transformer}:
+    get:
+      summary: ""
+      parameters:
+      - name: _transformer
+        in: path
+        description: URL-encoded transformer name.
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransformerInfo"
+  /api/data/transformers/frequencies:
+    get:
+      summary: ""
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  description: A transformer frequency name (FrequencyName).
+  /api/data/transformers/frequencies/{_transformerFreq}:
+    get:
+      summary: ""
+      parameters:
+      - name: _transformerFreq
+        in: path
+        description: URL-encoded transformer frequency name (FrequencyName).
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/calc:
+    post:
+      summary: Evaluate a cycle
+      description: Evaluates a cycle given optional auxiliary data and config overrides
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CycleRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Map from result series name (key) to its [XYList](#/components/schemas/XYList)
+                  (value). The `xType` discriminator selects the concrete XYList variant.
+                additionalProperties:
+                  $ref: "#/components/schemas/XYList"
+  /api:
+    get:
+      summary: ""
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+components:
+  schemas:
+    UserRequest:
+      type: object
+      title: UserRequest
+      required:
+      - name
+      - pass
+      properties:
+        name:
+          type: string
+        pass:
+          type: string
+    LoginResponse:
+      type: object
+      title: LoginResponse
+      required:
+      - token
+      properties:
+        token:
+          type: string
+    CompoundInfo:
+      type: object
+      title: CompoundInfo
+      description: 'CompoundInfo describes a compound: a positive half-life, a percent
+        active dose in (0.0, 1.0], and an optional note.'
+      required:
+      - halfLife
+      properties:
+        halfLife:
+          type: string
+          description: Half-life duration string; must be positive.
+        pctActive:
+          type: number
+          description: Percent active dose; value in (0.0, 1.0].
+        note:
+          type: string
+          description: Miscellaneous note.
+    BlendValue:
+      type: object
+      title: BlendValue
+      description: 'BlendValue describes a blend: at least two compound components
+        with positive amounts, plus an optional note.'
+      required:
+      - components
+      properties:
+        components:
+          type: object
+          description: Map from compound name (key, serialized as `base` or `base=variant`)
+            to its positive numeric component value. At least two components are required.
+          additionalProperties:
+            type: number
+            description: Positive numeric component value.
+            minimum: 0.0
+            exclusiveMinimum: true
+          minProperties: 2
+        note:
+          type: string
+          description: Miscellaneous note.
+    FrequencyValue:
+      type: object
+      title: FrequencyValue
+      description: 'FrequencyValue describes a frequency: a non-empty list of positive
+        durations between doses.'
+      required:
+      - values
+      properties:
+        values:
+          type: array
+          description: Durations between doses; each must be positive.
+          items:
+            type: string
+    Data:
+      type: object
+      title: Data
+      properties:
+        compounds:
+          type: object
+          description: Map from compound name (key) to its [CompoundInfo](#/components/schemas/CompoundInfo)
+            (value).
+          additionalProperties:
+            $ref: "#/components/schemas/CompoundInfo"
+        blends:
+          type: object
+          description: Map from blend name (key) to its [BlendValue](#/components/schemas/BlendValue)
+            (value).
+          additionalProperties:
+            $ref: "#/components/schemas/BlendValue"
+        frequencies:
+          type: object
+          description: Map from frequency name (key) to its [FrequencyValue](#/components/schemas/FrequencyValue)
+            (value).
+          additionalProperties:
+            $ref: "#/components/schemas/FrequencyValue"
+    TransformerInfo:
+      type: object
+      title: TransformerInfo
+      description: Describes info and usage for a transformer.
+      required:
+      - info
+      - usage
+      properties:
+        info:
+          type: string
+          description: Human-readable description of what the transformer does.
+        usage:
+          type: string
+          description: Usage template for the transformer, for example `<compound>`.
+    ProxyMapOfCompoundInfo:
+      type: object
+      title: ProxyMapOfCompoundInfo
+      description: Partial CompoundInfo update; omitted fields are unchanged.
+      properties:
+        halfLife:
+          type: string
+          description: Half-life duration string; must be positive.
+        note:
+          type: string
+          description: Miscellaneous note.
+        pctActive:
+          type: number
+          description: Percent active dose; value in (0.0, 1.0].
+    RampedDose:
+      type: object
+      nullable: true
+      title: RampedDose
+      description: A stepwise dose ramp. The dose administered at time t is base +
+        k * addDose, where k is the number of completed addFreqName intervals at t.
+        The first dose is the base dose.
+      required:
+      - addDose
+      - addFreqName
+      properties:
+        addDose:
+          type: number
+          description: Amount to add per ramp interval, in milligrams; must be finite
+            and non-zero. May be positive (ramp up) or negative (ramp down).
+        addFreqName:
+          type: string
+          description: Ramp interval frequency name; must be a valid FrequencyName
+            string (non-empty) that exists in the frequencies data.
+    CycleDescription:
+      type: object
+      title: CycleDescription
+      description: Describes a cycle of a compound.
+      required:
+      - compoundOrBlend
+      - start
+      - duration
+      - freqName
+      properties:
+        prefix:
+          type: string
+          nullable: true
+          description: 'Optional entry kind: omit or null for a compound, ".b" for
+            a blend, or ".t" for a transformer.'
+        compoundOrBlend:
+          type: string
+          description: Compound base name (CompoundBase) or blend name (BlendName),
+            depending on prefix. Names must be non-empty and must not start with '.'.
+            CompoundBase also must not contain '=' or ':'; BlendName must not contain
+            '='.
+        variantOrTransformer:
+          type: string
+          description: Optional compound variant when prefix is omitted or null; must
+            be empty for blends; transformer name when prefix is ".t" (required and
+            non-empty).
+        dose:
+          type: number
+          nullable: true
+          description: Required and positive when prefix is not ".t" (compound or
+            blend); ignored for transformers.
+        start:
+          type: string
+          description: Duration string; must represent a nonnegative duration. ISO-8601
+            or other supported duration formats (for example "1h 30m") are accepted.
+        duration:
+          type: string
+          description: Duration string; must represent a positive duration. ISO-8601
+            or other supported duration formats (for example "1h 30m") are accepted.
+        freqName:
+          type: string
+          description: A valid FrequencyName string (non-empty); must exist in the
+            frequencies data.
+        group:
+          type: integer
+          description: Group number; must be nonnegative; defaults to 0.
+        doseRamp:
+          $ref: "#/components/schemas/RampedDose"
+    CycleData:
+      type: object
+      nullable: true
+      title: CycleData
+      description: Optional auxiliary data used to resolve names in a cycle.
+      properties:
+        compounds:
+          type: object
+          description: Map from an auxiliary compound name (key) to its [CompoundInfo](#/components/schemas/CompoundInfo)
+            (value).
+          additionalProperties:
+            $ref: "#/components/schemas/CompoundInfo"
+        blends:
+          type: object
+          description: Map from an auxiliary blend name (key) to its [BlendValue](#/components/schemas/BlendValue)
+            (value).
+          additionalProperties:
+            $ref: "#/components/schemas/BlendValue"
+        frequencies:
+          type: object
+          description: Map from an auxiliary frequency name (key) to its [FrequencyValue](#/components/schemas/FrequencyValue)
+            (value).
+          additionalProperties:
+            $ref: "#/components/schemas/FrequencyValue"
+    ProxyMapOfConfig:
+      type: object
+      nullable: true
+      title: ProxyMapOfConfig
+      description: Calculator configurables.
+      properties:
+        cutoffMilligrams:
+          type: number
+          description: Do not evaluate further decay of compound once active dose
+            is below this number. Must be a positive number.
+          minimum: 0.0
+          exclusiveMinimum: true
+        doLambdaDoseCorrection:
+          type: boolean
+          description: The canonical iteration of the formula online has the lambda
+            correction of dose and not just time; if the mathematically correct value
+            is desired, set this to false.
+        tickDuration:
+          type: string
+          description: The duration that is elapsed between two consecutive dose values.
+            Must represent a positive duration; ISO-8601 or other supported duration
+            formats (for example "1h 30m") are accepted.
+          format: duration
+    CycleRequest:
+      type: object
+      title: CycleRequest
+      required:
+      - cycle
+      properties:
+        cycle:
+          type: array
+          description: Cycle steps to evaluate; must be non-empty.
+          items:
+            $ref: "#/components/schemas/CycleDescription"
+        data:
+          $ref: "#/components/schemas/CycleData"
+        config:
+          $ref: "#/components/schemas/ProxyMapOfConfig"
+        decode:
+          type: string
+          description: How to decode the result. Accepted values are "none", "duration",
+            or an ISO-8601 duration string (for example "PT24H") that defines a custom
+            day length.
+    XYList.OfDay:
+      type: object
+      title: XYList.OfDay
+      description: XYList describes a tagged XY pair that gives information on (x,y)
+        plotting type (bar vs point). The concrete variant is selected by `xType`.
+      required:
+      - xType
+      - plotType
+      - x
+      - y
+      properties:
+        xType:
+          type: string
+          enum:
+          - day
+        plotType:
+          type: string
+          description: Plotting type; see PlotType.
+          enum:
+          - point
+          - bar
+        x:
+          type: array
+          items:
+            type: number
+        y:
+          type: array
+          items:
+            type: number
+    XYList.OfDuration:
+      type: object
+      title: XYList.OfDuration
+      description: XYList describes a tagged XY pair that gives information on (x,y)
+        plotting type (bar vs point). The concrete variant is selected by `xType`.
+      required:
+      - xType
+      - plotType
+      - x
+      - y
+      properties:
+        xType:
+          type: string
+          enum:
+          - duration
+        plotType:
+          type: string
+          description: Plotting type; see PlotType.
+          enum:
+          - point
+          - bar
+        x:
+          type: array
+          items:
+            type: string
+            format: duration
+        y:
+          type: array
+          items:
+            type: number
+    XYList.OfRaw:
+      type: object
+      title: XYList.OfRaw
+      description: XYList describes a tagged XY pair that gives information on (x,y)
+        plotting type (bar vs point). The concrete variant is selected by `xType`.
+      required:
+      - xType
+      - plotType
+      - x
+      - y
+      properties:
+        xType:
+          type: string
+          enum:
+          - raw
+        plotType:
+          type: string
+          description: Plotting type; see PlotType.
+          enum:
+          - point
+          - bar
+        x:
+          type: array
+          items:
+            type: integer
+        y:
+          type: array
+          items:
+            type: number
+    XYList:
+      type: object
+      title: XYList
+      description: XYList describes a tagged XY pair that gives information on (x,y)
+        plotting type (bar vs point). The concrete variant is selected by `xType`.
+      oneOf:
+      - $ref: "#/components/schemas/XYList.OfDay"
+      - $ref: "#/components/schemas/XYList.OfDuration"
+      - $ref: "#/components/schemas/XYList.OfRaw"
+      discriminator:
+        propertyName: xType
+        mapping:
+          day: "#/components/schemas/XYList.OfDay"
+          duration: "#/components/schemas/XYList.OfDuration"
+          raw: "#/components/schemas/XYList.OfRaw"
+  securitySchemes:
+    default:
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Bearer Authentication
+      type: http

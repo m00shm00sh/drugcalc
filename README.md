@@ -68,6 +68,7 @@ Gradle is configured with the following tasks:
 | `publishImageToLocalRegistry` | Publish the docker image locally                                     |
 | `run`                         | Run the server                                                       |
 | `runDocker`                   | Run using the local docker image                                     |
+| `:server:generateOpenApiSpec` | Regenerate `server/src/main/resources/openapi/documentation.yaml`    |
 
 If the server starts successfully, you'll see the following output:
 
