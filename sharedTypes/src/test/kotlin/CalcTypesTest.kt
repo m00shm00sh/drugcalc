@@ -263,7 +263,7 @@ internal class CalcTypesTest {
     }
 
     @Test
-    fun `CycleDescription rejects negative group`() {
+    fun `CycleDescription rejects reserved group id`() {
         val ex = assertThrows<IllegalArgumentException> {
             CycleDescription(
                 compoundOrBlend = "x",
@@ -271,10 +271,63 @@ internal class CalcTypesTest {
                 start = Duration.ZERO,
                 duration = 1.0.toDuration(DurationUnit.DAYS),
                 freqName = FrequencyName("every day"),
-                group = -1
+                group = CycleDescription.GROUP_COPY_PREVIOUS - 1
             )
         }
-        assertEquals("negative group", ex.message)
+        assertEquals("invalid group id", ex.message)
+    }
+
+    @Test
+    fun `CycleDescription accepts auto-new and copy-previous groups for compounds`() {
+        assertDoesNotThrow {
+            CycleDescription(
+                compoundOrBlend = "x",
+                dose = 1.0,
+                start = Duration.ZERO,
+                duration = 1.0.toDuration(DurationUnit.DAYS),
+                freqName = FrequencyName("every day"),
+                group = CycleDescription.GROUP_AUTO_NEW
+            )
+            CycleDescription(
+                compoundOrBlend = "x",
+                dose = 1.0,
+                start = Duration.ZERO,
+                duration = 1.0.toDuration(DurationUnit.DAYS),
+                freqName = FrequencyName("every day"),
+                group = CycleDescription.GROUP_COPY_PREVIOUS
+            )
+        }
+    }
+
+    @Test
+    fun `CycleDescription rejects auto-new group for transformer`() {
+        val ex = assertThrows<IllegalArgumentException> {
+            CycleDescription(
+                prefix = CycleDescription.PREFIX_TRANSFORMER,
+                compoundOrBlend = "x",
+                variantOrTransformer = "median",
+                start = Duration.ZERO,
+                duration = 1.0.toDuration(DurationUnit.DAYS),
+                freqName = FrequencyName("every day"),
+                group = CycleDescription.GROUP_AUTO_NEW
+            )
+        }
+        assertEquals("auto-new group not allowed for transformer", ex.message)
+    }
+
+    @Test
+    fun `CycleDescription accepts copy-previous group for transformer`() {
+        assertDoesNotThrow {
+            CycleDescription(
+                prefix = CycleDescription.PREFIX_TRANSFORMER,
+                compoundOrBlend = "x",
+                variantOrTransformer = "median",
+                start = Duration.ZERO,
+                duration = 1.0.toDuration(DurationUnit.DAYS),
+                freqName = FrequencyName("every day"),
+                group = CycleDescription.GROUP_COPY_PREVIOUS
+            )
+        }
     }
 
     @Test

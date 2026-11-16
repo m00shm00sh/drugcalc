@@ -14,12 +14,15 @@ import {
     AvailableFNsCacheSchema,
     AvailableVXsCacheSchema,
     zodNonemptyStringSchema,
-    zodNumberString,
 } from './string'
 import { SelectableSchema } from './Selectable'
 import { getOrElse, stripIf } from '../util/filter-setif'
 import { zodPositiveNumberSchema } from './number'
-import { zodSuperRefinerForGroupIds } from './constrainGroupIds'
+import {
+    isAutoNewGroup,
+    zodGroupIdString,
+    zodSuperRefinerForGroupIds,
+} from './groupIds'
 
 /* even though this is strictly an outgoing type, i'm still making a zod schema because
  * prettier's typescript handling butchers indentation of union types
@@ -75,7 +78,7 @@ const CalcRequestRowSharedSchema = z
         start: zodDisplayDurationStringSchema,
         duration: zodDisplayDurationStringSchema,
         freqName: zodNonemptyStringSchema('select a frequency'),
-        group: zodNumberString,
+        group: zodGroupIdString,
         doseRampEnabled: z.boolean().optional(),
         doseRampDose: zodNonzeroFiniteNumberSchema('ramp dose').optional(),
         doseRampFreqName: zodNonemptyStringSchema('select a ramp frequency').optional(),
@@ -119,6 +122,19 @@ const validateDoseRamp = (
     }
 }
 
+const validateGroup = (
+    row: z.infer<typeof CalcRequestRowSharedSchema> & { prefix: Prefix },
+    ctx: z.core.$RefinementCtx,
+) => {
+    if (row.prefix === '.t' && isAutoNewGroup(row.group)) {
+        ctx.addIssue({
+            code: 'custom',
+            path: ['group'],
+            message: 'new group is not supported for transformers',
+        })
+    }
+}
+
 const CalcRequestRowSchema = z
     .union([
         CalcRequestRowSharedSchema.extend({
@@ -141,7 +157,10 @@ const CalcRequestRowSchema = z
         })
             .extend(AvailableVXsCacheSchema.shape),
     ])
-    .superRefine(validateDoseRamp)
+    .superRefine((row, ctx) => {
+        validateDoseRamp(row, ctx)
+        validateGroup(row, ctx)
+    })
 
 export type CalcRequestRow = z.infer<typeof CalcRequestRowSchema>
 

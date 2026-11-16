@@ -30,6 +30,7 @@ import {
 } from '../types/Calc'
 import { reshapeCompoundKeys, type CompoundsMap } from '../types/Compounds'
 import type { Config } from '../types/Config'
+import { groupOptionValues } from '../types/groupIds'
 import { sortedFrequenciesWithWeights, type FrequenciesMap } from '../types/Frequencies'
 import { getSelectedIndices } from './item-editor/util/Selectable'
 import {
@@ -95,8 +96,6 @@ const CycleDescriptionEditorRow = ({
     const row = `cycle.${index}`
     const curRow = getValues(`cycle.${index}`)
     const selectPrefix = prefixOptions
-
-    const groupOptVals = Array.from({ length: numRows }, (_, k) => `${k}`)
 
     const rowError = errors?.cycle?.[index]
     return (
@@ -174,7 +173,7 @@ const CycleDescriptionEditorRow = ({
                     blockClasses={['col-start-5']}
                     label="group"
                     name={`${row}.group`}
-                    optionValues={groupOptVals}
+                    optionValues={groupOptionValues(numRows)}
                 />
                 {curRow.prefix !== '.t' && (
                     <FormInput

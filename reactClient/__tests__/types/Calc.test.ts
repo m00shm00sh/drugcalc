@@ -31,6 +31,11 @@ describe('CalcRequestDataContainerSchema', () => {
                 cycle: [validRow({ group: '0' }), validRow({ group: '1' })],
             })()
         })
+        it('accepts auto-new and copy-previous group sentinels', () => {
+            expectParseOk(CalcRequestDataContainerSchema, {
+                cycle: [validRow({ group: '-1' }), validRow({ group: '-2' })],
+            })()
+        })
         it('rejects group id out of range (>= cycle length)', () => {
             expectParseFail(CalcRequestDataContainerSchema, {
                 cycle: [validRow({ group: '1' })],
@@ -44,9 +49,31 @@ describe('CalcRequestDataContainerSchema', () => {
                 cycle: [validRow({ group: 'abc' })],
             })()
         })
-        it('rejects negative group', () => {
+        it('rejects negative groups other than the sentinels', () => {
             expectParseFail(CalcRequestDataContainerSchema, {
-                cycle: [validRow({ group: '-1' })],
+                cycle: [validRow({ group: '-3' })],
+            })()
+        })
+        it('rejects auto-new group for a transformer', () => {
+            expectParseFail(CalcRequestDataContainerSchema, {
+                cycle: [
+                    validRow({
+                        prefix: '.t',
+                        variantOrTransformer: 't1',
+                        group: '-1',
+                    }),
+                ],
+            })()
+        })
+        it('accepts copy-previous group for a transformer', () => {
+            expectParseOk(CalcRequestDataContainerSchema, {
+                cycle: [
+                    validRow({
+                        prefix: '.t',
+                        variantOrTransformer: 't1',
+                        group: '-2',
+                    }),
+                ],
             })()
         })
     })
