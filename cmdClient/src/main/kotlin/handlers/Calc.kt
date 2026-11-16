@@ -104,7 +104,7 @@ internal fun AppState.configureCalc(): Repl.EntryBuilder.() -> Unit = {
             }
         }
         this["add"] {
-            usage = "$name {flags=.b|.t}? cb=compound {vx=var|xfrm}? {d=dose}? s=time t=time fn=freqname {dr=addDose@addFreq}? {gr=group}"
+            usage = "$name {flags=.b|.t}? cb=compound {vx=var|xfrm}? {d=dose}? s=time t=time fn=freqname {dr=addDose@addFreq}? {gr=group|new|copy}"
             help = "add cycle to list"
             handler = { (_, kw, _, out) ->
                 val data = parseCycleDescription(kw, null)
@@ -207,17 +207,23 @@ internal fun AppState.configureCalc(): Repl.EntryBuilder.() -> Unit = {
     }
 }
 
+private val groupValueAliases = mapOf(
+    "new" to CycleDescription.GROUP_AUTO_NEW.toString(),
+    "copy" to CycleDescription.GROUP_COPY_PREVIOUS.toString(),
+)
+
 internal fun parseCycleDescription(kvToks: Map<String, String>, old: CycleDescription?): CycleDescription {
     val doseRampName = name(CycleDescription::doseRamp)
+    val groupName = name(CycleDescription::group)
     var doseRampTok: String? = null
     val props = buildMap {
         kvToks.forEach { (k, v) ->
             val remapK = descriptionRemap[k] ?: throw IllegalArgumentException("unrecognized: $k")
-            if (remapK == doseRampName) {
+            when (remapK) {
                 // the dose ramp is supplied as a single "<add-dose>@<add-frequency>" token
-                doseRampTok = v
-            } else {
-                this[remapK] = v
+                doseRampName -> doseRampTok = v
+                groupName -> this[remapK] = groupValueAliases[v.lowercase()] ?: v
+                else -> this[remapK] = v
             }
         }
     }

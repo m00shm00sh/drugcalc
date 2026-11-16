@@ -124,7 +124,8 @@ data class RampedDose(
  * @property start start time
  * @property duration duration
  * @property freqName frequency name; must exist in {frequencies}
- * @property group group number; must be nonnegative; defaults to 0
+ * @property group reducer group; see GROUP_AUTO_NEW and GROUP_COPY_PREVIOUS; otherwise must be
+ *   nonnegative; defaults to 0. GROUP_AUTO_NEW is not valid for transformers.
  * @property doseRamp optional dose ramp; only valid for compounds and blends
  *
  * @throws IllegalArgumentException if values are invalid
@@ -184,8 +185,14 @@ data class CycleDescription(
         require(duration.isPositive()) {
             "nonpositive duration"
         }
-        require(group >= 0) {
-            "negative group"
+        when {
+            group >= 0 -> {}
+            group == GROUP_COPY_PREVIOUS -> {}
+            group == GROUP_AUTO_NEW ->
+                require(prefix != PREFIX_TRANSFORMER) {
+                    "auto-new group not allowed for transformer"
+                }
+            else -> throw IllegalArgumentException("invalid group id")
         }
     }
 
@@ -193,6 +200,13 @@ data class CycleDescription(
         val PREFIX_COMPOUND: String? = null
         const val PREFIX_BLEND = ".b"
         const val PREFIX_TRANSFORMER = ".t"
+
+        /** Assign the next reducer group during decoding, starting from 1 and skipping groups
+         * already claimed by preceding entries. */
+        const val GROUP_AUTO_NEW = -1
+
+        /** Copy the reducer group of the preceding entry during decoding. */
+        const val GROUP_COPY_PREVIOUS = -2
     }
 }
 

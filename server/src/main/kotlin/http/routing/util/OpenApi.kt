@@ -176,7 +176,11 @@ private fun OpenApiDoc.describeSchemas(): OpenApiDoc {
                         "supported duration formats (for example \"1h 30m\") are accepted.",
                     "freqName" to
                         "A valid FrequencyName string (non-empty); must exist in the frequencies data.",
-                    "group" to "Group number; must be nonnegative; defaults to 0.",
+                    "group" to
+                        "Reducer group. -1 assigns the next group in the sequence starting from 1 " +
+                        "that is not already claimed by a preceding entry, -2 copies the " +
+                        "preceding entry's group; otherwise the value must be nonnegative. " +
+                        "Defaults to 0. -1 is not valid for transformers.",
                     "doseRamp" to
                         "Optional dose ramping specification; only valid for compounds and blends. " +
                         "When present, addDose must be finite and non-zero (positive to ramp up, " +

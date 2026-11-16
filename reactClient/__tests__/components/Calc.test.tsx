@@ -450,6 +450,13 @@ describe('Calc', () => {
                 ),
             ).map((o) => o.value)
 
+        const groupOptionLabels = (container: HTMLElement, row: number): string[] =>
+            Array.from(
+                container.querySelectorAll<HTMLOptionElement>(
+                    `select[name="cycle.${row}.group"] option`,
+                ),
+            ).map((o) => o.textContent ?? '')
+
         const addRow = async (findByRole: (role: string, opts: object) => Promise<HTMLElement>) => {
             const addBtn = (await findByRole('button', {name: 'Add item'})) as HTMLButtonElement
             await act(async () => {
@@ -476,14 +483,15 @@ describe('Calc', () => {
             await findByText('Cycle')
             await findByRole('button', {name: 'Evaluate'})
 
-            expect(groupOptions(container, 0)).toEqual(['0'])
+            expect(groupOptions(container, 0)).toEqual(['0', '-1', '-2'])
+            expect(groupOptionLabels(container, 0)).toEqual(['0', 'new', 'copy'])
 
             await addRow(findByRole)
 
             await waitFor(() => {
-                expect(groupOptions(container, 0)).toEqual(['0', '1'])
+                expect(groupOptions(container, 0)).toEqual(['0', '1', '-1', '-2'])
             })
-            expect(groupOptions(container, 1)).toEqual(['0', '1'])
+            expect(groupOptions(container, 1)).toEqual(['0', '1', '-1', '-2'])
         })
 
         it('submits the selected group id for each row', async () => {
@@ -591,7 +599,7 @@ describe('Calc', () => {
 
             await addRow(findByRole)
             await waitFor(() => {
-                expect(groupOptions(container, 0)).toEqual(['0', '1'])
+                expect(groupOptions(container, 0)).toEqual(['0', '1', '-1', '-2'])
             })
 
             fireEvent.change(
@@ -625,7 +633,7 @@ describe('Calc', () => {
             const group1 = container.querySelector(
                 'select[name="cycle.1.group"]',
             ) as HTMLSelectElement
-            expect(groupOptions(container, 0)).toEqual(['0', '1'])
+            expect(groupOptions(container, 0)).toEqual(['0', '1', '-1', '-2'])
             expect(group0.value).toBe('0')
             expect(group1.value).toBe('1')
         })

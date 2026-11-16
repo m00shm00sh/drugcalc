@@ -27,9 +27,15 @@ describe('zodSuperRefinerForGroupIds', () => {
         it('non-sequential but in-range ids', () => {
             expect(() => zGroupIds.parse([{ group: '2' }, { group: '0' }, { group: '1' }])).not.toThrow()
         })
+        it('auto-new and copy-previous sentinels', () => {
+            expect(() => zGroupIds.parse([{ group: '-1' }, { group: '-2' }])).not.toThrow()
+        })
     })
 
     describe('rejects out-of-range group ids', () => {
+        it('negative ids other than the sentinels', () => {
+            expect(() => zGroupIds.parse([{ group: '-3' }])).toThrow()
+        })
         it('group id equal to array length', () => {
             expect(() => zGroupIds.parse([{ group: '3' }])).toThrow()
         })

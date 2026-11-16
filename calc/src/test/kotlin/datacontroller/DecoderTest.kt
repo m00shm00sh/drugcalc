@@ -7,6 +7,7 @@ import com.moshy.drugcalc.types.calccommand.*
 import com.moshy.drugcalc.types.dataentry.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.*
 import kotlin.time.*
@@ -163,6 +164,68 @@ internal class DecoderTest {
 
         assertEquals(expectedCalc, result[0])
         assertEquals(expectedCalc, result[1])
+    }
+
+    @Test
+    fun `testDecoder assigns auto-new groups and copies the previous group`() {
+        fun desc(group: Int) = CycleDescription(
+            compoundOrBlend = "foo", variantOrTransformer = "bar", dose = 50.0,
+            start = C.ZERO_DUR, duration = C.ONE_WEEK,
+            freqName = FrequencyName("f2"), group = group
+        )
+
+        val result = doDecodeGroups(
+            listOf(
+                desc(CycleDescription.GROUP_AUTO_NEW),
+                desc(CycleDescription.GROUP_COPY_PREVIOUS),
+                desc(2),
+                desc(0),
+                desc(CycleDescription.GROUP_AUTO_NEW),
+                desc(CycleDescription.GROUP_COPY_PREVIOUS),
+            ),
+            C.CONFIG, C.DATA
+        )
+
+        // Explicit group 2 is claimed by the third entry, so auto-new assigns 1, then 3.
+        assertEquals(setOf(0, 1, 2, 3), result.keys)
+        // Each copy-previous entry joins the group resolved for its predecessor.
+        assertEquals(listOf(1, 2, 1, 2), result.toSortedMap().values.map { it.compounds.size })
+    }
+
+    @Test
+    fun `testResolveGroups assigns sequential auto-new groups and copies the previous group`() {
+        fun desc(group: Int) = CycleDescription(
+            compoundOrBlend = "foo", variantOrTransformer = "bar", dose = 50.0,
+            start = C.ZERO_DUR, duration = C.ONE_WEEK,
+            freqName = FrequencyName("f2"), group = group
+        )
+
+        val resolved = Decoder(C.CONFIG, C.DATA).resolveGroups(
+            listOf(
+                desc(CycleDescription.GROUP_AUTO_NEW),
+                desc(CycleDescription.GROUP_COPY_PREVIOUS),
+                desc(3),
+                desc(CycleDescription.GROUP_COPY_PREVIOUS),
+            )
+        )
+
+        assertEquals(listOf(1, 1, 3, 3), resolved.map { it.group })
+    }
+
+    @Test
+    fun `testDecoder rejects copy-previous group without a preceding entry`() {
+        val cycle = listOf(
+            CycleDescription(
+                compoundOrBlend = "foo", variantOrTransformer = "bar", dose = 50.0,
+                start = C.ZERO_DUR, duration = C.ONE_WEEK,
+                freqName = FrequencyName("f2"),
+                group = CycleDescription.GROUP_COPY_PREVIOUS
+            )
+        )
+
+        assertThrows<IllegalArgumentException> {
+            doDecodeGroups(cycle, C.CONFIG, C.DATA)
+        }
     }
 
     @Test

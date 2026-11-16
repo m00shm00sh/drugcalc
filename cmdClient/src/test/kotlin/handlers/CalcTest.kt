@@ -41,6 +41,30 @@ internal class CalcTest {
     }
 
     @Test
+    fun `parseCycleDescription parses negative group sentinels`() {
+        assertEquals(
+            CycleDescription.GROUP_AUTO_NEW,
+            parseCycleDescription(base + ("gr" to "-1"), null).group
+        )
+        assertEquals(
+            CycleDescription.GROUP_COPY_PREVIOUS,
+            parseCycleDescription(base + ("gr" to "-2"), null).group
+        )
+    }
+
+    @Test
+    fun `parseCycleDescription aliases group values to negative sentinels`() {
+        assertEquals(
+            CycleDescription.GROUP_AUTO_NEW,
+            parseCycleDescription(base + ("gr" to "new"), null).group
+        )
+        assertEquals(
+            CycleDescription.GROUP_COPY_PREVIOUS,
+            parseCycleDescription(base + ("gr" to "copy"), null).group
+        )
+    }
+
+    @Test
     fun `parseCycleDescription applies doseRamp to existing cycle`() {
         val old = CycleDescription(
             compoundOrBlend = "foo",

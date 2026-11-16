@@ -761,7 +761,10 @@ components:
             frequencies data.
         group:
           type: integer
-          description: Group number; must be nonnegative; defaults to 0.
+          description: Reducer group. -1 assigns the next group in the sequence starting
+            from 1 that is not already claimed by a preceding entry, -2 copies the
+            preceding entry's group; otherwise the value must be nonnegative. Defaults
+            to 0. -1 is not valid for transformers.
         doseRamp:
           $ref: "#/components/schemas/RampedDose"
     CycleData:

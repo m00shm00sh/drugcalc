@@ -28,15 +28,47 @@ class Decoder(
 
     /** Decode [cycle] into a map of group id to [CycleCalculation].
      * Each [CycleDescription] is routed to the list for its [CycleDescription.group] value
-     * (defaulting to 0) and decoded independently.
+     * (defaulting to 0) and decoded independently. Negative sentinel groups are resolved first:
+     * [CycleDescription.GROUP_AUTO_NEW] becomes the next group in the sequence starting from 1
+     * not yet claimed by a preceding entry, and [CycleDescription.GROUP_COPY_PREVIOUS] copies the
+     * group of the preceding entry.
+     * @throws IllegalArgumentException if a copy-previous group has no preceding entry
      * @throw IllegalStateException on name resulution because invalid [names] was supplied
      */
     fun decode(cycle: List<CycleDescription>): Map<Int, CycleCalculation> {
-        return cycle
+        return resolveGroups(cycle)
             .groupBy { it.group }
             .mapValues { (_, groupCycles) ->
                 decodeGroup(groupCycles)
             }
+    }
+
+    /** Resolve negative sentinel groups left-to-right, preserving entry order.
+     *
+     * [CycleDescription.GROUP_AUTO_NEW] picks the next group in the sequence starting from 1 that
+     * has not already been claimed by a preceding entry.
+     */
+    internal fun resolveGroups(cycle: List<CycleDescription>): List<CycleDescription> {
+        val claimedGroups = mutableSetOf<Int>()
+        var nextNewGroup = 1
+        var lastGroup: Int? = null
+
+        return cycle.map { description ->
+            val group = when (description.group) {
+                CycleDescription.GROUP_AUTO_NEW -> {
+                    while (nextNewGroup in claimedGroups)
+                        ++nextNewGroup
+                    nextNewGroup++
+                }
+                CycleDescription.GROUP_COPY_PREVIOUS -> requireNotNull(lastGroup) {
+                    "copy-previous group has no preceding entry"
+                }
+                else -> description.group
+            }
+            claimedGroups += group
+            lastGroup = group
+            if (group == description.group) description else description.copy(group = group)
+        }
     }
 
     private fun decodeGroup(cycle: List<CycleDescription>): CycleCalculation {
