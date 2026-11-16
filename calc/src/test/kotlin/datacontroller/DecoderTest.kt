@@ -194,22 +194,16 @@ internal class DecoderTest {
 
     @Test
     fun `testResolveGroups assigns sequential auto-new groups and copies the previous group`() {
-        fun desc(group: Int) = CycleDescription(
-            compoundOrBlend = "foo", variantOrTransformer = "bar", dose = 50.0,
-            start = C.ZERO_DUR, duration = C.ONE_WEEK,
-            freqName = FrequencyName("f2"), group = group
-        )
-
-        val resolved = Decoder(C.CONFIG, C.DATA).resolveGroups(
+        val resolved = resolveGroups(
             listOf(
-                desc(CycleDescription.GROUP_AUTO_NEW),
-                desc(CycleDescription.GROUP_COPY_PREVIOUS),
-                desc(3),
-                desc(CycleDescription.GROUP_COPY_PREVIOUS),
+                UnresolvedGroup(null, CycleDescription.GROUP_AUTO_NEW),
+                UnresolvedGroup(null, CycleDescription.GROUP_COPY_PREVIOUS),
+                UnresolvedGroup(null, 3),
+                UnresolvedGroup(null, CycleDescription.GROUP_COPY_PREVIOUS),
             )
         )
 
-        assertEquals(listOf(1, 1, 3, 3), resolved.map { it.group })
+        assertEquals(listOf(1, 1, 3, 3), resolved)
     }
 
     @Test

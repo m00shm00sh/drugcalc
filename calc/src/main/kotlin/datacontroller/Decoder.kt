@@ -36,39 +36,14 @@ class Decoder(
      * @throw IllegalStateException on name resulution because invalid [names] was supplied
      */
     fun decode(cycle: List<CycleDescription>): Map<Int, CycleCalculation> {
-        return resolveGroups(cycle)
-            .groupBy { it.group }
-            .mapValues { (_, groupCycles) ->
-                decodeGroup(groupCycles)
+        val resolvedGroups = resolveGroups(
+            cycle.map { UnresolvedGroup(it.prefix, it.group) }
+        )
+        return cycle.zip(resolvedGroups)
+            .groupBy { (_, group) -> group }
+            .mapValues { (_, entries) ->
+                decodeGroup(entries.map { (description, _) -> description })
             }
-    }
-
-    /** Resolve negative sentinel groups left-to-right, preserving entry order.
-     *
-     * [CycleDescription.GROUP_AUTO_NEW] picks the next group in the sequence starting from 1 that
-     * has not already been claimed by a preceding entry.
-     */
-    internal fun resolveGroups(cycle: List<CycleDescription>): List<CycleDescription> {
-        val claimedGroups = mutableSetOf<Int>()
-        var nextNewGroup = 1
-        var lastGroup: Int? = null
-
-        return cycle.map { description ->
-            val group = when (description.group) {
-                CycleDescription.GROUP_AUTO_NEW -> {
-                    while (nextNewGroup in claimedGroups)
-                        ++nextNewGroup
-                    nextNewGroup++
-                }
-                CycleDescription.GROUP_COPY_PREVIOUS -> requireNotNull(lastGroup) {
-                    "copy-previous group has no preceding entry"
-                }
-                else -> description.group
-            }
-            claimedGroups += group
-            lastGroup = group
-            if (group == description.group) description else description.copy(group = group)
-        }
     }
 
     private fun decodeGroup(cycle: List<CycleDescription>): CycleCalculation {
@@ -306,6 +281,41 @@ class Decoder(
         return div.toInt()
     }
 
+}
+
+/** Input to [resolveGroups]; carries only the fields needed to resolve group sentinels. */
+internal data class UnresolvedGroup(val prefix: String?, val group: Int)
+
+/** Resolve negative sentinel groups left-to-right, preserving entry order.
+ *
+ * [CycleDescription.GROUP_AUTO_NEW] picks the next group in the sequence starting from 1 that
+ * has not already been claimed by a preceding entry.
+ * @return resolved nonnegative group ids, positionally aligned with [cycle]
+ */
+internal fun resolveGroups(cycle: List<UnresolvedGroup>): List<Int> {
+    val claimedGroups = mutableSetOf<Int>()
+    var nextNewGroup = 1
+    var lastGroup: Int? = null
+
+    return cycle.map { unresolved ->
+        val group = when (unresolved.group) {
+            CycleDescription.GROUP_AUTO_NEW -> {
+                require(unresolved.prefix != CycleDescription.PREFIX_TRANSFORMER) {
+                    "auto-new group not allowed for transformer"
+                }
+                while (nextNewGroup in claimedGroups)
+                    ++nextNewGroup
+                nextNewGroup++
+            }
+            CycleDescription.GROUP_COPY_PREVIOUS -> requireNotNull(lastGroup) {
+                "copy-previous group has no preceding entry"
+            }
+            else -> unresolved.group
+        }
+        claimedGroups += group
+        lastGroup = group
+        group
+    }
 }
 
 /** Intermediate step in decoding - the name has been validated but the durations have yet to be handled. */
