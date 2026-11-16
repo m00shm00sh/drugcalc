@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { GROUP_AUTO_NEW, GROUP_COPY_PREVIOUS } from './constrainGroupIds'
 import type { Nullable } from '../util/util'
 
 export function zodNonemptyStringSchema(): z.ZodString
@@ -25,10 +24,3 @@ export const AvailableFNsCacheSchema = z.object({ 'fn': zodStringsCacheSchema })
 export const zodStringBool = z.literal(['true', 'false'])
 
 export const zodNumberString = z.string().min(1).regex(/^(0|([1-9][0-9]*))$/, 'invalid number')
-export const zodGroupIdString = z
-    .string()
-    .min(1)
-    .regex(
-        new RegExp(`^(${GROUP_AUTO_NEW}|${GROUP_COPY_PREVIOUS}|0|[1-9][0-9]*)$`),
-        'invalid group',
-    )

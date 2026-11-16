@@ -30,7 +30,7 @@ import {
 } from '../types/Calc'
 import { reshapeCompoundKeys, type CompoundsMap } from '../types/Compounds'
 import type { Config } from '../types/Config'
-import { GROUP_AUTO_NEW, GROUP_COPY_PREVIOUS } from '../types/constrainGroupIds'
+import { groupOptionValues } from '../types/groupIds'
 import { sortedFrequenciesWithWeights, type FrequenciesMap } from '../types/Frequencies'
 import { getSelectedIndices } from './item-editor/util/Selectable'
 import {
@@ -96,15 +96,6 @@ const CycleDescriptionEditorRow = ({
     const row = `cycle.${index}`
     const curRow = getValues(`cycle.${index}`)
     const selectPrefix = prefixOptions
-
-    // group ids are displayed (key) and submitted (value); sentinels get descriptive labels
-    const groupOptVals = {
-        new: String(GROUP_AUTO_NEW),
-        copy: String(GROUP_COPY_PREVIOUS),
-        ...Object.fromEntries(
-            Array.from({ length: numRows }, (_, k) => [`${k}`, `${k}`]),
-        ),
-    }
 
     const rowError = errors?.cycle?.[index]
     return (
@@ -182,7 +173,7 @@ const CycleDescriptionEditorRow = ({
                     blockClasses={['col-start-5']}
                     label="group"
                     name={`${row}.group`}
-                    optionValues={groupOptVals}
+                    optionValues={groupOptionValues(numRows)}
                 />
                 {curRow.prefix !== '.t' && (
                     <FormInput

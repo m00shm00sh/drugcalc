@@ -14,12 +14,15 @@ import {
     AvailableFNsCacheSchema,
     AvailableVXsCacheSchema,
     zodNonemptyStringSchema,
-    zodGroupIdString,
 } from './string'
 import { SelectableSchema } from './Selectable'
 import { getOrElse, stripIf } from '../util/filter-setif'
 import { zodPositiveNumberSchema } from './number'
-import { GROUP_AUTO_NEW, zodSuperRefinerForGroupIds } from './constrainGroupIds'
+import {
+    isAutoNewGroup,
+    zodGroupIdString,
+    zodSuperRefinerForGroupIds,
+} from './groupIds'
 
 /* even though this is strictly an outgoing type, i'm still making a zod schema because
  * prettier's typescript handling butchers indentation of union types
@@ -123,7 +126,7 @@ const validateGroup = (
     row: z.infer<typeof CalcRequestRowSharedSchema> & { prefix: Prefix },
     ctx: z.core.$RefinementCtx,
 ) => {
-    if (row.prefix === '.t' && Number(row.group) === GROUP_AUTO_NEW) {
+    if (row.prefix === '.t' && isAutoNewGroup(row.group)) {
         ctx.addIssue({
             code: 'custom',
             path: ['group'],

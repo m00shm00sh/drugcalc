@@ -1,7 +1,12 @@
 import { describe, expect, it } from '@jest/globals'
 import { z } from 'zod'
 
-import { zodSuperRefinerForGroupIds } from '../../src/types/constrainGroupIds'
+import {
+    groupOptionValues,
+    isAutoNewGroup,
+    zodGroupIdString,
+    zodSuperRefinerForGroupIds,
+} from '../../src/types/groupIds'
 import { parseError } from './__get_parse_error'
 
 const zRow = z.object({
@@ -60,6 +65,35 @@ describe('zodSuperRefinerForGroupIds', () => {
         it('for valid in-range data', () => {
             const e = parseError([{ group: '0' }, { group: '1' }], zGroupIds)
             expect(e).toBeUndefined()
+        })
+    })
+})
+
+describe('zodGroupIdString', () => {
+    it.each(['-1', '-2', '0', '1', '42'])('accepts %s', (group) => {
+        expect(zodGroupIdString.parse(group)).toBe(group)
+    })
+
+    it.each(['-3', '01', '1.5', '', 'x'])('rejects %s', (group) => {
+        expect(() => zodGroupIdString.parse(group)).toThrow()
+    })
+})
+
+describe('isAutoNewGroup', () => {
+    it('recognizes only the auto-new sentinel', () => {
+        expect(isAutoNewGroup('-1')).toBe(true)
+        expect(isAutoNewGroup('-2')).toBe(false)
+        expect(isAutoNewGroup('0')).toBe(false)
+    })
+})
+
+describe('groupOptionValues', () => {
+    it('labels the sentinels and lists one option per row', () => {
+        expect(groupOptionValues(2)).toEqual({
+            'new': '-1',
+            'copy': '-2',
+            '0': '0',
+            '1': '1',
         })
     })
 })
